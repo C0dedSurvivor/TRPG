@@ -75,6 +75,9 @@ public class Player : BattleParticipant
         Debug.Log("Saving the player");
         Stream outStream = File.OpenWrite("Assets/Resources/Storage/Players/" + name + ".data");
         BinaryWriter file = new BinaryWriter(outStream);
+        file.Write(level);
+        file.Write(exp);
+        file.Write(skillPoints);
         file.Write(moveType);
         file.Write(attack);
         file.Write(attackGrowthType);
@@ -114,6 +117,9 @@ public class Player : BattleParticipant
     {
         Stream inStream = File.OpenRead("Assets/Resources/Storage/Players/" + name + ".data");
         BinaryReader file = new BinaryReader(inStream);
+        level = file.ReadInt32();
+        exp = file.ReadInt32();
+        skillPoints = file.ReadInt32();
         moveType = file.ReadInt32();
         attack = file.ReadInt32();
         attackGrowthType = file.ReadString();

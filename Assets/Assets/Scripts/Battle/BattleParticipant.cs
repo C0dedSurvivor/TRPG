@@ -24,6 +24,24 @@ public struct statMod
     }
 }
 
+public class SkillInfo
+{
+    public bool unlocked;
+    public int level;
+
+    public SkillInfo()
+    {
+        unlocked = false;
+        level = 1;
+    }
+
+    public SkillInfo(bool unlock, int lvl)
+    {
+        unlocked = unlock;
+        level = lvl;
+    }
+}
+
 public class BattleParticipant {
     public string name;
 
@@ -48,10 +66,9 @@ public class BattleParticipant {
     public bool moved;
 
     //x = skill tree id, y = spell id
-    public Dictionary<int, Dictionary<int, Skill>> skillTreeList = new Dictionary<int, Dictionary<int, Skill>>();
+    public Dictionary<int, Dictionary<int, SkillInfo>> skillTreeList = new Dictionary<int, Dictionary<int, SkillInfo>>();
 
     public BattleParticipant(string name) {
-        skillTreeList = GameStorage.skills.GetPlayerSkillList(name);
         this.name = name;
     }
 
@@ -69,7 +86,19 @@ public class BattleParticipant {
         mHealth = 30 + mT;
         cHealth = mHealth;
         equippedWeapon = "Wooden Sword";
-        skillTreeList = GameStorage.skills.GetPlayerSkillList("");
+
+        //grab all the skills
+        List<int> treeList = GameStorage.GetPlayerSkillList("");
+        foreach (int tree in treeList)
+        {
+            skillTreeList.Add(tree, new Dictionary<int, SkillInfo>());
+            foreach (int skill in GameStorage.skillTreeList[tree].Keys)
+            {
+                skillTreeList[tree].Add(skill, new SkillInfo());
+                if (GameStorage.skillTreeList[tree][skill].dependencies.Count == 0)
+                    skillTreeList[tree][skill].unlocked = true;
+            }
+        }
     }
 
     public void AddMod(string affectedStat, int flatMod, int multMod, int dur)

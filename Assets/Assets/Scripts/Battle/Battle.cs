@@ -335,7 +335,7 @@ public class Battle : MonoBehaviour
                             if (tileList[x, (mapSizeY - 1) - y].GetComponent<BattleTile>().skillTargetting)
                             {
                                 Debug.Log("Casting Skill at " + x + "|" + y);
-                                Skill displaySkill = GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillTreeList[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[selectedSpell - 1].x][GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[selectedSpell - 1].y];
+                                Skill displaySkill = GameStorage.skillTreeList[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[selectedSpell - 1].x][GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[selectedSpell - 1].y];
                                 CastSkill(displaySkill, x, y);
                             }
                         }
@@ -993,7 +993,7 @@ public class Battle : MonoBehaviour
             Vector2Int skillPos = GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position;
             if (selectedMoveSpot.x != -1)
                 skillPos = selectedMoveSpot;
-            Skill displaySkill = GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillTreeList[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[skillToShow - 1].x][GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[skillToShow - 1].y];
+            Skill displaySkill = GameStorage.skillTreeList[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[skillToShow - 1].x][GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[skillToShow - 1].y];
 
             if (displaySkill.targetType == 1)
             {

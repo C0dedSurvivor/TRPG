@@ -14,8 +14,6 @@ public class Skill {
     public int unlockLevel;
     public int unlockCost;
 
-    public bool unlocked = false;
-
     //how large the aoe is (even numbers put the extra space on bottom)
     public int xRange;
     public int yRange;

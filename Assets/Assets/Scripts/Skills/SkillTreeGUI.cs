@@ -85,30 +85,44 @@ public class SkillTreeGUI : MonoBehaviour {
         }
         skillTreeButtons.Clear();
         //Generates buttons off of the new player's skill tree list
-        for(int i = 1; i <= GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList.Count; i++)
+        int i = 0;
+        foreach(int tree in GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList.Keys)
         {
+            i++;
             skillTreeButtons.Add(Instantiate(skillTreeButtonPrefab, new Vector3((i - 1) * 48 - 275, 185, 0) + skillWindow.transform.position, Quaternion.Euler(Vector3.zero), skillWindow.transform));
-            int j = i;
+            int j = tree;
             skillTreeButtons[skillTreeButtons.Count - 1].GetComponentInChildren<Text>().text = j + "";
             skillTreeButtons[skillTreeButtons.Count - 1].onClick.AddListener(delegate { ChangeShownSkillTree(j); });
         }
-        currentSkillTree = 1;
+        currentSkillTree = GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList.Keys.ElementAt(0);
         ChangeShownSkillTree(currentSkillTree);
     }
 
     public void ChangeShownSkillTree(int skillTree)
     {
-        //resets the color of the previous skill tree's selection button
-        var colors = skillTreeButtons[currentSkillTree - 1].colors;
-        colors.normalColor = Color.white;
-        colors.highlightedColor = Color.white;
-        skillTreeButtons[currentSkillTree - 1].colors = colors;
+        ///doesn't work
 
-        //changes the color of the new skill tree's selection button to symbolize that it is selected
-        var colors2 = skillTreeButtons[skillTree - 1].colors;
-        colors2.normalColor = colors2.disabledColor;
-        colors2.highlightedColor = colors2.disabledColor;
-        skillTreeButtons[skillTree - 1].colors = colors2;
+
+        foreach (Button b in skillTreeButtons)
+        {
+            if (b.GetComponentInChildren<Text>().text == "" + currentSkillTree)
+            {
+                //resets the color of the previous skill tree's selection button
+                var colors = b.colors;
+                colors.normalColor = Color.white;
+                colors.highlightedColor = Color.white;
+                b.colors = colors;
+            }
+
+            if (b.GetComponentInChildren<Text>().text == "" + skillTree)
+            {
+                //changes the color of the new skill tree's selection button to symbolize that it is selected
+                var colors2 = b.colors;
+                colors2.normalColor = colors2.disabledColor;
+                colors2.highlightedColor = colors2.disabledColor;
+                b.colors = colors2;
+            }
+        }
 
         currentSkillTree = skillTree;
 
@@ -124,15 +138,15 @@ public class SkillTreeGUI : MonoBehaviour {
         float maxY = float.MinValue;
         int xPos = 0;
         Dictionary<int, Vector2> madeButtons = new Dictionary<int, Vector2>();
-        while (madeButtons.Count < GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[skillTree].Count) {
+        while (madeButtons.Count < GameStorage.skillTreeList[skillTree].Count) {
             //make a list of all buttons that need to be generated this round
             List<int> halfMadeButtons = new List<int>();
-            for (int i = 1; i <= GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[skillTree].Count; i++)
+            for (int i = 1; i <= GameStorage.skillTreeList[skillTree].Count; i++)
             {
                 if(!madeButtons.ContainsKey(i))
                 {
                     bool valid = true;
-                    foreach(int j in GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[skillTree][i].dependencies)
+                    foreach(int j in GameStorage.skillTreeList[skillTree][i].dependencies)
                     {
                         if (!madeButtons.ContainsKey(j))
                             valid = false;
@@ -145,14 +159,14 @@ public class SkillTreeGUI : MonoBehaviour {
             foreach(int i in halfMadeButtons)
             {
                 float pos = 0;
-                foreach(int j in GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[skillTree][i].dependencies)
+                foreach(int j in GameStorage.skillTreeList[skillTree][i].dependencies)
                 {
                     pos += madeButtons[j].y;
                 }
-                Debug.Log(pos + " Depends " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[skillTree][i].dependencies.Count);
-                if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[skillTree][i].dependencies.Count > 1)
+                Debug.Log(pos + " Depends " + GameStorage.skillTreeList[skillTree][i].dependencies.Count);
+                if (GameStorage.skillTreeList[skillTree][i].dependencies.Count > 1)
                 {
-                    pos /= GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[skillTree][i].dependencies.Count;
+                    pos /= GameStorage.skillTreeList[skillTree][i].dependencies.Count;
                 }
                 Debug.Log(pos);
                 //normalizes the position of skills that need to be between other skills
@@ -190,14 +204,14 @@ public class SkillTreeGUI : MonoBehaviour {
                             if (madeButtons[key] == new Vector2(xPos, pos + displacement))
                                 impactedSkill = key;
                         }
-                        if (!CompareLists(GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[skillTree][impactedSkill].dependencies, GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[skillTree][i].dependencies))
+                        if (!CompareLists(GameStorage.skillTreeList[skillTree][impactedSkill].dependencies, GameStorage.skillTreeList[skillTree][i].dependencies))
                         {
                             foreach (int key in madeButtons.Keys)
                             {
                                 if (madeButtons[key] == new Vector2(xPos, pos - displacement))
                                     impactedSkill = key;
                             }
-                            if (!madeButtons.ContainsValue(new Vector2(xPos, pos - displacement)) || !CompareLists(GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[skillTree][impactedSkill].dependencies, GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[skillTree][i].dependencies))
+                            if (!madeButtons.ContainsValue(new Vector2(xPos, pos - displacement)) || !CompareLists(GameStorage.skillTreeList[skillTree][impactedSkill].dependencies, GameStorage.skillTreeList[skillTree][i].dependencies))
                             {
                                 conflictionSwitch = false;
                                 displacement *= -1;
@@ -230,7 +244,7 @@ public class SkillTreeGUI : MonoBehaviour {
             else
             {
                 bool unlockable = true;
-                foreach (int toCheck in GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[skillTree][id].dependencies)
+                foreach (int toCheck in GameStorage.skillTreeList[skillTree][id].dependencies)
                 {
                     if (!GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[skillTree][toCheck].unlocked)
                     {
@@ -251,7 +265,7 @@ public class SkillTreeGUI : MonoBehaviour {
         //renders the lines between the skills
         foreach (int key in madeButtons.Keys)
         {
-            foreach (int j in GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[skillTree][key].dependencies)
+            foreach (int j in GameStorage.skillTreeList[skillTree][key].dependencies)
             {
                 Vector3 differenceVector = madeButtons[key] - madeButtons[j];
 
@@ -274,41 +288,41 @@ public class SkillTreeGUI : MonoBehaviour {
         skillInfo.transform.position = Input.mousePosition + new Vector3(2, -2, 0);
         if (skillInfo.transform.localPosition.y < 0 && Mathf.Abs(skillInfo.transform.localPosition.y) + skillInfo.GetComponent<VerticalLayoutGroup>().preferredHeight > Screen.height / 2)
             skillInfo.transform.position = new Vector3(skillInfo.transform.position.x, Screen.height / 2 - skillInfo.GetComponent<VerticalLayoutGroup>().preferredHeight / 2, skillInfo.transform.position.z);
-        skillInfo.transform.GetChild(0).GetComponent<Text>().text = GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].name;
+        skillInfo.transform.GetChild(0).GetComponent<Text>().text = GameStorage.skillTreeList[currentSkillTree][skill].name;
         string type = "";
-        if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].partList.OfType<DamagePart>().FirstOrDefault() != null)
+        if (GameStorage.skillTreeList[currentSkillTree][skill].partList.OfType<DamagePart>().FirstOrDefault() != null)
             type += "Damage";
-        if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].partList.OfType<HealingPart>().FirstOrDefault() != null) {
+        if (GameStorage.skillTreeList[currentSkillTree][skill].partList.OfType<HealingPart>().FirstOrDefault() != null) {
             if (type != "")
                 type += ", ";
             type += "Heal";
         }
-        if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].partList.OfType<StatChangePart>().FirstOrDefault() != null)
+        if (GameStorage.skillTreeList[currentSkillTree][skill].partList.OfType<StatChangePart>().FirstOrDefault() != null)
         {
             if (type != "")
                 type += ", ";
             type += "Stat Change";
         }
-        if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].partList.OfType<StatusEffectPart>().FirstOrDefault() != null)
+        if (GameStorage.skillTreeList[currentSkillTree][skill].partList.OfType<StatusEffectPart>().FirstOrDefault() != null)
         {
             if (type != "")
                 type += ", ";
             type += "Status Effect";
         }
         skillInfo.transform.GetChild(1).GetComponent<Text>().text = "Skill Type: " + type;
-        skillInfo.transform.GetChild(2).GetComponent<Text>().text = "Range: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].targettingRange;
+        skillInfo.transform.GetChild(2).GetComponent<Text>().text = "Range: " + GameStorage.skillTreeList[currentSkillTree][skill].targettingRange;
         //1 = self, 2 = enemy, 3 = ally, 4 = passive, 5 = anywhere
-        if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].targetType == 1)
+        if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == 1)
             skillInfo.transform.GetChild(3).GetComponent<Text>().text = "Target Type: Caster";
-        else if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].targetType == 2)
+        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == 2)
             skillInfo.transform.GetChild(3).GetComponent<Text>().text = "Target Type: Enemy";
-        else if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].targetType == 3)
+        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == 3)
             skillInfo.transform.GetChild(3).GetComponent<Text>().text = "Target Type: Ally";
-        else if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].targetType == 4)
+        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == 4)
             skillInfo.transform.GetChild(3).GetComponent<Text>().text = "Passive";
-        else if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].targetType == 5)
+        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == 5)
             skillInfo.transform.GetChild(3).GetComponent<Text>().text = "Target Type: Anywhere";
-        skillInfo.transform.GetChild(4).GetComponent<Text>().text = "AOE: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].xRange + "x" + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].yRange;
+        skillInfo.transform.GetChild(4).GetComponent<Text>().text = "AOE: " + GameStorage.skillTreeList[currentSkillTree][skill].xRange + "x" + GameStorage.skillTreeList[currentSkillTree][skill].yRange;
         if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].unlocked)
         {
             skillInfo.transform.GetChild(5).GetComponent<Text>().text = "Unlocked";
@@ -317,7 +331,7 @@ public class SkillTreeGUI : MonoBehaviour {
         {
             bool unlockable = true;
             List<int> needed = new List<int>();
-            foreach (int toCheck in GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].dependencies)
+            foreach (int toCheck in GameStorage.skillTreeList[currentSkillTree][skill].dependencies)
             {
                 if (!GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][toCheck].unlocked)
                 {
@@ -327,7 +341,7 @@ public class SkillTreeGUI : MonoBehaviour {
             }
             if (unlockable)
             {
-                skillInfo.transform.GetChild(5).GetComponent<Text>().text = "Unlockable\nUnlock cost: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].unlockCost;
+                skillInfo.transform.GetChild(5).GetComponent<Text>().text = "Unlockable\nUnlock cost: " + GameStorage.skillTreeList[currentSkillTree][skill].unlockCost;
             }
             else
             {
@@ -360,7 +374,7 @@ public class SkillTreeGUI : MonoBehaviour {
         {
             selectedSkill = skillID;
             quickSkillSwitcher.SetActive(true);
-            quickSkillSwitcher.GetComponentInChildren<Text>().text = "Equip " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skillID].name + " for battle?";
+            quickSkillSwitcher.GetComponentInChildren<Text>().text = "Equip " + GameStorage.skillTreeList[currentSkillTree][skillID].name + " for battle?";
         }
         else
         {
@@ -373,7 +387,7 @@ public class SkillTreeGUI : MonoBehaviour {
         string errorMessage = "This skill is not unlockable yet. You need to unlock ";
         bool unlockable = true;
         List<int> needed = new List<int>();
-        foreach (int toCheck in GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skillID].dependencies)
+        foreach (int toCheck in GameStorage.skillTreeList[currentSkillTree][skillID].dependencies)
         {
             if (!GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][toCheck].unlocked)
             {
@@ -392,7 +406,7 @@ public class SkillTreeGUI : MonoBehaviour {
                 errorMessage += " and " + needed[needed.Count - 1];
         }
         errorMessage += " first.";
-        if(unlockable && GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].SkillPoints < GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skillID].unlockCost)
+        if(unlockable && GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].SkillPoints < GameStorage.skillTreeList[currentSkillTree][skillID].unlockCost)
         {
             errorMessage = "You do not have enough skill points to unlock this skill.";
             unlockable = false;
@@ -410,7 +424,7 @@ public class SkillTreeGUI : MonoBehaviour {
                 else
                 {
                     unlockable = true;
-                    foreach (int toCheck in GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][b.GetComponent<SkillUnlockButton>().skillID].dependencies)
+                    foreach (int toCheck in GameStorage.skillTreeList[currentSkillTree][b.GetComponent<SkillUnlockButton>().skillID].dependencies)
                     {
                         if (!GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][toCheck].unlocked)
                         {
@@ -427,6 +441,7 @@ public class SkillTreeGUI : MonoBehaviour {
                     }
                 }
             }
+            GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].SavePlayer();
         }
         else
         {
@@ -443,6 +458,7 @@ public class SkillTreeGUI : MonoBehaviour {
     public void SwapQuickSkill(int place)
     {
         GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillQuickList[place] = new Vector2Int(currentSkillTree, selectedSkill);
+        GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].SavePlayer();
         GetComponentInParent<SkillTreeGUI>().quickSkillSwitcher.SetActive(false);
     }
 

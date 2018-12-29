@@ -4,7 +4,6 @@ using System.Collections.Generic;
 
 public class Skill {
     public string name;
-    public int id;
 
     //1 = self, 2 = enemy, 3 = ally, 4 = passive, 5 = anywhere
     public int targetType;

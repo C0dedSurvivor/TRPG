@@ -79,7 +79,7 @@ public class BattleUI : MonoBehaviour {
     // Update is called once per frame
     void Update() {
         //if a battle is actually going on
-        if(BattleScript.GetComponent<Battle>().matchPart.CompareTo("") != 0)
+        if(Battle.matchPart.CompareTo("") != 0)
         {
             toggleDanger.gameObject.SetActive(true);
             toggleaEther.gameObject.SetActive(true);
@@ -103,6 +103,8 @@ public class BattleUI : MonoBehaviour {
                 confirmMove.gameObject.SetActive(false);
             }
 
+            PlayerStatPos.GetComponent<RectTransform>().localPosition = new Vector3(340, 70, 0);
+            EnemyStatPos.GetComponent<RectTransform>().localPosition = new Vector3(340, 70, 0);
             //if a player is selected
             if (BattleScript.GetComponent<Battle>().selectedPlayer != -1)
             {
@@ -151,7 +153,7 @@ public class BattleUI : MonoBehaviour {
                         damageNote1.text = "This enemy will not live for much longer.";
                     }
                     float pd = (GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.GetComponent<Battle>().selectedPlayer]].cHealth - BattleScript.GetComponent<Battle>().GetDamageValues(BattleScript.GetComponent<Battle>().enemyList[BattleScript.GetComponent<Battle>().selectedEnemy], GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.GetComponent<Battle>().selectedPlayer]])) / (GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.GetComponent<Battle>().selectedPlayer]].mHealth * 1.0f);
-                    if (Registry.WeaponTypeRegistry[Registry.WeaponRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.GetComponent<Battle>().selectedPlayer]].equippedWeapon].weaponType].ranged != Registry.WeaponTypeRegistry[Registry.WeaponRegistry[BattleScript.GetComponent<Battle>().enemyList[BattleScript.GetComponent<Battle>().selectedEnemy].equippedWeapon].weaponType].ranged)
+                    if (Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.GetComponent<Battle>().selectedPlayer]].equippedWeapon]).subType].ranged != Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[BattleScript.GetComponent<Battle>().enemyList[BattleScript.GetComponent<Battle>().selectedEnemy].equippedWeapon]).subType].ranged)
                     {
                         damageNote2.text = "And they shouldn't be able to counterattack me from this range.";
                     }
@@ -172,15 +174,6 @@ public class BattleUI : MonoBehaviour {
                     confirmAttack.gameObject.SetActive(true);
                     denyAttack.gameObject.SetActive(true);
                 }
-                else
-                {
-                    PlayerStatPos.GetComponent<RectTransform>().localPosition = new Vector3(340, 70, 0);
-                    EnemyStatPos.GetComponent<RectTransform>().localPosition = new Vector3(340, 70, 0);
-                    damageNote1.gameObject.SetActive(false);
-                    damageNote2.gameObject.SetActive(false);
-                    confirmAttack.gameObject.SetActive(false);
-                    denyAttack.gameObject.SetActive(false);
-                }
             }
             else
             {
@@ -195,6 +188,10 @@ public class BattleUI : MonoBehaviour {
                 quickSkill1.gameObject.SetActive(false);
                 quickSkill2.gameObject.SetActive(false);
                 quickSkill3.gameObject.SetActive(false);
+                damageNote1.gameObject.SetActive(false);
+                damageNote2.gameObject.SetActive(false);
+                confirmAttack.gameObject.SetActive(false);
+                denyAttack.gameObject.SetActive(false);
             }
 
             //if an enemy is selected
@@ -226,10 +223,14 @@ public class BattleUI : MonoBehaviour {
                 eSpeed.gameObject.SetActive(false);
                 eCrit.gameObject.SetActive(false);
                 eHealth.gameObject.SetActive(false);
+                damageNote1.gameObject.SetActive(false);
+                damageNote2.gameObject.SetActive(false);
+                confirmAttack.gameObject.SetActive(false);
+                denyAttack.gameObject.SetActive(false);
             }
 
             //if it's damage time
-            if (BattleScript.GetComponent<Battle>().matchPart.CompareTo("attack") == 0)
+            if (Battle.matchPart.CompareTo("attack") == 0)
             {
                 denyAttack.gameObject.SetActive(true);
             }
@@ -242,6 +243,35 @@ public class BattleUI : MonoBehaviour {
         }
         else
         {
+            pName.gameObject.SetActive(false);
+            pAtk.gameObject.SetActive(false);
+            pDef.gameObject.SetActive(false);
+            pMAtk.gameObject.SetActive(false);
+            pMDef.gameObject.SetActive(false);
+            pSpeed.gameObject.SetActive(false);
+            pCrit.gameObject.SetActive(false);
+            pHealth.gameObject.SetActive(false);
+
+            eName.gameObject.SetActive(false);
+            eAtk.gameObject.SetActive(false);
+            eDef.gameObject.SetActive(false);
+            eMAtk.gameObject.SetActive(false);
+            eMDef.gameObject.SetActive(false);
+            eSpeed.gameObject.SetActive(false);
+            eCrit.gameObject.SetActive(false);
+            eHealth.gameObject.SetActive(false);
+
+            damageNote1.gameObject.SetActive(false);
+            damageNote2.gameObject.SetActive(false);
+            confirmAttack.gameObject.SetActive(false);
+            denyAttack.gameObject.SetActive(false);
+
+            quickSkill1.gameObject.SetActive(false);
+            quickSkill2.gameObject.SetActive(false);
+            quickSkill3.gameObject.SetActive(false);
+
+            swap.gameObject.SetActive(false);
+            confirmMove.gameObject.SetActive(false);
             toggleDanger.gameObject.SetActive(false);
             toggleaEther.gameObject.SetActive(false);
         }

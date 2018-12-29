@@ -44,8 +44,8 @@ public class Player : BattleParticipant
             mAttack = 15 + mT;
             mDefense = 15 + mT;
             critChance = 15 + mT;
-            mHealth = 30 + mT;
-            cHealth = mHealth;
+            mHealth = 150 + mT;
+            cHealth = mHealth / 2;
             equippedWeapon = "Wooden Bow";
             skillQuickList.Add(new Vector2Int(1, 1));
             skillQuickList.Add(new Vector2Int(1, 2));

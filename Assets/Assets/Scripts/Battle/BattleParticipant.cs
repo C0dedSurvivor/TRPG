@@ -59,7 +59,20 @@ public class BattleParticipant {
     //1 = slow, 2 = walking, 3 = riding
     public int moveType = 1;
 
-    public string equippedWeapon;
+    //0 = weapon, 1 = helmet, 2 = chestplate, 3 = legs, 4 = boots, 5 = gloves, 6 = accessory 1, 7 = accessory 2
+    public string[] equipment = new string[8];
+
+    public string equippedWeapon
+    {
+        get
+        {
+            return equipment[0];
+        }
+        set
+        {
+            equipment[0] = value;
+        }
+    }
 
     public Vector2Int position;
 
@@ -83,7 +96,7 @@ public class BattleParticipant {
         mAttack = 15 + mT;
         mDefense = 15 + mT;
         critChance = 15 + mT;
-        mHealth = 30 + mT;
+        mHealth = 1;
         cHealth = mHealth;
         equippedWeapon = "Wooden Sword";
 
@@ -167,7 +180,7 @@ public class BattleParticipant {
     private float GetDistMod(int dist)
     {
         float damageMod = 1.0f;
-        foreach (RangeDependentAttack r in Registry.WeaponTypeRegistry[Registry.WeaponRegistry[equippedWeapon].weaponType].specialRanges)
+        foreach (RangeDependentAttack r in Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[equippedWeapon]).subType].specialRanges)
         {
             if (r.atDistance == dist)
             {
@@ -181,10 +194,10 @@ public class BattleParticipant {
     public int GetEffectiveAtk(int dist = -1)
     {
         int value;
-        if (Registry.WeaponTypeRegistry[Registry.WeaponRegistry[equippedWeapon].weaponType].attackType.Contains("magical"))
+        if (Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[equippedWeapon]).subType].attackType.Contains("magical"))
             value = Mathf.RoundToInt(attack * GetDistMod(dist));
         else
-            value = Mathf.RoundToInt((attack + Registry.WeaponRegistry[equippedWeapon].strength) * GetDistMod(dist));
+            value = Mathf.RoundToInt((attack + ((EquippableBase)Registry.ItemRegistry[equippedWeapon]).strength) * GetDistMod(dist));
         statMod s = GetStatMod("atk");
 
         value += s.flatMod;
@@ -196,10 +209,10 @@ public class BattleParticipant {
     public int GetEffectiveDef(int dist = -1)
     {
         int value;
-        if (Registry.WeaponTypeRegistry[Registry.WeaponRegistry[equippedWeapon].weaponType].attackType.Contains("magical"))
+        if (Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[equippedWeapon]).subType].attackType.Contains("magical"))
             value = Mathf.RoundToInt(defense * GetDistMod(dist));
         else
-            value = Mathf.RoundToInt((defense + Registry.WeaponRegistry[equippedWeapon].defense) * GetDistMod(dist));
+            value = Mathf.RoundToInt((defense + ((EquippableBase)Registry.ItemRegistry[equippedWeapon]).defense) * GetDistMod(dist));
         statMod s = GetStatMod("def");
 
         value += s.flatMod;
@@ -211,10 +224,10 @@ public class BattleParticipant {
     public int GetEffectiveMAtk(int dist = -1)
     {
         int value;
-        if (Registry.WeaponTypeRegistry[Registry.WeaponRegistry[equippedWeapon].weaponType].attackType.Contains("physical"))
+        if (Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[equippedWeapon]).subType].attackType.Contains("physical"))
             value = Mathf.RoundToInt(mAttack * GetDistMod(dist));
         else
-            value = Mathf.RoundToInt((mAttack + Registry.WeaponRegistry[equippedWeapon].strength) * GetDistMod(dist));
+            value = Mathf.RoundToInt((mAttack + ((EquippableBase)Registry.ItemRegistry[equippedWeapon]).strength) * GetDistMod(dist));
         statMod s = GetStatMod("matk");
 
         value += s.flatMod;
@@ -226,10 +239,10 @@ public class BattleParticipant {
     public int GetEffectiveMDef(int dist = -1)
     {
         int value;
-        if (Registry.WeaponTypeRegistry[Registry.WeaponRegistry[equippedWeapon].weaponType].attackType.Contains("physical"))
+        if (Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[equippedWeapon]).subType].attackType.Contains("physical"))
             value = Mathf.RoundToInt(mDefense * GetDistMod(dist));
         else
-            value = Mathf.RoundToInt((mDefense + Registry.WeaponRegistry[equippedWeapon].defense) * GetDistMod(dist));
+            value = Mathf.RoundToInt((mDefense + ((EquippableBase)Registry.ItemRegistry[equippedWeapon]).defense) * GetDistMod(dist));
         statMod s = GetStatMod("mdef");
 
         value += s.flatMod;
@@ -241,7 +254,7 @@ public class BattleParticipant {
     public int GetEffectiveCrit()
     {
         int value;
-        value = critChance + Registry.WeaponRegistry[equippedWeapon].critChanceMod;
+        value = critChance + ((EquippableBase)Registry.ItemRegistry[equippedWeapon]).critChanceMod;
         statMod s = GetStatMod("crit");
 
         value += s.flatMod;

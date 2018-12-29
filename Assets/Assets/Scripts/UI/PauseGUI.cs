@@ -8,6 +8,8 @@ public class PauseGUI : MonoBehaviour
     public GameObject pauseLandingScreen;
     public GameObject playerInfoScreen;
     public GameObject playerSkillScreen;
+    public GearTurner outerGear;
+    public GameObject[] playerButtons = new GameObject[4];
 
     public static bool paused = false;
 
@@ -18,7 +20,7 @@ public class PauseGUI : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetKeyDown(KeyCode.Escape) && Battle.matchPart == "")
         {
             if (loadedMenu == 0)
             {
@@ -54,6 +56,23 @@ public class PauseGUI : MonoBehaviour
     {
         loadedMenu = 1;
         playerInfoScreen.SetActive(false);
+    }
+
+    public void ToPlayerSelection()
+    {
+        foreach(GameObject p in playerButtons)
+        {
+            p.SetActive(true);
+        }
+        outerGear.frozen = true;
+    }
+
+    public void ClosePlayerSelection()
+    {
+        foreach (GameObject p in playerButtons)
+        {
+            p.SetActive(false);
+        }
     }
 
     public void BackToPlayer()

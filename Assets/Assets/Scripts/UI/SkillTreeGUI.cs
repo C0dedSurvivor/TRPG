@@ -17,6 +17,7 @@ public class SkillTreeGUI : MonoBehaviour {
     public GameObject skillInfo;
     public GameObject failedSkillUnlock;
     public GameObject quickSkillSwitcher;
+    public Text skillPointCounter;
     public float UILineWidth;
     private int currentSkillTree;
     private List<Button> skillButtons;
@@ -78,8 +79,9 @@ public class SkillTreeGUI : MonoBehaviour {
     public void OpenSkillMenu(int playerID)
     {
         this.playerID = playerID;
+        skillPointCounter.text = "Skill Points: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].SkillPoints;
         //Clears the remnants of a previous player's skill tree list
-        foreach(Button button in skillTreeButtons)
+        foreach (Button button in skillTreeButtons)
         {
             Destroy(button.gameObject);
         }
@@ -251,15 +253,12 @@ public class SkillTreeGUI : MonoBehaviour {
                         unlockable = false;
                     }
                 }
-                if (unlockable)
+                if (!unlockable)
                 {
-                    skillButtons[skillButtons.Count - 1].image.color = Color.green;
-                }
-                else
-                {
-                    skillButtons[skillButtons.Count - 1].image.color = Color.red;
+                    skillButtons[skillButtons.Count - 1].image.color = new Color(1, 0.4f, 0.4f, 1);
                 }
             }
+            skillButtons[skillButtons.Count - 1].image.overrideSprite = Resources.Load<Sprite>("Images/SkillIcons/" + GameStorage.skillTreeList[skillTree][id].name);
             //Debug.Log(skillButtons[skillButtons.Count - 1].transform.position + "|" + skillWindow.transform.position + "|" + displayWindow.transform.position);
         }
         //renders the lines between the skills
@@ -441,6 +440,7 @@ public class SkillTreeGUI : MonoBehaviour {
                     }
                 }
             }
+            skillPointCounter.text = "Skill Points: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].SkillPoints;
             GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].SavePlayer();
         }
         else

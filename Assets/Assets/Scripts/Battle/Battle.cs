@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public struct EnemyMove
 {
@@ -75,7 +76,7 @@ public class Battle : MonoBehaviour
     public GameObject MoveMarkerPrefab;
     public GameObject BattleUIPrefab;
     public GameObject CameraPrefab;
-    public GameObject twoButtonChoicePrefab;
+    public GameObject skillCastConfirmMenu;
 
     public GameObject battleTile;
     public Vector2Int topLeft;
@@ -89,7 +90,7 @@ public class Battle : MonoBehaviour
     /// Attack: Player finished moving, choosing what to do next
     /// Enemy: Enemy choosing moves
 	/// </summary>
-    public string matchPart = "";
+    public static string matchPart = "";
     //Whether or not the players can swap positions, only true if no one has moved yet
     public bool canSwap;
 
@@ -112,6 +113,7 @@ public class Battle : MonoBehaviour
     public GameObject[] enemyModels = new GameObject[4];
     //This is a camera
     private GameObject battleCamera;
+    public GameObject mapPlayer;
 
     //-1 means nothing selected
     public int selectedPlayer = -1;
@@ -140,13 +142,12 @@ public class Battle : MonoBehaviour
 
     private bool updateTilesThisFrame = false;
 
-    public GameObject skillCastConfirmMenu = null;
-
     // Use this for initialization
     void Awake()
     {
         Registry.FillRegistry();
         GameStorage.FillStorage();
+        Inventory.LoadInventory();
     }
 
     //Sets up all of the variables and prefabs needed during the battle
@@ -165,6 +166,11 @@ public class Battle : MonoBehaviour
         enemyList[1] = new Enemy(10, 5, 2, 5, 5);
         enemyList[2] = new Enemy(12, 5, 2, 5, 5);
         enemyList[3] = new Enemy(14, 5, 5, 5, 5);
+        for(int i = 0; i < GameStorage.activePlayerList.Count; i++)
+        {
+            GameStorage.playerMasterList[GameStorage.activePlayerList[i]].position = new Vector2Int(6 + 2 * i, 10 + i % 2);
+            GameStorage.playerMasterList[GameStorage.activePlayerList[i]].moved = false;
+        }
         //grabs the map layout
         battleMap = GameStorage.GrabBattleMap(centerX, centerY, xSize, ySize);
         //finds the top left corner of the current map
@@ -194,7 +200,7 @@ public class Battle : MonoBehaviour
             enemyModels[i] = Instantiate(EnemyBattleModelPrefab);
             enemyModels[i].transform.position = new Vector3(enemyList[i].position.x + topLeft.x, 1, (mapSizeY - 1) - enemyList[i].position.y + topLeft.y);
         }
-        skillCastConfirmMenu = null;
+        skillCastConfirmMenu.SetActive(false);
         Cursor.lockState = CursorLockMode.None;
     }
 
@@ -203,7 +209,7 @@ public class Battle : MonoBehaviour
     {
         if (matchPart.CompareTo("") != 0)
         {
-            if (skillCastConfirmMenu == null)
+            if (skillCastConfirmMenu.activeSelf == false)
             {
                 if (Input.GetMouseButtonDown(0))
                 {
@@ -238,6 +244,10 @@ public class Battle : MonoBehaviour
                         //moves the player and player model
                         GameStorage.playerMasterList[GameStorage.activePlayerList[playerAnimMoves[0].entityID]].position.Set(Mathf.RoundToInt(GameStorage.playerMasterList[GameStorage.activePlayerList[playerAnimMoves[0].entityID]].position.x + playerAnimMoves[0].relativeMove.x), Mathf.RoundToInt(GameStorage.playerMasterList[GameStorage.activePlayerList[playerAnimMoves[0].entityID]].position.y - playerAnimMoves[0].relativeMove.y));
                         playerAnimMoves.Remove(playerAnimMoves[0]);
+                        //battle animations here, idk
+                        //checks to see if anyone died
+
+                        //if all the players are done moving
                         if (playerAnimMoves.Count == 0)
                         {
                             updateTilesThisFrame = true;
@@ -316,44 +326,6 @@ public class Battle : MonoBehaviour
                     updateTilesThisFrame = true;
                 }
             }
-            //If the menu is open to decide whether to cast the spell at the selected spot...
-            else
-            {
-                Debug.Log(skillCastConfirmMenu.GetComponent<TwoButtonPopup>().selected);
-
-                //if yes is selected
-                if (skillCastConfirmMenu.GetComponent<TwoButtonPopup>().selected == 1)
-                {
-                    Destroy(skillCastConfirmMenu);
-                    skillCastConfirmMenu = null;
-                    if (selectedMoveSpot.x != -1)
-                        ConfirmPlayerMove();
-                    for (int x = 0; x < mapSizeX; x++)
-                    {
-                        for (int y = 0; y < mapSizeY; y++)
-                        {
-                            if (tileList[x, (mapSizeY - 1) - y].GetComponent<BattleTile>().skillTargetting)
-                            {
-                                Debug.Log("Casting Skill at " + x + "|" + y);
-                                Skill displaySkill = GameStorage.skillTreeList[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[selectedSpell - 1].x][GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[selectedSpell - 1].y];
-                                CastSkill(displaySkill, x, y);
-                            }
-                        }
-                    }
-                    GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].moved = true;
-                    selectedPlayer = -1;
-                    selectedEnemy = -1;
-                    selectedSpell = -1;
-                    matchPart = "player";
-                    updateTilesThisFrame = true;
-                }
-                //if no is selected
-                else if (skillCastConfirmMenu.GetComponent<TwoButtonPopup>().selected == 2)
-                {
-                    Destroy(skillCastConfirmMenu);
-                    skillCastConfirmMenu = null;
-                }
-            }
 
             if (updateTilesThisFrame)
             {
@@ -389,10 +361,27 @@ public class Battle : MonoBehaviour
     private void ExpungeAll()
     {
         matchPart = "";
-        tileList = new GameObject[0, 0];
-        enemyList = new Enemy[4];
-        battleMap = new int[0, 0];
+        for (int x = 0; x < mapSizeX; x++)
+        {
+            for (int y = 0; y < mapSizeY; y++)
+            {
+                Destroy(tileList[x, y]);
+                tileList[x, y] = null;
+            }
+        }
+        for (int x = 0; x < playerModels.Length; x++)
+        {
+            Destroy(playerModels[x]);
+            playerModels[x] = null;
+        }
+        for (int x = 0; x < enemyModels.Length; x++)
+        {
+            Destroy(enemyModels[x]);
+            enemyModels[x] = null;
+        }
+        Destroy(battleCamera);
         battleCamera = null;
+        Destroy(moveMarker);
         moveMarker = null;
     }
 
@@ -407,6 +396,54 @@ public class Battle : MonoBehaviour
                 tileList[x, y].GetComponent<BattleTile>().arrayID = new Vector2Int(x, (mapSizeY - 1) - y);
             }
         }
+    }
+
+    public void CheckForDeath()
+    {
+        int deadCount = 0;
+        for(int pID = 0; pID < GameStorage.activePlayerList.Count; pID++)
+        {
+            if(GameStorage.playerMasterList[GameStorage.activePlayerList[pID]].cHealth <= 0)
+            {
+                deadCount++;
+                playerModels[pID].SetActive(false);
+                GameStorage.playerMasterList[GameStorage.activePlayerList[pID]].position.Set(-200, -200);
+            }
+        }
+        if (deadCount == GameStorage.activePlayerList.Count)
+            OnBattleEnd(false);
+        deadCount = 0;
+        for(int e = 0; e < enemyList.Length; e++)
+        {
+            if (enemyList[e].cHealth <= 0)
+            {
+                deadCount++;
+                enemyModels[e].SetActive(false);
+                enemyList[e].position.Set(-200, -200);
+            }
+        }
+        if (deadCount == enemyList.Length)
+            OnBattleEnd(true);
+    }
+
+    public void OnBattleEnd(bool won)
+    {
+        /* ToDo
+         * Actually trigger this
+         * Animate camera return
+         */
+        matchPart = "";
+        
+        if (won)
+        {
+            foreach(int p in GameStorage.activePlayerList)
+            {
+                GameStorage.playerMasterList[p].GainExp(200);
+            }
+            mapPlayer.SetActive(true);
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+        ExpungeAll();
     }
 
     public void ToggleDangerArea()
@@ -474,13 +511,11 @@ public class Battle : MonoBehaviour
             {
                 selectedEnemy = EnemyAtPos(pos.x, pos.y);
                 //generates the choice menu
-                skillCastConfirmMenu = Instantiate(twoButtonChoicePrefab, FindObjectOfType<Canvas>().transform);
-                skillCastConfirmMenu.GetComponent<TwoButtonPopup>().leftText.text = "Yes";
-                skillCastConfirmMenu.GetComponent<TwoButtonPopup>().rightText.text = "No";
                 if (selectedMoveSpot.x != -1)
-                    skillCastConfirmMenu.GetComponent<TwoButtonPopup>().mainText.text = "You have a move selected. Move and cast?";
+                    skillCastConfirmMenu.GetComponentInChildren<Text>().text = "You have a move selected. Move and cast?";
                 else
-                    skillCastConfirmMenu.GetComponent<TwoButtonPopup>().mainText.text = "Are you sure you want to cast there?";
+                    skillCastConfirmMenu.GetComponentInChildren<Text>().text = "Are you sure you want to cast there?";
+                skillCastConfirmMenu.SetActive(true);
             }
         }
         //swaps players
@@ -671,7 +706,7 @@ public class Battle : MonoBehaviour
         EnemyMove fallbackMove = new EnemyMove(0, 0, 100, 0, true);
         int maxMove = enemyList[n].GetMoveSpeed();
         WeaponType weapon;
-        if (!Registry.WeaponTypeRegistry.TryGetValue(Registry.WeaponRegistry[enemyList[n].equippedWeapon].weaponType, out weapon))
+        if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[n].equippedWeapon]).subType, out weapon))
             Debug.Log("Weapon Type does not exist in the Registry.");
         for (int x = -maxMove; x <= maxMove; x++)
         {
@@ -840,8 +875,8 @@ public class Battle : MonoBehaviour
         if (Mathf.Abs(e.position.y - p.position.y) > dist)
             dist = Mathf.Abs(e.position.y - p.position.y);
 
-        string type = Registry.WeaponTypeRegistry[Registry.WeaponRegistry[p.equippedWeapon].weaponType].attackType;
-        foreach (RangeDependentAttack r in Registry.WeaponTypeRegistry[Registry.WeaponRegistry[p.equippedWeapon].weaponType].specialRanges)
+        string type = Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[p.equippedWeapon]).subType].attackType;
+        foreach (RangeDependentAttack r in Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[p.equippedWeapon]).subType].specialRanges)
         {
             if (r.atDistance == dist)
             {
@@ -861,38 +896,38 @@ public class Battle : MonoBehaviour
     public void PerformPlayerAttack()
     {
         WeaponType pweapon;
-        if (!Registry.WeaponTypeRegistry.TryGetValue(Registry.WeaponRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon].weaponType, out pweapon))
+        if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon]).subType, out pweapon))
             Debug.Log("Weapon Type does not exist in the Registry.");
         //if healing a player
         if (selectedEnemy >= enemyList.Length)
         {
-            GameStorage.playerMasterList[GameStorage.activePlayerList[selectedEnemy - enemyList.Length]].Heal(Registry.WeaponRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon].strength);
+            GameStorage.playerMasterList[GameStorage.activePlayerList[selectedEnemy - enemyList.Length]].Heal(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon]).strength);
         }
         //if attacking an enemy
         else
         {
             float mod = 1.0f;
-            if (Random.Range(0.0f, 100.0f) < GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].critChance + Registry.WeaponRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon].critChanceMod) { mod = 1.5f; }
+            if (Random.Range(0.0f, 100.0f) < GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].critChance + ((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon]).critChanceMod) { mod = 1.5f; }
             enemyList[selectedEnemy].Damage(Mathf.RoundToInt(GetDamageValues(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]], enemyList[selectedEnemy]) * mod));
             if (enemyList[selectedEnemy].cHealth <= 0)
             {
-                enemyModels[selectedEnemy].SetActive(false);
-                enemyList[selectedEnemy].position.Set(-200, -200);
+                CheckForDeath();
             }
             else
             {
                 WeaponType eweapon;
-                if (!Registry.WeaponTypeRegistry.TryGetValue(Registry.WeaponRegistry[enemyList[selectedEnemy].equippedWeapon].weaponType, out eweapon))
+                if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[selectedEnemy].equippedWeapon]).subType, out eweapon))
                     Debug.Log("Weapon Type does not exist in the Registry.");
                 if (pweapon.ranged == eweapon.ranged)
                 {
                     mod = 1.0f;
-                    if (Random.Range(0.0f, 100.0f) < enemyList[selectedEnemy].critChance + Registry.WeaponRegistry[enemyList[selectedEnemy].equippedWeapon].critChanceMod) { mod = 1.5f; }
+                    if (Random.Range(0.0f, 100.0f) < enemyList[selectedEnemy].critChance + ((EquippableBase)Registry.ItemRegistry[enemyList[selectedEnemy].equippedWeapon]).critChanceMod) { mod = 1.5f; }
                     GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].Damage(Mathf.RoundToInt(GetDamageValues(enemyList[selectedEnemy], GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]]) * mod));
                     if (GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].cHealth <= 0)
                     {
                         playerModels[selectedPlayer].SetActive(false);
                         GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.Set(-200, -200);
+                        CheckForDeath();
                     }
                 }
             }
@@ -906,30 +941,30 @@ public class Battle : MonoBehaviour
         int player = PlayerAtPos(pX, pY);
 
         float mod = 1.0f;
-        if (Random.Range(0.0f, 100.0f) < enemyList[enemy].critChance + Registry.WeaponRegistry[enemyList[enemy].equippedWeapon].critChanceMod) { mod = 1.5f; }
+        if (Random.Range(0.0f, 100.0f) < enemyList[enemy].critChance + ((EquippableBase)Registry.ItemRegistry[enemyList[enemy].equippedWeapon]).critChanceMod) { mod = 1.5f; }
         GameStorage.playerMasterList[GameStorage.activePlayerList[player]].Damage(Mathf.RoundToInt(GetDamageValues(enemyList[enemy], GameStorage.playerMasterList[GameStorage.activePlayerList[player]]) * mod));
         if (GameStorage.playerMasterList[GameStorage.activePlayerList[player]].cHealth <= 0)
         {
             playerModels[player].SetActive(false);
             GameStorage.playerMasterList[GameStorage.activePlayerList[player]].position.Set(-200, -200);
+            CheckForDeath();
         }
         else
         {
             WeaponType pweapon;
             WeaponType eweapon;
-            if (!Registry.WeaponTypeRegistry.TryGetValue(Registry.WeaponRegistry[enemyList[enemy].equippedWeapon].weaponType, out eweapon))
+            if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[enemy].equippedWeapon]).subType, out eweapon))
                 Debug.Log("Weapon Type does not exist in the Registry.");
-            if (!Registry.WeaponTypeRegistry.TryGetValue(Registry.WeaponRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[player]].equippedWeapon].weaponType, out pweapon))
+            if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[player]].equippedWeapon]).subType, out pweapon))
                 Debug.Log("Weapon Type does not exist in the Registry.");
             if (pweapon.ranged == eweapon.ranged)
             {
                 mod = 1.0f;
-                if (Random.Range(0.0f, 100.0f) < GameStorage.playerMasterList[GameStorage.activePlayerList[player]].critChance + Registry.WeaponRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[player]].equippedWeapon].critChanceMod) { mod = 1.5f; }
+                if (Random.Range(0.0f, 100.0f) < GameStorage.playerMasterList[GameStorage.activePlayerList[player]].critChance + ((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[player]].equippedWeapon]).critChanceMod) { mod = 1.5f; }
                 enemyList[enemy].Damage(Mathf.RoundToInt(GetDamageValues(GameStorage.playerMasterList[GameStorage.activePlayerList[player]], enemyList[enemy]) * mod));
                 if (enemyList[enemy].cHealth <= 0)
                 {
-                    enemyModels[enemy].SetActive(false);
-                    enemyList[enemy].position.Set(-200, -200);
+                    CheckForDeath();
                 }
             }
         }
@@ -1068,7 +1103,7 @@ public class Battle : MonoBehaviour
         {
             int maxMove = GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].GetMoveSpeed();
             WeaponType weapon;
-            if (!Registry.WeaponTypeRegistry.TryGetValue(Registry.WeaponRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon].weaponType, out weapon))
+            if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon]).subType, out weapon))
                 Debug.Log("Weapon Type does not exist in the Registry.");
             for (int x = -maxMove; x <= maxMove; x++)
             {
@@ -1149,7 +1184,7 @@ public class Battle : MonoBehaviour
             {
                 int maxMove = enemyList[n].GetMoveSpeed();
                 WeaponType weapon;
-                if (!Registry.WeaponTypeRegistry.TryGetValue(Registry.WeaponRegistry[enemyList[n].equippedWeapon].weaponType, out weapon))
+                if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[n].equippedWeapon]).subType, out weapon))
                     Debug.Log("Weapon Type does not exist in the Registry.");
                 for (int x = -maxMove; x <= maxMove; x++)
                 {
@@ -1170,7 +1205,7 @@ public class Battle : MonoBehaviour
         if (matchPart.CompareTo("attack") == 0)
         {
             WeaponType weapon;
-            if (!Registry.WeaponTypeRegistry.TryGetValue(Registry.WeaponRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon].weaponType, out weapon))
+            if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon]).subType, out weapon))
                 Debug.Log("Weapon Type does not exist in the Registry.");
             RenderWeaponRanges(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y, weapon, "attack area");
             for (int x = 0; x < mapSizeX; x++)
@@ -1484,5 +1519,36 @@ public class Battle : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void ConfirmSkillCast()
+    {
+        skillCastConfirmMenu.SetActive(false);
+        if (selectedMoveSpot.x != -1)
+            ConfirmPlayerMove();
+        for (int x = 0; x < mapSizeX; x++)
+        {
+            for (int y = 0; y < mapSizeY; y++)
+            {
+                if (tileList[x, (mapSizeY - 1) - y].GetComponent<BattleTile>().skillTargetting)
+                {
+                    Debug.Log("Casting Skill at " + x + "|" + y);
+                    Skill displaySkill = GameStorage.skillTreeList[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[selectedSpell - 1].x][GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[selectedSpell - 1].y];
+                    CastSkill(displaySkill, x, y);
+                }
+            }
+        }
+        GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].moved = true;
+        selectedPlayer = -1;
+        selectedEnemy = -1;
+        selectedSpell = -1;
+        matchPart = "player";
+        updateTilesThisFrame = true;
+        CheckForDeath();
+    }
+
+    public void CancelSkillCast()
+    {
+        skillCastConfirmMenu.SetActive(false);
     }
 }

@@ -51,17 +51,19 @@ public class EquippableBase : ItemBase
     public int equipSlot;
 
     /// <summary>
-    /// Weapon: sword, lance, axe, fists, shield, tome, bow
+    /// Weapon: ID of it's weapon type
     /// Armor: Heavy, medium, light
-    /// Accessory: physical, magical
     /// </summary>
     public int subType;
 
+    //0 = physical, 1 = magical
+    public int statType;
 
-    public EquippableBase(int slot, int subtype, int healthChange, int strengthChange, int defenseChange, int critChange, int sellPrice, string flavor = "") : base(1, sellPrice, flavor)
+    public EquippableBase(int slot, int subtype, int stattype, int healthChange, int strengthChange, int defenseChange, int critChange, int sellPrice, string flavor = "") : base(1, sellPrice, flavor)
     {
         equipSlot = slot;
         subType = subtype;
+        statType = stattype;
         health = healthChange;
         strength = strengthChange;
         defense = defenseChange;

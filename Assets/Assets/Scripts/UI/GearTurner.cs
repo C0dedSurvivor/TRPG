@@ -26,6 +26,10 @@ public class GearTurner : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
                 {
                     GetComponent<GearInventoryGUI>().CheckForOutOfBounds();
                 }
+                if (GetComponent<PauseInventory>() != null)
+                {
+                    GetComponent<PauseInventory>().CheckForOutOfBounds();
+                }
             }
         }
 	}
@@ -44,6 +48,10 @@ public class GearTurner : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
             if(GetComponent<GearInventoryGUI>() != null)
             {
                 GetComponent<GearInventoryGUI>().CheckForOutOfBounds();
+            }
+            if (GetComponent<PauseInventory>() != null)
+            {
+                GetComponent<PauseInventory>().CheckForOutOfBounds();
             }
         }
     }

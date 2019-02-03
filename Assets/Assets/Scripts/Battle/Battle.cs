@@ -3,6 +3,26 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+public enum EffectTriggers
+{
+    FallBelow25Percent,
+    FallBelow50Percent,
+    RiseAbove25Percent,
+    RiseAbove50Percent,
+    TakeDamage,
+    DealDamage,
+    TakePhysicalDamage,
+    LeavePhysicalDamage,
+    TakeMagicDamage,
+    LeaveMagicDamage,
+    BasicAttack,
+    SpellCast,
+    GettingHealed,
+    Healing,
+    StartOfMatch,
+    EndOfMatch
+}
+
 public struct EnemyMove
 {
     public Vector2Int movePosition;
@@ -68,6 +88,16 @@ public struct moveQueue
     }
 }
 
+public enum BattleState
+{
+    None,
+    Swap,
+    Player,
+    Attack,
+    Enemy,
+    ReturnCamera
+}
+
 public class Battle : MonoBehaviour
 {
     //prefabs
@@ -90,7 +120,7 @@ public class Battle : MonoBehaviour
     /// Attack: Player finished moving, choosing what to do next
     /// Enemy: Enemy choosing moves
 	/// </summary>
-    public static string matchPart = "";
+    public static BattleState battleState = BattleState.None;
     //Whether or not the players can swap positions, only true if no one has moved yet
     public bool canSwap;
 
@@ -187,7 +217,7 @@ public class Battle : MonoBehaviour
         battleCamera = Instantiate(CameraPrefab);
         cameraFinalRot = battleCamera.transform.rotation;
         battleCamera.transform.SetPositionAndRotation(cameraInitPos, cameraInitRot);
-        cameraFinalPos = new Vector3(topLeft.x + (xSize / 2) + 3.5f, 19, topLeft.y + (ySize / 2));
+        cameraFinalPos = new Vector3(topLeft.x + (xSize / 2), 19, topLeft.y + (ySize / 2));
         battleCamera.GetComponent<Camera>().tag = "MainCamera";
         //moves the player and enemy models into their correct position
         for (int i = 0; i < GameStorage.activePlayerList.Count; i++)
@@ -207,7 +237,20 @@ public class Battle : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (matchPart.CompareTo("") != 0)
+        if(battleState == BattleState.ReturnCamera)
+        {
+            Debug.Log(mapPlayer.GetComponentInChildren<Camera>().transform.position + "|" + mapPlayer.GetComponentInChildren<Camera>().transform.rotation.eulerAngles);
+            mapPlayer.GetComponentInChildren<Camera>().transform.position = (Vector3.Lerp(mapPlayer.GetComponentInChildren<Camera>().transform.position, cameraFinalPos, 0.1f));
+            mapPlayer.GetComponentInChildren<Camera>().transform.rotation = (Quaternion.Lerp(mapPlayer.GetComponentInChildren<Camera>().transform.rotation, cameraFinalRot, 0.1f));
+            if (GameStorage.Approximately(mapPlayer.GetComponentInChildren<Camera>().transform.position, cameraFinalPos) && GameStorage.Approximately(mapPlayer.GetComponentInChildren<Camera>().transform.rotation, cameraFinalRot))
+            {
+                battleState = BattleState.None;
+                mapPlayer.GetComponentInChildren<Camera>().transform.position = cameraFinalPos;
+                mapPlayer.GetComponentInChildren<Camera>().transform.rotation = cameraFinalRot;
+                cameraFinalPos = new Vector3(-1, -100, -1);
+            }
+        }
+        else if (battleState == BattleState.None)
         {
             if (skillCastConfirmMenu.activeSelf == false)
             {
@@ -252,11 +295,6 @@ public class Battle : MonoBehaviour
                         {
                             updateTilesThisFrame = true;
                             movesGenerated = false;
-                            foreach (int pID in GameStorage.activePlayerList)
-                            {
-                                if (!GameStorage.playerMasterList[pID].moved)
-                                    playersDone = false;
-                            }
                             if (playersDone)
                             {
                                 //resets to start enemy moves
@@ -265,7 +303,6 @@ public class Battle : MonoBehaviour
                                     if (enemyList[j].cHealth > 0)
                                         enemyList[j].moved = false;
                                 }
-                                playersDone = true;
                             }
                         }
                     }
@@ -292,33 +329,29 @@ public class Battle : MonoBehaviour
                             movingEnemy++;
                             if (movingEnemy >= enemyList.Length)
                             {
-                                //resets to allow players to move and starts player's turn
-                                for (int j = 0; j < GameStorage.activePlayerList.Count; j++)
-                                {
-                                    if (GameStorage.playerMasterList[GameStorage.activePlayerList[j]].cHealth > 0 && !GameStorage.playerMasterList[GameStorage.activePlayerList[j]].statusList.Contains("sleep"))
-                                        GameStorage.playerMasterList[GameStorage.activePlayerList[j]].moved = false;
-                                }
-                                movingEnemy = 0;
+                                EndEnemyTurn();
                                 playersDone = false;
-                                turn++;
-                                foreach (int pID in GameStorage.activePlayerList)
-                                {
-                                    GameStorage.playerMasterList[pID].EndOfTurn();
-                                }
-                                foreach (Enemy e in enemyList)
-                                {
-                                    e.EndOfTurn();
-                                }
-                                matchPart = "player";
                             }
                         }
                     }
                 }
                 if (playersDone && !movesGenerated)
                 {
-                    matchPart = "enemy";
+                    Debug.Log("starting enemy turn");
+                    battleState = BattleState.Enemy;
                     selectedPlayer = -1;
-                    MoveEnemies();
+                    if (enemyList[movingEnemy].cHealth > 0)
+                        MoveEnemies();
+                    else
+                    {
+                        movingEnemy++;
+                        if (movingEnemy >= enemyList.Length)
+                        {
+                            EndEnemyTurn();
+                            playersDone = false;
+                        }
+                    }
+                    Debug.Log("End enemy turn " + enemyAnimMoves.Count);
                 }
 
                 if (selectedSpell != -1)
@@ -342,14 +375,16 @@ public class Battle : MonoBehaviour
             updateTilesThisFrame = false;
         }
         //animates the camera into position at the beginning of the battle
-        else if (cameraFinalPos != new Vector3(-1, -100, -1))
+        else if (battleCamera != null && cameraFinalPos != new Vector3(-1, -100, -1))
         {
             Debug.Log(battleCamera.transform.position + "|" + battleCamera.transform.rotation.eulerAngles);
             battleCamera.transform.position = (Vector3.Lerp(battleCamera.transform.position, cameraFinalPos, 0.1f));
             battleCamera.transform.rotation = (Quaternion.Lerp(battleCamera.transform.rotation, cameraFinalRot, 0.1f));
             if (GameStorage.Approximately(battleCamera.transform.position, cameraFinalPos) && GameStorage.Approximately(battleCamera.transform.rotation, cameraFinalRot))
             {
-                matchPart = "player";
+                battleState = BattleState.Player;
+                battleCamera.transform.position = cameraFinalPos;
+                battleCamera.transform.rotation = cameraFinalRot;
                 cameraFinalPos = new Vector3(-1, -100, -1);
                 //sets up the background variables
                 canSwap = true;
@@ -357,10 +392,32 @@ public class Battle : MonoBehaviour
         }
     }
 
+    private void EndEnemyTurn()
+    {
+        //resets to allow players to move and starts player's turn
+        for (int j = 0; j < GameStorage.activePlayerList.Count; j++)
+        {
+            if (GameStorage.playerMasterList[GameStorage.activePlayerList[j]].cHealth > 0 && !GameStorage.playerMasterList[GameStorage.activePlayerList[j]].statusList.Contains("sleep"))
+                GameStorage.playerMasterList[GameStorage.activePlayerList[j]].moved = false;
+        }
+        movingEnemy = 0;
+        turn++;
+        foreach (int pID in GameStorage.activePlayerList)
+        {
+            GameStorage.playerMasterList[pID].EndOfTurn();
+        }
+        foreach (Enemy e in enemyList)
+        {
+            e.EndOfTurn();
+        }
+        if (battleState != BattleState.ReturnCamera)
+            battleState = BattleState.Player;
+    }
+
     //resets variables when new battle starts
     private void ExpungeAll()
     {
-        matchPart = "";
+        battleState = BattleState.None;
         for (int x = 0; x < mapSizeX; x++)
         {
             for (int y = 0; y < mapSizeY; y++)
@@ -429,21 +486,28 @@ public class Battle : MonoBehaviour
     public void OnBattleEnd(bool won)
     {
         /* ToDo
-         * Actually trigger this
          * Animate camera return
          */
-        matchPart = "";
-        
         if (won)
         {
             foreach(int p in GameStorage.activePlayerList)
             {
                 GameStorage.playerMasterList[p].GainExp(200);
             }
-            mapPlayer.SetActive(true);
             Cursor.lockState = CursorLockMode.Locked;
+            mapPlayer.SetActive(true);
+            cameraFinalPos = mapPlayer.GetComponentInChildren<Camera>().transform.position;
+            cameraFinalRot = mapPlayer.GetComponentInChildren<Camera>().transform.rotation;
+            mapPlayer.GetComponentInChildren<Camera>().transform.SetPositionAndRotation(battleCamera.transform.position, battleCamera.transform.rotation);
+            ExpungeAll();
+            updateTilesThisFrame = false;
+            battleState = BattleState.ReturnCamera;
         }
-        ExpungeAll();
+        else
+        {
+            battleState = BattleState.None;
+            ExpungeAll();
+        }
     }
 
     public void ToggleDangerArea()
@@ -463,18 +527,41 @@ public class Battle : MonoBehaviour
     {
         if (canSwap)
         {
-            if (matchPart.CompareTo("swap") == 0)
+            if (battleState == BattleState.Swap)
             {
-                matchPart = "player";
+                battleState = BattleState.Player;
             }
             else
             {
-                matchPart = "swap";
+                battleState = BattleState.Swap;
             }
             selectedMoveSpot = new Vector2Int(-1, -1);
             moveMarker.SetActive(false);
             updateTilesThisFrame = true;
         }
+    }
+
+    //If player wants to end the turn before all ally pawns have been moved
+    public void EndPlayerTurnEarly()
+    {
+        updateTilesThisFrame = true;
+        movesGenerated = false;
+        selectedEnemy = -1;
+        selectedMoveSpot = new Vector2Int(-1, -1);
+        moveMarker.SetActive(false);
+        selectedSpell = -1;
+        canSwap = false;
+        //resets to start enemy moves
+        for (int j = 0; j < enemyList.Length; j++)
+        {
+            if (enemyList[j].cHealth > 0)
+                enemyList[j].moved = false;
+        }
+        for (int j = 0; j < GameStorage.activePlayerList.Count; j++)
+        {
+            GameStorage.playerMasterList[GameStorage.activePlayerList[j]].moved = true;
+        }
+        battleState = BattleState.Enemy;
     }
 
     //activates when spell button is hovered
@@ -519,7 +606,7 @@ public class Battle : MonoBehaviour
             }
         }
         //swaps players
-        else if (selectedPlayer != -1 && matchPart.CompareTo("swap") == 0)
+        else if (selectedPlayer != -1 && battleState == BattleState.Swap)
         {
             int n = PlayerAtPos(pos.x, pos.y);
             GameStorage.playerMasterList[GameStorage.activePlayerList[n]].position = GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position;
@@ -579,7 +666,7 @@ public class Battle : MonoBehaviour
         //selecting a different player
         else if (hoveredSpell == -1)
         {
-            if (matchPart.CompareTo("attack") != 0)
+            if (battleState == BattleState.Attack)
             {
                 selectedPlayer = PlayerAtPos(pos.x, pos.y);
                 selectedMoveSpot = new Vector2Int(-1, -1);
@@ -588,7 +675,7 @@ public class Battle : MonoBehaviour
             }
 
             //selecting an enemy
-            if (matchPart.CompareTo("attack") != 0)
+            if (battleState == BattleState.Attack)
                 selectedEnemy = EnemyAtPos(pos.x, pos.y);
             else if (tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerAttackRange)
             {
@@ -622,7 +709,7 @@ public class Battle : MonoBehaviour
             moveMarker.SetActive(false);
             canSwap = false;
             movesGenerated = true;
-            matchPart = "attack";
+            battleState = BattleState.Attack;
         }
     }
 
@@ -875,7 +962,7 @@ public class Battle : MonoBehaviour
         if (Mathf.Abs(e.position.y - p.position.y) > dist)
             dist = Mathf.Abs(e.position.y - p.position.y);
 
-        string type = Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[p.equippedWeapon]).subType].attackType;
+        int type = ((EquippableBase)Registry.ItemRegistry[p.equippedWeapon]).statType;
         foreach (RangeDependentAttack r in Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[p.equippedWeapon]).subType].specialRanges)
         {
             if (r.atDistance == dist)
@@ -883,13 +970,10 @@ public class Battle : MonoBehaviour
                 type = r.damageType;
             }
         }
-        if (type.Contains("physical"))
+        if (type == 0)
             return Mathf.RoundToInt((p.GetEffectiveAtk(dist) * 3.0f) / e.GetEffectiveDef(dist));
-        else if (type.Contains("magic"))
-            return Mathf.RoundToInt((p.GetEffectiveMAtk(dist) * 3.0f) / e.GetEffectiveMDef(dist));
         else
-            ///fix this
-            return 0;
+            return Mathf.RoundToInt((p.GetEffectiveMAtk(dist) * 3.0f) / e.GetEffectiveMDef(dist));
     }
 
     //performs attack, checks for an executes possible counterattack
@@ -901,7 +985,7 @@ public class Battle : MonoBehaviour
         //if healing a player
         if (selectedEnemy >= enemyList.Length)
         {
-            GameStorage.playerMasterList[GameStorage.activePlayerList[selectedEnemy - enemyList.Length]].Heal(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon]).strength);
+            GameStorage.playerMasterList[GameStorage.activePlayerList[selectedEnemy - enemyList.Length]].Heal(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].GetEffectiveAtk() / 2);
         }
         //if attacking an enemy
         else
@@ -965,6 +1049,7 @@ public class Battle : MonoBehaviour
                 if (enemyList[enemy].cHealth <= 0)
                 {
                     CheckForDeath();
+                    Debug.Log(battleState);
                 }
             }
         }
@@ -974,7 +1059,8 @@ public class Battle : MonoBehaviour
     public void EndPlayerAttack()
     {
         GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].moved = true;
-        matchPart = "player";
+        if(battleState != BattleState.ReturnCamera)
+            battleState = BattleState.Player;
         selectedPlayer = -1;
         selectedEnemy = -1;
         updateTilesThisFrame = true;
@@ -1089,7 +1175,7 @@ public class Battle : MonoBehaviour
                 }
             }
         }
-        if (matchPart.CompareTo("swap") == 0)
+        if (battleState == BattleState.Swap)
         {
             for (int p = 0; p < GameStorage.activePlayerList.Count; p++)
             {
@@ -1099,7 +1185,7 @@ public class Battle : MonoBehaviour
         }
 
         //if we need to render player moves
-        else if (matchPart.CompareTo("player") == 0 && selectedPlayer != -1)
+        else if (battleState == BattleState.Player && selectedPlayer != -1)
         {
             int maxMove = GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].GetMoveSpeed();
             WeaponType weapon;
@@ -1202,7 +1288,7 @@ public class Battle : MonoBehaviour
                 }
             }
         }
-        if (matchPart.CompareTo("attack") == 0)
+        if (battleState == BattleState.Attack)
         {
             WeaponType weapon;
             if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon]).subType, out weapon))
@@ -1212,7 +1298,7 @@ public class Battle : MonoBehaviour
             {
                 for (int y = 0; y < mapSizeY; y++)
                 {
-                    if(!((EnemyAtPos(x, y) != -1 && (weapon.attackType.Contains("magic") || weapon.attackType.Contains("physical"))) || (PlayerAtPos(x, y) == -1 && weapon.attackType.Contains("healing"))))
+                    if((EnemyAtPos(x, y) == -1 || ((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon]).strength == 0) && (PlayerAtPos(x, y) == -1 || !weapon.heals))
                         tileList[x, (mapSizeY - 1) - y].GetComponent<BattleTile>().playerAttackRange = false;
                 }
             }
@@ -1542,13 +1628,14 @@ public class Battle : MonoBehaviour
         selectedPlayer = -1;
         selectedEnemy = -1;
         selectedSpell = -1;
-        matchPart = "player";
+        battleState = BattleState.Player;
         updateTilesThisFrame = true;
         CheckForDeath();
     }
 
     public void CancelSkillCast()
     {
+        selectedEnemy = -1;
         skillCastConfirmMenu.SetActive(false);
     }
 }

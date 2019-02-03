@@ -46,7 +46,7 @@ public class Player : BattleParticipant
             critChance = 15 + mT;
             mHealth = 150 + mT;
             cHealth = mHealth / 2;
-            equippedWeapon = "Wooden Bow";
+            equippedWeapon = "Dagger";
             skillQuickList.Add(new Vector2Int(1, 1));
             skillQuickList.Add(new Vector2Int(1, 2));
             skillQuickList.Add(new Vector2Int(1, 3));
@@ -150,16 +150,34 @@ public class Player : BattleParticipant
             }
         }
         file.Close();
+        cHealth /= 2;
+        equippedWeapon = "Demonic Sword";
     }
 
-	/// <summary>
-	/// Equips the new weapon, returning the old one so it can be returned to the inventory. 
-	/// </summary>
-	public string EquipWeapon(string w){
-		string weap = equippedWeapon;
-		equippedWeapon = w;
-		return weap;
-	}
+    /// <summary>
+    /// Equips the new item, returning the old one so it can be returned to the inventory. 
+    /// </summary>
+    public string EquipItem(string i, int slot) {
+        string item = equipment[slot];
+        equipment[slot] = i;
+		return item;
+    }
+
+    public void CheckHealthChange(int prevMax)
+    {
+        if (cHealth > GetEffectiveMaxHealth())
+            cHealth = GetEffectiveMaxHealth();
+        if(cHealth == prevMax)
+            cHealth = GetEffectiveMaxHealth();
+    }
+
+    /// <summary>
+    /// Returns the item equipped in inventory slot "slot". 
+    /// </summary>
+    public string GetEquipped(int slot)
+    {
+        return equipment[slot];
+    }
 
     public void GainExp(int e){
 		exp += e;

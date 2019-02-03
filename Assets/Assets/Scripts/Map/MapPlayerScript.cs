@@ -15,7 +15,7 @@ public class MapPlayerScript : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        if (!PauseGUI.paused && Battle.matchPart == "")
+        if (!PauseGUI.paused && Battle.battleState == BattleState.None)
         {
             //only for starting battles right now, later can be used for doors and NPCs
             if (Input.GetKeyDown("r"))

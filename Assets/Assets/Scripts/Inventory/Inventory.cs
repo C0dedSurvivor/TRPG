@@ -185,6 +185,8 @@ public class Inventory
         AddItem("Steel Axe", 1);
         AddItem("Xarok", 1);
 
+        AddItem("Staff of Healing", 1);
+
         SortInventory((int)sortingType);
     }
 
@@ -283,31 +285,44 @@ public class Inventory
 
     public static int RemoveItem(string itemName, int amount)
     {
-        if (Registry.ItemRegistry[itemName] is EquippableBase)
+        for (int i = 0; i < itemList.Count; i++)
         {
-            itemList.Remove(new StoredItem(itemName));
-            return 1;
+            if (itemList[i].Name == itemName)
+            {
+                itemList[i].amount -= amount;
+                if (itemList[i].amount <= 0)
+                {
+                    itemList.RemoveAt(i);
+                }
+                return amount;
+            }
         }
-        //if it is either a base material or a battle item, code don't care
+        //if it doesn't already exist
+        return 0;
+    }
+
+    public static int GetItemAmount(string i)
+    {
+        if (Registry.ItemRegistry[i] is EquippableBase) {
+            int amt = 0;
+            foreach (StoredItem s in itemList)
+            {
+                if (s.Name == i)
+                    amt++;
+            }
+            return amt;
+        }
         else
         {
-            for(int i = 0; i < itemList.Count; i++)
+            foreach (StoredItem s in itemList)
             {
-                if (itemList[i].Name == itemName)
-                {
-                    itemList[i].amount -= amount;
-                    if (itemList[i].amount - amount <= 0)
-                    {
-                        itemList.Remove(new StoredItem(itemName));
-                    }
-                    return amount;
-                }
+                if (s.Name == i)
+                    return s.amount;
             }
-            //if it doesn't already exist
-            return 0;
         }
+        return 0;
     }
-    
+
     private static StoredItem Copy(StoredItem i)
     {
         return new StoredItem(i.Name, i.amount);

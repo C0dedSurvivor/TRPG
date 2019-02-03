@@ -12,6 +12,7 @@ public class SkillTreeGUI : MonoBehaviour {
     public Button skillButtonPrefab;
     public Button skillTreeButtonPrefab;
     public Image lineRendererPrefab;
+
     public GameObject displayWindow;
     public GameObject skillWindow;
     public GameObject skillInfo;
@@ -20,13 +21,18 @@ public class SkillTreeGUI : MonoBehaviour {
     public Text skillPointCounter;
     public float UILineWidth;
     private int currentSkillTree;
+
     private List<Button> skillButtons;
     private List<Button> skillTreeButtons;
     private List<Image> UILines;
+
     private int playerID;
 
     //Which skill is selected to be equipped in the quick switcher
     private int selectedSkill;
+
+    private float buttonXSpacing = 100;
+    private float buttonYSpacing = 70;
 
     GraphicRaycaster m_Raycaster;
     PointerEventData m_PointerEventData;
@@ -38,6 +44,11 @@ public class SkillTreeGUI : MonoBehaviour {
         skillTreeButtons = new List<Button>();
         UILines = new List<Image>();
         displayWindow.transform.position = new Vector3(242.5f, 210, 0);
+
+        Debug.Log(Screen.width + "|" + Screen.height);
+
+        buttonXSpacing *= Screen.width / 930.0f;
+        buttonYSpacing *= Screen.height / 470.0f;
 
         //Fetch the Raycaster from the GameObject (the Canvas)
         m_Raycaster = GetComponent<GraphicRaycaster>();
@@ -91,7 +102,7 @@ public class SkillTreeGUI : MonoBehaviour {
         foreach(int tree in GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList.Keys)
         {
             i++;
-            skillTreeButtons.Add(Instantiate(skillTreeButtonPrefab, new Vector3((i - 1) * 48 - 275, 185, 0) + skillWindow.transform.position, Quaternion.Euler(Vector3.zero), skillWindow.transform));
+            skillTreeButtons.Add(Instantiate(skillTreeButtonPrefab, new Vector3((i - 1) * 44 - 375, 160, 0) + skillWindow.transform.position, Quaternion.Euler(Vector3.zero), skillWindow.transform));
             int j = tree;
             skillTreeButtons[skillTreeButtons.Count - 1].GetComponentInChildren<Text>().text = j + "";
             skillTreeButtons[skillTreeButtons.Count - 1].onClick.AddListener(delegate { ChangeShownSkillTree(j); });
@@ -174,31 +185,31 @@ public class SkillTreeGUI : MonoBehaviour {
                 //normalizes the position of skills that need to be between other skills
                 if(halfMadeButtons.Count % 2 == 0)
                 {
-                    if(pos % 70 != Mathf.Sign(pos) * 35 && pos % 70 != 0)
+                    if(pos % buttonYSpacing != Mathf.Sign(pos) * (buttonYSpacing / 2.0f) && pos % buttonYSpacing != 0)
                     {
-                        pos = 70 * (Mathf.RoundToInt(pos / 70)) + Mathf.Sign(pos) * 35;
+                        pos = buttonYSpacing * (Mathf.RoundToInt(pos / buttonYSpacing)) + Mathf.Sign(pos) * (buttonYSpacing / 2.0f);
                     }
                 }
                 else
                 {
-                    if (pos % 70 != 0 && pos % 70 != Mathf.Sign(pos) * 35)
+                    if (pos % buttonYSpacing != 0 && pos % buttonYSpacing != Mathf.Sign(pos) * (buttonYSpacing / 2.0f))
                     {
-                        pos = 70 * (Mathf.RoundToInt(pos / 70));
+                        pos = buttonYSpacing * (Mathf.RoundToInt(pos / buttonYSpacing));
                     }
                 }
                 Debug.Log(pos);
                 float displacement = 0;
                 if(halfMadeButtons.Count % 2 == 0)
-                    displacement = 35;
+                    displacement = (buttonYSpacing / 2.0f);
                 bool conflictionSwitch = true;
                 while (madeButtons.ContainsValue(new Vector2(xPos, pos + displacement)))
                 {
                     if(conflictionSwitch)
                         displacement *= -1;
                     if (displacement >= 0)
-                         displacement += 70;
+                         displacement += buttonYSpacing;
                     else if(!conflictionSwitch)
-                        displacement -= 70;
+                        displacement -= buttonYSpacing;
                     if (madeButtons.ContainsValue(new Vector2(xPos, pos + displacement))) {
                         int impactedSkill = -1;
                         foreach (int key in madeButtons.Keys)
@@ -228,7 +239,7 @@ public class SkillTreeGUI : MonoBehaviour {
                     minY = pos + displacement;
                 madeButtons.Add(i, new Vector2(xPos, pos + displacement));
             }
-            xPos += 100;
+            xPos += Mathf.RoundToInt(buttonXSpacing);
         }
         displayWindow.GetComponent<LayoutElement>().minWidth = xPos + 300;
         displayWindow.GetComponent<LayoutElement>().minHeight = maxY - minY + 100;
@@ -266,27 +277,28 @@ public class SkillTreeGUI : MonoBehaviour {
         {
             foreach (int j in GameStorage.skillTreeList[skillTree][key].dependencies)
             {
-                Vector3 differenceVector = madeButtons[key] - madeButtons[j];
+                Vector3 differenceVector = (madeButtons[key] - madeButtons[j]) * 2.4f;
 
                 UILines.Add(Instantiate(lineRendererPrefab, displayWindow.transform));
                 UILines[UILines.Count - 1].rectTransform.sizeDelta = new Vector2(differenceVector.magnitude, UILineWidth);
-                UILines[UILines.Count - 1].rectTransform.pivot = new Vector2(0, 0.5f);
                 UILines[UILines.Count - 1].rectTransform.position = madeButtons[j] + new Vector2(skillWindow.transform.position.x - Mathf.Clamp(displayWindow.GetComponent<LayoutElement>().minWidth * 0.5f, 300, float.MaxValue) + 50, skillWindow.transform.position.y);
                 float angle = Mathf.Atan2(differenceVector.y, differenceVector.x) * Mathf.Rad2Deg;
                 UILines[UILines.Count - 1].rectTransform.rotation = Quaternion.Euler(0, 0, angle);
                 UILines[UILines.Count - 1].transform.SetAsFirstSibling();
             }
         }
-        if(displayWindow.GetComponent<LayoutElement>().minWidth > 600)
-            displayWindow.transform.localPosition = new Vector3(displayWindow.GetComponent<LayoutElement>().minWidth * 0.2f, 0, 0);
+        displayWindow.GetComponent<LayoutElement>().minWidth *= 2.4f;
+        displayWindow.GetComponent<LayoutElement>().minHeight *= 2.4f;
+        //if(displayWindow.GetComponent<LayoutElement>().minWidth > 600)
+        //    displayWindow.transform.localPosition = new Vector3(displayWindow.GetComponent<LayoutElement>().minWidth * 0.2f, 0, 0);
     }
 
     public void MouseOverSkill(int skill, int unlockState)
     {
         skillInfo.SetActive(true);
         skillInfo.transform.position = Input.mousePosition + new Vector3(2, -2, 0);
-        if (skillInfo.transform.localPosition.y < 0 && Mathf.Abs(skillInfo.transform.localPosition.y) + skillInfo.GetComponent<VerticalLayoutGroup>().preferredHeight > Screen.height / 2)
-            skillInfo.transform.position = new Vector3(skillInfo.transform.position.x, Screen.height / 2 - skillInfo.GetComponent<VerticalLayoutGroup>().preferredHeight / 2, skillInfo.transform.position.z);
+        //if (skillInfo.transform.localPosition.y < 0 && Mathf.Abs(skillInfo.transform.localPosition.y) + skillInfo.GetComponent<VerticalLayoutGroup>().preferredHeight > Screen.height / 2)
+        //    skillInfo.transform.position = new Vector3(skillInfo.transform.position.x, Screen.height / 2 - skillInfo.GetComponent<VerticalLayoutGroup>().preferredHeight / 2, skillInfo.transform.position.z);
         skillInfo.transform.GetChild(0).GetComponent<Text>().text = GameStorage.skillTreeList[currentSkillTree][skill].name;
         string type = "";
         if (GameStorage.skillTreeList[currentSkillTree][skill].partList.OfType<DamagePart>().FirstOrDefault() != null)

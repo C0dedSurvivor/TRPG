@@ -15,6 +15,8 @@ public class GameStorage : MonoBehaviour {
     public static List<Player> playerMasterList = new List<Player>();
     public static List<int> activePlayerList = new List<int>(){0, 1, 2, 3};
 
+    public static int playerCurrency;
+
     /*
      * 
      * Map storage and access
@@ -344,7 +346,19 @@ public class GameStorage : MonoBehaviour {
 
     public static bool Approximately(Vector3 v1, Vector3 v2)
     {
-        if (Mathf.Approximately(v1.x, v2.x) && Mathf.Approximately(v1.y, v2.y) && Mathf.Approximately(v1.z, v2.z))
+        if (Approximately(v1.x, v2.x) && Approximately(v1.y, v2.y) && Approximately(v1.z, v2.z))
+        {
+            Debug.Log("true");
+            return true;
+        }
+        Debug.Log("false");
+        return false;
+    }
+    
+    public static bool Approximately(Quaternion v1, Quaternion v2)
+    {
+        Debug.Log(v1.eulerAngles.x + " = " + v2.eulerAngles.x + " | " + v1.eulerAngles.y + " = " + v2.eulerAngles.y + " | " + v1.eulerAngles.z + " = " + v2.eulerAngles.z);
+        if (Approximately(v1.eulerAngles.x, v2.eulerAngles.x) && Approximately(v1.eulerAngles.y, v2.eulerAngles.y) && Approximately(v1.eulerAngles.z, v2.eulerAngles.z))
         {
             Debug.Log("true");
             return true;
@@ -353,12 +367,9 @@ public class GameStorage : MonoBehaviour {
         return false;
     }
 
-    //the default Approximately didn't like me, hense fuckYouEpsilon
-    public static bool Approximately(Quaternion v1, Quaternion v2)
+    public static bool Approximately(float f1, float f2)
     {
-        bool fuckYouEpsilon = (Mathf.Approximately(v1.eulerAngles.y, v2.eulerAngles.y) || Mathf.Abs(v1.eulerAngles.y) < 0.000001f);
-        Debug.Log(v1.eulerAngles.x + " = " + v2.eulerAngles.x + " | " + v1.eulerAngles.y + " = " + v2.eulerAngles.y + " | " + v1.eulerAngles.z + " = " + v2.eulerAngles.z);
-        if (Mathf.Approximately(v1.eulerAngles.x, v2.eulerAngles.x) && fuckYouEpsilon && Mathf.Approximately(v1.eulerAngles.z, v2.eulerAngles.z))
+        if (f1 < f2 + (Mathf.Pow(1, -10)) && f1 > f2 - (Mathf.Pow(1, -10)))
         {
             Debug.Log("true");
             return true;

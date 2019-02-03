@@ -180,24 +180,47 @@ public class BattleParticipant {
     private float GetDistMod(int dist)
     {
         float damageMod = 1.0f;
-        foreach (RangeDependentAttack r in Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[equippedWeapon]).subType].specialRanges)
+        if (equippedWeapon != null)
         {
-            if (r.atDistance == dist)
+            foreach (RangeDependentAttack r in Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[equippedWeapon]).subType].specialRanges)
             {
-                damageMod = r.damageMult;
+                if (r.atDistance == dist)
+                {
+                    damageMod = r.damageMult;
+                }
             }
         }
         return damageMod;
     }
 
     //all of these grab the combined total of base stat, weapon stats and stat mods for a certain stat
+    public int GetEffectiveMaxHealth()
+    {
+        int value = mHealth;
+        foreach (string i in equipment)
+        {
+            if (i != null)
+            {
+                value += ((EquippableBase)Registry.ItemRegistry[i]).health;
+            }
+        }
+
+        return value;
+    }
+
     public int GetEffectiveAtk(int dist = -1)
     {
-        int value;
-        if (Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[equippedWeapon]).subType].attackType.Contains("magical"))
-            value = Mathf.RoundToInt(attack * GetDistMod(dist));
-        else
-            value = Mathf.RoundToInt((attack + ((EquippableBase)Registry.ItemRegistry[equippedWeapon]).strength) * GetDistMod(dist));
+        int value = attack;
+        foreach(string i in equipment)
+        {
+            if(i != null)
+            {
+                if(((EquippableBase)Registry.ItemRegistry[i]).statType == 0)
+                    value += ((EquippableBase)Registry.ItemRegistry[i]).strength;
+            }
+        }
+        value = Mathf.RoundToInt(value * GetDistMod(dist));
+
         statMod s = GetStatMod("atk");
 
         value += s.flatMod;
@@ -208,11 +231,17 @@ public class BattleParticipant {
 
     public int GetEffectiveDef(int dist = -1)
     {
-        int value;
-        if (Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[equippedWeapon]).subType].attackType.Contains("magical"))
-            value = Mathf.RoundToInt(defense * GetDistMod(dist));
-        else
-            value = Mathf.RoundToInt((defense + ((EquippableBase)Registry.ItemRegistry[equippedWeapon]).defense) * GetDistMod(dist));
+        int value = defense;
+
+        foreach (string i in equipment)
+        {
+            if (i != null)
+            {
+                if (((EquippableBase)Registry.ItemRegistry[i]).statType == 0)
+                    value += ((EquippableBase)Registry.ItemRegistry[i]).defense;
+            }
+        }
+
         statMod s = GetStatMod("def");
 
         value += s.flatMod;
@@ -223,11 +252,18 @@ public class BattleParticipant {
 
     public int GetEffectiveMAtk(int dist = -1)
     {
-        int value;
-        if (Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[equippedWeapon]).subType].attackType.Contains("physical"))
-            value = Mathf.RoundToInt(mAttack * GetDistMod(dist));
-        else
-            value = Mathf.RoundToInt((mAttack + ((EquippableBase)Registry.ItemRegistry[equippedWeapon]).strength) * GetDistMod(dist));
+        int value = mAttack;
+
+        foreach (string i in equipment)
+        {
+            if (i != null)
+            {
+                if (((EquippableBase)Registry.ItemRegistry[i]).statType == 1)
+                    value += ((EquippableBase)Registry.ItemRegistry[i]).strength;
+            }
+        }
+
+        value = Mathf.RoundToInt(value * GetDistMod(dist));
         statMod s = GetStatMod("matk");
 
         value += s.flatMod;
@@ -238,11 +274,17 @@ public class BattleParticipant {
 
     public int GetEffectiveMDef(int dist = -1)
     {
-        int value;
-        if (Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[equippedWeapon]).subType].attackType.Contains("physical"))
-            value = Mathf.RoundToInt(mDefense * GetDistMod(dist));
-        else
-            value = Mathf.RoundToInt((mDefense + ((EquippableBase)Registry.ItemRegistry[equippedWeapon]).defense) * GetDistMod(dist));
+        int value = defense;
+
+        foreach (string i in equipment)
+        {
+            if (i != null)
+            {
+                if (((EquippableBase)Registry.ItemRegistry[i]).statType == 1)
+                    value += ((EquippableBase)Registry.ItemRegistry[i]).defense;
+            }
+        }
+
         statMod s = GetStatMod("mdef");
 
         value += s.flatMod;
@@ -253,8 +295,14 @@ public class BattleParticipant {
 
     public int GetEffectiveCrit()
     {
-        int value;
-        value = critChance + ((EquippableBase)Registry.ItemRegistry[equippedWeapon]).critChanceMod;
+        int value = critChance;
+        foreach(string i in equipment)
+        {
+            if (i != null)
+            {
+                value += ((EquippableBase)Registry.ItemRegistry[i]).critChanceMod;
+            }
+        }
         statMod s = GetStatMod("crit");
 
         value += s.flatMod;
@@ -285,13 +333,13 @@ public class BattleParticipant {
     //makes sure you can't be overhealed
     public void Heal(int h)
     {
-        cHealth = Mathf.Clamp(cHealth + h, 0, mHealth);
+        cHealth = Mathf.Clamp(cHealth + h, 0, GetEffectiveMaxHealth());
     }
 
     //makes sure you can't be overkilled
     public void Damage(int d)
     {
-        cHealth = Mathf.Clamp(cHealth - d, 0, mHealth);
+        cHealth = Mathf.Clamp(cHealth - d, 0, GetEffectiveMaxHealth());
         if (d > 0 && statusList.Contains("sleep"))
             statusList.Remove("sleep");
     }

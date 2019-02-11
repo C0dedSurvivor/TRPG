@@ -26,14 +26,18 @@ public class SkillTreeGUI : MonoBehaviour {
     private List<Button> skillTreeButtons;
     private List<Image> UILines;
 
+    //The ID of the player whose skill trees we are looking at
     private int playerID;
 
     //Which skill is selected to be equipped in the quick switcher
     private int selectedSkill;
 
-    private float buttonXSpacing = 100;
-    private float buttonYSpacing = 70;
+    //The buffer space between the skill buttons
+    // **MODIFIABLE BUT MIGHT BREAK, EDIT AT YOUR OWN RISK**
+    private int buttonXSpacing = 100;
+    private int buttonYSpacing = 70;
 
+    //Used to tell if the mouse is over a skill button
     GraphicRaycaster m_Raycaster;
     PointerEventData m_PointerEventData;
     EventSystem m_EventSystem;
@@ -47,8 +51,8 @@ public class SkillTreeGUI : MonoBehaviour {
 
         Debug.Log(Screen.width + "|" + Screen.height);
 
-        buttonXSpacing *= Screen.width / 930.0f;
-        buttonYSpacing *= Screen.height / 470.0f;
+        buttonXSpacing = (int)(buttonXSpacing * Screen.width / 930.0f);
+        buttonYSpacing = (int)(buttonYSpacing * Screen.height / 470.0f);
 
         //Fetch the Raycaster from the GameObject (the Canvas)
         m_Raycaster = GetComponent<GraphicRaycaster>();
@@ -102,7 +106,13 @@ public class SkillTreeGUI : MonoBehaviour {
         foreach(int tree in GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList.Keys)
         {
             i++;
-            skillTreeButtons.Add(Instantiate(skillTreeButtonPrefab, new Vector3((i - 1) * 44 - 375, 160, 0) + skillWindow.transform.position, Quaternion.Euler(Vector3.zero), skillWindow.transform));
+            Vector2 size = skillTreeButtonPrefab.GetComponent<RectTransform>().sizeDelta;
+
+
+            //X is jsut barely off, y is pretty far off
+
+
+            skillTreeButtons.Add(Instantiate(skillTreeButtonPrefab, new Vector3((i - 1) * (size.x / (2140.0f / Screen.width)) - (Screen.width / 2 - 185 / (2140.0f / Screen.width)), Screen.height / 2 - (185 / (1080.0f / Screen.height) - (size.y / (1080.0f / Screen.height))), 0) + skillWindow.transform.position, Quaternion.Euler(Vector3.zero), skillWindow.transform));
             int j = tree;
             skillTreeButtons[skillTreeButtons.Count - 1].GetComponentInChildren<Text>().text = j + "";
             skillTreeButtons[skillTreeButtons.Count - 1].onClick.AddListener(delegate { ChangeShownSkillTree(j); });
@@ -113,9 +123,6 @@ public class SkillTreeGUI : MonoBehaviour {
 
     public void ChangeShownSkillTree(int skillTree)
     {
-        ///doesn't work
-
-
         foreach (Button b in skillTreeButtons)
         {
             if (b.GetComponentInChildren<Text>().text == "" + currentSkillTree)
@@ -241,8 +248,8 @@ public class SkillTreeGUI : MonoBehaviour {
             }
             xPos += Mathf.RoundToInt(buttonXSpacing);
         }
-        displayWindow.GetComponent<LayoutElement>().minWidth = xPos + 300;
-        displayWindow.GetComponent<LayoutElement>().minHeight = maxY - minY + 100;
+        displayWindow.GetComponent<LayoutElement>().minWidth = xPos;
+        displayWindow.GetComponent<LayoutElement>().minHeight = maxY - minY;
         displayWindow.transform.localPosition = Vector2.zero;
         foreach(int id in madeButtons.Keys)
         {
@@ -268,6 +275,10 @@ public class SkillTreeGUI : MonoBehaviour {
                 {
                     skillButtons[skillButtons.Count - 1].image.color = new Color(1, 0.4f, 0.4f, 1);
                 }
+                else
+                {
+                    skillButtons[skillButtons.Count - 1].image.color = Color.green;
+                }
             }
             skillButtons[skillButtons.Count - 1].image.overrideSprite = Resources.Load<Sprite>("Images/SkillIcons/" + GameStorage.skillTreeList[skillTree][id].name);
             //Debug.Log(skillButtons[skillButtons.Count - 1].transform.position + "|" + skillWindow.transform.position + "|" + displayWindow.transform.position);
@@ -277,7 +288,7 @@ public class SkillTreeGUI : MonoBehaviour {
         {
             foreach (int j in GameStorage.skillTreeList[skillTree][key].dependencies)
             {
-                Vector3 differenceVector = (madeButtons[key] - madeButtons[j]) * 2.4f;
+                Vector3 differenceVector = (madeButtons[key] - madeButtons[j]) * (new Vector2(2140.0f / Screen.width, 1080.0f / Screen.height));
 
                 UILines.Add(Instantiate(lineRendererPrefab, displayWindow.transform));
                 UILines[UILines.Count - 1].rectTransform.sizeDelta = new Vector2(differenceVector.magnitude, UILineWidth);
@@ -287,8 +298,9 @@ public class SkillTreeGUI : MonoBehaviour {
                 UILines[UILines.Count - 1].transform.SetAsFirstSibling();
             }
         }
-        displayWindow.GetComponent<LayoutElement>().minWidth *= 2.4f;
-        displayWindow.GetComponent<LayoutElement>().minHeight *= 2.4f;
+        Debug.Log("normalized: " + skillWindow.GetComponent<RectTransform>().sizeDelta);
+        displayWindow.GetComponent<LayoutElement>().minWidth *= (2000.0f / Screen.width);
+        displayWindow.GetComponent<LayoutElement>().minHeight *= (1200.0f / Screen.height);
         //if(displayWindow.GetComponent<LayoutElement>().minWidth > 600)
         //    displayWindow.transform.localPosition = new Vector3(displayWindow.GetComponent<LayoutElement>().minWidth * 0.2f, 0, 0);
     }
@@ -448,7 +460,7 @@ public class SkillTreeGUI : MonoBehaviour {
                     }
                     else
                     {
-                        b.image.color = Color.red;
+                        b.image.color = new Color(1, 0.4f, 0.4f, 1);
                     }
                 }
             }

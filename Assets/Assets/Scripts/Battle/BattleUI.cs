@@ -89,7 +89,7 @@ public class BattleUI : MonoBehaviour {
                 stats[5].text = "Speed: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]].GetMoveSpeed();
                 stats[6].text = "Crit: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]].GetEffectiveCrit() + "%";
                 stats[7].text = "Health: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]].cHealth + "/" + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]].mHealth;
-                if (!GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]].moved)
+                if (Battle.battleState != BattleState.Swap && !GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]].moved)
                 {
                     quickSkill1.gameObject.SetActive(true);
                     quickSkill2.gameObject.SetActive(true);

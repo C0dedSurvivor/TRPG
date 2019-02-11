@@ -118,8 +118,8 @@ public class GameStorage : MonoBehaviour {
         {
             for (int y = 0; y < ySize; y++)
             {
-                Debug.Log((x - ((int)Mathf.Ceil(xSize / 2.0f) - 1) + centerX) + " | " + (mapYsize - trueBY - (ySize - y)));
-                Debug.Log(x + " - (" + (int)Mathf.Ceil(xSize / 2.0f) + " - 1) + " + centerX + " | " + mapYsize + " - (" + ySize + " - (" + trueBY + " - " + y + "))");
+                //Debug.Log((x - ((int)Mathf.Ceil(xSize / 2.0f) - 1) + centerX) + " | " + (mapYsize - trueBY - (ySize - y)));
+                //Debug.Log(x + " - (" + (int)Mathf.Ceil(xSize / 2.0f) + " - 1) + " + centerX + " | " + mapYsize + " - (" + ySize + " - (" + trueBY + " - " + y + "))");
                 bMap[x, y] = map[x - ((int)Mathf.Ceil(xSize / 2.0f) - 1) + centerX, mapYsize - trueBY - (ySize - y)];
                 if (bMap[x, y] == 1 || bMap[x, y] == 2 || bMap[x, y] == 4 || bMap[x, y] == 5)
                     tileCount++;
@@ -369,7 +369,7 @@ public class GameStorage : MonoBehaviour {
 
     public static bool Approximately(float f1, float f2)
     {
-        if (f1 < f2 + (Mathf.Pow(1, -10)) && f1 > f2 - (Mathf.Pow(1, -10)))
+        if (f1 < f2 + (Mathf.Pow(1, -25)) && f1 > f2 - (Mathf.Pow(1, -25)))
         {
             Debug.Log("true");
             return true;

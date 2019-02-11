@@ -250,7 +250,7 @@ public class Battle : MonoBehaviour
                 cameraFinalPos = new Vector3(-1, -100, -1);
             }
         }
-        else if (battleState == BattleState.None)
+        else if (battleState != BattleState.None)
         {
             if (skillCastConfirmMenu.activeSelf == false)
             {
@@ -262,7 +262,7 @@ public class Battle : MonoBehaviour
                     int layerMask = 1 << 8;
                     if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
                     {
-                        //print("I'm looking at " + hit.transform.GetComponent<BattleTile>().arrayID.x);
+                        print("I'm looking at " + hit.transform.GetComponent<BattleTile>().arrayID);
                         SpaceInteraction(hit.transform.GetComponent<BattleTile>().arrayID);
                         updateTilesThisFrame = true;
                     }
@@ -536,6 +536,8 @@ public class Battle : MonoBehaviour
                 battleState = BattleState.Swap;
             }
             selectedMoveSpot = new Vector2Int(-1, -1);
+            selectedEnemy = -1;
+            selectedPlayer = -1;
             moveMarker.SetActive(false);
             updateTilesThisFrame = true;
         }
@@ -616,7 +618,7 @@ public class Battle : MonoBehaviour
             selectedPlayer = -1;
         }
         //if player is moving something
-        else if (tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerMoveRange && !GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].moved && !movesGenerated)
+        else if (battleState != BattleState.Swap && tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerMoveRange && !GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].moved && !movesGenerated)
         {
             selectedMoveSpot.Set(pos.x, pos.y);
             moveMarker.transform.position = new Vector3(pos.x + topLeft.x, 1, (mapSizeY - 1) - pos.y + topLeft.y);
@@ -666,7 +668,7 @@ public class Battle : MonoBehaviour
         //selecting a different player
         else if (hoveredSpell == -1)
         {
-            if (battleState == BattleState.Attack)
+            if (battleState != BattleState.Attack)
             {
                 selectedPlayer = PlayerAtPos(pos.x, pos.y);
                 selectedMoveSpot = new Vector2Int(-1, -1);

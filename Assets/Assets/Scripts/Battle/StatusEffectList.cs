@@ -11,35 +11,53 @@ public class StatusEffectList
         effectList = new List<StatusEffect>();
     }
 
-    public bool Contains(string s)
+    /// <summary>
+    /// Returns if the list contains a certain status condition
+    /// </summary>
+    /// <param name="status">The status effect to check for</param>
+    public bool Contains(string status)
     {
         foreach (StatusEffect se in effectList)
         {
-            if (se.effect.IndexOf(s) != -1)
+            if (se.effect.IndexOf(status) != -1)
                 return true;
         }
         return false;
     }
 
-    public void Refresh(string s, int dur)
+    /// <summary>
+    /// Updates an existing status effect to a new duration
+    /// </summary>
+    /// <param name="status"></param>
+    /// <param name="duration"></param>
+    public void Refresh(string status, int duration)
     {
         for(int i = 0; i < effectList.Count; i++)
         {
-            if (effectList[i].effect.CompareTo(s) == 0)
-                effectList[i].duration = dur;
+            if (effectList[i].effect.CompareTo(status) == 0)
+                effectList[i].duration = duration;
         }
     }
 
-    public void Add(string s, int dur = -1)
+    /// <summary>
+    /// Adds a new status effect to the list
+    /// </summary>
+    /// <param name="status">The status to add</param>
+    /// <param name="duration">The duration of the status, -1 if not removed by time</param>
+    public void Add(string status, int duration = -1)
     {
-        effectList.Add(new StatusEffect(s, dur));
+        effectList.Add(new StatusEffect(status, duration));
     }
 
-    public void Remove(string s)
+    /// <summary>
+    /// Removes a given status from the list
+    /// </summary>
+    /// <param name="status">Status effect to remove</param>
+    public void Remove(string status)
     {
         for(int i = 0; i < effectList.Count; i++)
         {
-            if (effectList[i].effect.IndexOf(s) != -1)
+            if (effectList[i].effect.IndexOf(status) != -1)
                 effectList.RemoveAt(i);
         }
     }

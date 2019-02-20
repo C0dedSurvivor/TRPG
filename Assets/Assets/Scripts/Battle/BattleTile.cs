@@ -30,6 +30,9 @@ public class BattleTile : MonoBehaviour {
         Reset();
 	}
 
+    /// <summary>
+    /// Determines what color this tile should be
+    /// </summary>
     public void UpdateColors()
     {
         if (skillTargetting)
@@ -70,6 +73,9 @@ public class BattleTile : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Resets all the data in this tile
+    /// </summary>
     public void Reset()
     {
         playerMoveRange = false;
@@ -81,6 +87,10 @@ public class BattleTile : MonoBehaviour {
         myMat.color = none;
     }
 
+    /// <summary>
+    /// Updates the tile data by reference
+    /// </summary>
+    /// <param name="tileValue">What to update</param>
     public void ChangeValueByKey(string tileValue)
     {
         if (tileValue == "danger area")

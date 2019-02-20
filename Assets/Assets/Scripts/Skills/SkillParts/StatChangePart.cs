@@ -1,14 +1,14 @@
 ﻿
 public class StatChangePart : SkillPartBase{
 
-    //stat modifier
+    //Stat modifier
     public statMod StatMod;
 
-    public StatChangePart(int tT, string affectedStat, int flat, int multiplier, int dur, int chance = 100)
+    public StatChangePart(int target, string affectedStat, int flatChange, int multiplier, int duration, int chance = 100)
     {
         skillPartType = "statChange";
-        targetType = tT;
-        StatMod = new statMod(affectedStat, flat, multiplier, dur);
+        targetType = target;
+        StatMod = new statMod(affectedStat, flatChange, multiplier, duration);
         chanceToProc = chance;
     }
 }

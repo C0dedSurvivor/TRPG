@@ -2,9 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// A basic item
+/// </summary>
 public class ItemBase
 {
+    //Max amount the player can hold
     int maxStack;
+    //How much one of this item sells for
     int sellAmount;
     string flavorText;
 
@@ -40,6 +45,9 @@ public class ItemBase
     }
 }
 
+/// <summary>
+/// An item that ca be equipped to a pawn
+/// </summary>
 public class EquippableBase : ItemBase
 {
     public int health;
@@ -71,8 +79,12 @@ public class EquippableBase : ItemBase
     }
 }
 
+/// <summary>
+/// An item that has an effect when used during battle
+/// </summary>
 public class BattleItemBase : ItemBase
 {
+    //Is this item can be used outside of battle
     public bool usableOutOfBattle;
 
     public List<SkillPartBase> partList = new List<SkillPartBase>();

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class SkillPartBase {
-
+    //What type of skill this is (damage, healing, statChange, or statusEffect)
     public string skillPartType;
 
     //1 = self, 2 = enemy, 3 = ally, 4 = passive, 5 = all

@@ -43,9 +43,10 @@ public class GameStorage : MonoBehaviour {
     //Space 0 is for base value, space 1 is for max value. Both can be between 0-100.
     static int[,,] baseaEtherMap = new int[mapXsize, mapYsize, 2];
 
-    //test wall
+    //Test wall
     public static GameObject testWall;
 
+    //List of all skill trees
     public static Dictionary<int, Dictionary<int, Skill>> skillTreeList = new Dictionary<int, Dictionary<int, Skill>>();
 
     // Use this for initialization
@@ -59,9 +60,9 @@ public class GameStorage : MonoBehaviour {
 
         //Instantiates temporary base players
         playerMasterList.Add(new Player(6, 10, 3, "Player1"));
-        playerMasterList.Add(new Player(8, 11, 2, "Player2"));
-        playerMasterList.Add(new Player(10, 10, 1, "Player3"));
-        playerMasterList.Add(new Player(12, 11, 2, "Player4"));
+        playerMasterList.Add(new Player(8, 11, 3, "Player2"));
+        playerMasterList.Add(new Player(10, 10, 3, "Player3"));
+        playerMasterList.Add(new Player(12, 11, 3, "Player4"));
 
         //Instantiate the map and aEther maps with base values
         for (int x = 0; x < mapXsize; x++)
@@ -98,7 +99,7 @@ public class GameStorage : MonoBehaviour {
     {
         int[,] bMap = new int[xSize, ySize];
 
-        //moves the center of the map if it would put the battleMap out of bounds
+        //Moves the center of the map if it would put the battleMap out of bounds
         if (centerX < (int)Mathf.Ceil(xSize / 2.0f) - 1)
             centerX = (int)Mathf.Ceil(xSize / 2.0f) - 1;
         else if (centerX > mapXsize - (int)Mathf.Floor(xSize / 2.0f) + 1)
@@ -112,7 +113,7 @@ public class GameStorage : MonoBehaviour {
         trueBY = centerY - (int)Mathf.Ceil(ySize / 2.0f) + 1;
         Debug.Log(trueBX + " " + trueBY);
 
-        //copies the corresponding values from the main map to the battlemap
+        //Copies the corresponding values from the main map to the battlemap
         int tileCount = 0;
         for (int x = 0; x < xSize; x++)
         {
@@ -126,7 +127,7 @@ public class GameStorage : MonoBehaviour {
             }
         }
 
-        //if there are less that 75 normally usable (not locked by movement type) tiles on the map the map will be moved until a suitable place is found
+        //If there are less that 75 normally usable (not locked by movement type) tiles on the map the map will be moved until a suitable place is found
         if (tileCount < (xSize * ySize * 3) / 8)
         {
             int up = 0;
@@ -179,7 +180,7 @@ public class GameStorage : MonoBehaviour {
     public static int[,,] GrabaEtherMap(int topLeftX, int topLeftY, int xSize, int ySize)
     {
         int[,,] aMap = new int[xSize, ySize, 2];
-        //copies the corresponding values from the main map to the battlemap
+        //Copies the corresponding values from the main map to the battlemap
         for (int x = 0; x < xSize; x++)
         {
             for (int y = 0; y < ySize; y++)
@@ -191,69 +192,73 @@ public class GameStorage : MonoBehaviour {
         return aMap;
     }
 
-    //skills
+    /// <summary>
+    /// Populates all of the skill trees with their corresponding skills and adds them to the master list
+    /// </summary>
     public static void PopulateSkillTree()
     {
         Dictionary<int, Skill> testSkillTree = new Dictionary<int, Skill>();
 
         //Skill fireball = new Skill("Fireball", 2, 1, 7, 1, 1, 0, 1);
-        //fireball.addDamagePart(2, 5, 5, 0, 0);
+        //fireball.AddDamagePart(2, 5, 5, 0, 0);
         //testSkillTree.Add(1, fireball);
+
+        //Adds all of the skills to the trees
 
         //test skill to test damage, healing and stat changes
         Skill holyHandGrenade = new Skill("Holy Hand Grenade", 5, 1, 7, 5, 5, 0, 0);
-        holyHandGrenade.addDamagePart(2, 3, 3, 0, 0);
-        holyHandGrenade.addHealPart(3, 3, 3, 0, 0);
-        holyHandGrenade.addStatPart(3, "atk", 5, 0, 3);
+        holyHandGrenade.AddDamagePart(2, 3, 3, 0, 0);
+        holyHandGrenade.AddHealPart(3, 3, 3, 0, 0);
+        holyHandGrenade.AddStatPart(3, "atk", 5, 0, 3);
         testSkillTree.Add(1, holyHandGrenade);
 
         Skill firewall = new Skill("Firewall", 5, 4, 7, 1, 3, 1, 1);
-        firewall.addDamagePart(2, 3, 5, 0, 0);
-        firewall.addDependency(1);
+        firewall.AddDamagePart(2, 3, 5, 0, 0);
+        firewall.AddDependency(1);
         testSkillTree.Add(2, firewall);
 
         Skill conflagration = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        conflagration.addDamagePart(2, 10, 0, 0, 0);
-        conflagration.addStatPart(2, "atk", 0, -4, 3);
-        conflagration.addDependency(1);
+        conflagration.AddDamagePart(2, 10, 0, 0, 0);
+        conflagration.AddStatPart(2, "atk", 0, -4, 3);
+        conflagration.AddDependency(1);
         testSkillTree.Add(3, conflagration);
 
         Skill testSkill1 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill1.addDependency(3);
+        testSkill1.AddDependency(3);
         testSkillTree.Add(4, testSkill1);
 
         Skill testSkill2 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill2.addDependency(4);
-        testSkill2.addDependency(1);
+        testSkill2.AddDependency(4);
+        testSkill2.AddDependency(1);
         testSkillTree.Add(5, testSkill2);
 
         Skill testSkill3 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill3.addDependency(4);
+        testSkill3.AddDependency(4);
         testSkillTree.Add(6, testSkill3);
 
         Skill testSkill4 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill4.addDependency(5);
+        testSkill4.AddDependency(5);
         testSkillTree.Add(7, testSkill4);
 
         Skill testSkill5 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill5.addDependency(5);
+        testSkill5.AddDependency(5);
         testSkillTree.Add(8, testSkill5);
 
         Skill testSkill6 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill6.addDependency(7);
+        testSkill6.AddDependency(7);
         testSkillTree.Add(9, testSkill6);
 
         Skill testSkill7 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill7.addDependency(7);
-        testSkill7.addDependency(2);
+        testSkill7.AddDependency(7);
+        testSkill7.AddDependency(2);
         testSkillTree.Add(10, testSkill7);
 
         Skill testSkill8 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill8.addDependency(7);
+        testSkill8.AddDependency(7);
         testSkillTree.Add(11, testSkill8);
 
         Skill testSkill9 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill9.addDependency(10);
+        testSkill9.AddDependency(10);
         testSkillTree.Add(12, testSkill9);
 
 
@@ -270,69 +275,76 @@ public class GameStorage : MonoBehaviour {
         testSkillTree4.Add(2, firewall);
         testSkillTree4.Add(3, conflagration);
         Skill testSkill21 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill21.addDependency(1);
+        testSkill21.AddDependency(1);
         testSkillTree4.Add(4, testSkill21);
 
         Skill testSkill22 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill22.addDependency(2);
+        testSkill22.AddDependency(2);
         testSkillTree4.Add(5, testSkill22);
         Skill testSkill23 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill23.addDependency(2);
+        testSkill23.AddDependency(2);
         testSkillTree4.Add(6, testSkill23);
         Skill testSkill24 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill24.addDependency(2);
+        testSkill24.AddDependency(2);
         testSkillTree4.Add(7, testSkill24);
         Skill testSkill25 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill25.addDependency(2);
+        testSkill25.AddDependency(2);
         testSkillTree4.Add(8, testSkill25);
 
         Skill testSkill26 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill26.addDependency(3);
+        testSkill26.AddDependency(3);
         testSkillTree4.Add(9, testSkill26);
         Skill testSkill27 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill27.addDependency(3);
+        testSkill27.AddDependency(3);
         testSkillTree4.Add(10, testSkill27);
         Skill testSkill28 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill28.addDependency(3);
+        testSkill28.AddDependency(3);
         testSkillTree4.Add(11, testSkill28);
         Skill testSkill29 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill29.addDependency(3);
+        testSkill29.AddDependency(3);
         testSkillTree4.Add(12, testSkill29);
 
         Skill testSkill210 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill210.addDependency(4);
+        testSkill210.AddDependency(4);
         testSkillTree4.Add(13, testSkill210);
         Skill testSkill211 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill211.addDependency(4);
+        testSkill211.AddDependency(4);
         testSkillTree4.Add(14, testSkill211);
         Skill testSkill212 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill212.addDependency(4);
+        testSkill212.AddDependency(4);
         testSkillTree4.Add(15, testSkill212);
         Skill testSkill213 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        testSkill213.addDependency(4);
+        testSkill213.AddDependency(4);
         testSkillTree4.Add(16, testSkill213);
 
+        //Adds all of the trees to the master list
         skillTreeList.Add(1, testSkillTree);
         skillTreeList.Add(2, testSkillTree2);
         skillTreeList.Add(3, testSkillTree3);
         skillTreeList.Add(4, testSkillTree4);
     }
 
+    /// <summary>
+    /// Returns the ID of all skill trees a given pawn should have access to
+    /// </summary>
+    /// <param name="name">The name of the pawn</param>
+    /// <returns>A list of skill tree IDs</returns>
     public static List<int> GetPlayerSkillList(string name)
     {
         List<int> playerSkillTrees = new List<int>();
-        if (name == "Player1")
+        switch (name)
         {
-            playerSkillTrees.Add(1);
-            playerSkillTrees.Add(2);
-            playerSkillTrees.Add(3);
-            playerSkillTrees.Add(4);
-        }
-        if (name == "Player2")
-        {
-            playerSkillTrees.Add(2);
-            playerSkillTrees.Add(4);
-            playerSkillTrees.Add(1);
+            case "Player1":
+                playerSkillTrees.Add(1);
+                playerSkillTrees.Add(2);
+                playerSkillTrees.Add(3);
+                playerSkillTrees.Add(4);
+                break;
+            case "Player2":
+                playerSkillTrees.Add(2);
+                playerSkillTrees.Add(4);
+                playerSkillTrees.Add(1);
+                break;
         }
         return playerSkillTrees;
     }
@@ -344,37 +356,22 @@ public class GameStorage : MonoBehaviour {
      * 
     */
 
+    /// <summary>
+    /// Tests to see if two variables have approximately the same value
+    /// </summary>
+    public static bool Approximately(float f1, float f2)
+    {
+        return f1 < f2 + (Mathf.Pow(1, -25)) && f1 > f2 - (Mathf.Pow(1, -25));
+    }
+
     public static bool Approximately(Vector3 v1, Vector3 v2)
     {
-        if (Approximately(v1.x, v2.x) && Approximately(v1.y, v2.y) && Approximately(v1.z, v2.z))
-        {
-            Debug.Log("true");
-            return true;
-        }
-        Debug.Log("false");
-        return false;
+        return Approximately(v1.x, v2.x) && Approximately(v1.y, v2.y) && Approximately(v1.z, v2.z);
     }
     
     public static bool Approximately(Quaternion v1, Quaternion v2)
     {
-        Debug.Log(v1.eulerAngles.x + " = " + v2.eulerAngles.x + " | " + v1.eulerAngles.y + " = " + v2.eulerAngles.y + " | " + v1.eulerAngles.z + " = " + v2.eulerAngles.z);
-        if (Approximately(v1.eulerAngles.x, v2.eulerAngles.x) && Approximately(v1.eulerAngles.y, v2.eulerAngles.y) && Approximately(v1.eulerAngles.z, v2.eulerAngles.z))
-        {
-            Debug.Log("true");
-            return true;
-        }
-        Debug.Log("false");
-        return false;
-    }
-
-    public static bool Approximately(float f1, float f2)
-    {
-        if (f1 < f2 + (Mathf.Pow(1, -25)) && f1 > f2 - (Mathf.Pow(1, -25)))
-        {
-            Debug.Log("true");
-            return true;
-        }
-        Debug.Log("false");
-        return false;
+        //Debug.Log(v1.eulerAngles.x + " = " + v2.eulerAngles.x + " | " + v1.eulerAngles.y + " = " + v2.eulerAngles.y + " | " + v1.eulerAngles.z + " = " + v2.eulerAngles.z);
+        return Approximately(v1.eulerAngles.x, v2.eulerAngles.x) && Approximately(v1.eulerAngles.y, v2.eulerAngles.y) && Approximately(v1.eulerAngles.z, v2.eulerAngles.z);
     }
 }

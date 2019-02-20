@@ -44,7 +44,7 @@ public class VisualInventoryBase : MonoBehaviour {
             m_Raycaster.Raycast(m_PointerEventData, results);
 
             bool overItem = false;
-            //For every result returned, output the name of the GameObject on the Canvas hit by the Ray
+            //Shows the item info if the player is mousing over an item
             foreach (RaycastResult result in results)
             {
                 if (result.gameObject.GetComponent<InventoryItemButton>() != null)
@@ -61,6 +61,9 @@ public class VisualInventoryBase : MonoBehaviour {
     //to be overridden with that info needs to be shown
     public virtual void MouseOverItem(int item){ }
 
+    /// <summary>
+    /// Hides the skill info when the player is no longer mousing over an item
+    /// </summary>
     public void MouseLeaveItem()
     {
         itemInfo.SetActive(false);

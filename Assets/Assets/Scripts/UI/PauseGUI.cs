@@ -5,16 +5,28 @@ using UnityEngine.UI;
 
 public class PauseGUI : MonoBehaviour
 {
+    //Where the player first ends up when they enter the pause menu, the navigation hub
     public GameObject pauseLandingScreen;
+    //Displays information about a selected pawn, allows for equipping and de-equipping of items and access of that pawn's skill tree
     public GameObject playerInfoScreen;
+    //Displays the skill trees for a given pawn
     public GameObject playerSkillScreen;
+    //
     public GridInventoryGUI equipInv;
+    //The larger gear on the landing screen, used for secondary menu displays
     public GearTurner outerGear;
     public GameObject[] playerButtons = new GameObject[4];
+    /// <summary>
+    /// Displays the currently equipped items
+    /// </summary>
     public Image[] playerEquipment = new Image[8];
 
     public static bool paused = false;
-
+    
+    /// <summary>
+    /// The ID of the player whose information is currently displayed
+    /// Only applicable in the player section of the pause menu
+    /// </summary>
     public static int playerID;
     //0 = none, 1 = landing, 2 = player, 3 = skills, 4 = inventory
     private int loadedMenu = 0;
@@ -24,6 +36,7 @@ public class PauseGUI : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape) && Battle.battleState == BattleState.None)
         {
+            //If the player wants to enter the pause menu
             if (loadedMenu == 0)
             {
                 loadedMenu = 1;
@@ -31,15 +44,18 @@ public class PauseGUI : MonoBehaviour
                 pauseLandingScreen.SetActive(true);
                 paused = true;
             }
+            //If the player wants to exit the pause menu
             else if (loadedMenu == 1)
             {
                 BackToGame();
             }
+            //If the player wants to return to the landing page
             else if (loadedMenu == 2 || loadedMenu == 4)
             {
                 BackToLanding();
                 equipInv.Close();
             }
+            //If the player wants to go back to the player info screen
             else if (loadedMenu == 3 && GetComponentInParent<SkillTreeGUI>().failedSkillUnlock.activeSelf != true)
             {
                 BackToPlayer();
@@ -47,6 +63,9 @@ public class PauseGUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Closes the pause menu
+    /// </summary>
     public void BackToGame()
     {
         loadedMenu = 0;
@@ -55,12 +74,18 @@ public class PauseGUI : MonoBehaviour
         paused = false;
     }
 
+    /// <summary>
+    /// Moves back to the landing page
+    /// </summary>
     public void BackToLanding()
     {
         loadedMenu = 1;
         playerInfoScreen.SetActive(false);
     }
 
+    /// <summary>
+    /// Shows the buttons that allow the player to open the player info screen for a specified pawn
+    /// </summary>
     public void ToPlayerSelection()
     {
         foreach(GameObject p in playerButtons)
@@ -70,6 +95,9 @@ public class PauseGUI : MonoBehaviour
         outerGear.frozen = true;
     }
 
+    /// <summary>
+    /// Hides the buttons shown in ToPlayerSelection
+    /// </summary>
     public void ClosePlayerSelection()
     {
         foreach (GameObject p in playerButtons)
@@ -78,6 +106,9 @@ public class PauseGUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Returns to the player info screen
+    /// </summary>
     public void BackToPlayer()
     {
         loadedMenu = 2;
@@ -85,6 +116,10 @@ public class PauseGUI : MonoBehaviour
         playerSkillScreen.SetActive(false);
     }
 
+    /// <summary>
+    /// Opens the player info screen
+    /// </summary>
+    /// <param name="playerID">What Player ID to grab the info of</param>
     public void OpenPlayerScreen(int playerID)
     {
         loadedMenu = 2;
@@ -93,6 +128,9 @@ public class PauseGUI : MonoBehaviour
         playerInfoScreen.SetActive(true);
     }
 
+    /// <summary>
+    /// Grabs the updated stats of the currently selected pawn
+    /// </summary>
     public void UpdatePlayerStatDisplay()
     {
         playerInfoScreen.transform.GetChild(1).GetChild(0).GetComponent<Text>().text = GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].name;
@@ -106,6 +144,9 @@ public class PauseGUI : MonoBehaviour
         playerInfoScreen.transform.GetChild(1).GetChild(8).GetComponent<Text>().text = "Equipped Skills: \n1) " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillQuickList[0] + "\n2) " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillQuickList[1] + "\n3) " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillQuickList[2];
     }
 
+    /// <summary>
+    /// Updates the displays for the character's currently equipped items
+    /// </summary>
     public void UpdatePlayerEquipped()
     {
         for (int i = 0; i < 8; i++)
@@ -119,6 +160,9 @@ public class PauseGUI : MonoBehaviour
         UpdatePlayerStatDisplay();
     }
 
+    /// <summary>
+    /// Opens the skill menu for the currently selected player
+    /// </summary>
     public void OpenSkillScreen()
     {
         loadedMenu = 3;

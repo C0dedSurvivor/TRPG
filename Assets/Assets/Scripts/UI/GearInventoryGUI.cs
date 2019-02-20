@@ -4,16 +4,25 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
+/// <summary>
+/// The base class for Gear-layout inventories
+/// </summary>
 [RequireComponent(typeof(GearTurner))]
 public class GearInventoryGUI : VisualInventoryBase
 {
+    //The index of the topmost displayed item in the inventory
     private int firstActive = 0;
+    //The index of the bottommost displayed item in the inventory
     private int lastActive;
-
-    //filter: -1 = none, 1-6 signify equipment slot, 7 = all equippables, 8 = all battle items, 9 = all materials
+    
+    /// <summary>
+    /// Generates the initial view of the inventory with a given filter
+    /// Filter: -1 = none, 1-6 signify equipment slot, 7 = all equippables, 8 = all battle items, 9 = all materials
+    /// </summary>
     public virtual void GenerateInventory()
     {
         firstActive = 0;
+        //13 is the amount to display that looks the best, generates less if there are less items to show
         for (int i = 0; i < Mathf.Min(13, itemList.Count); i++)
         {
             itemBoxList.Add(Instantiate(itemBoxPrefab, transform));
@@ -27,11 +36,14 @@ public class GearInventoryGUI : VisualInventoryBase
         }
         GetComponent<GearTurner>().buttonCount = itemList.Count;
         GetComponent<GearTurner>().offset = Mathf.Max(0, ((itemList.Count - 12) / 2.0f) * GetComponent<GearTurner>().buttonDifference);
-        GetComponent<GearTurner>().frozen = false;
+        GetComponent<GearTurner>().frozen = itemList.Count == 0;
         
         enabled = true;
     }
 
+    /// <summary>
+    /// Clears all of the visibles and data
+    /// </summary>
     public virtual void Destroy()
     {
         for (int i = 0; i < itemBoxList.Count; i++)
@@ -43,14 +55,19 @@ public class GearInventoryGUI : VisualInventoryBase
         enabled = false;
     }
 
+    /// <summary>
+    /// Checks to see if any of the item boxes have moved off screen and adjusts them accordingly
+    /// </summary>
     public void CheckForOutOfBounds()
     {
         bool neededToMove = false;
         Rect screenRect = new Rect(0f, 0f, Screen.width, Screen.height);
+        //If the top item button is not already displaying the top item in the inventory
         if (firstActive != 0)
         {
             Vector3[] v = new Vector3[4];
             itemBoxList[itemBoxList.Count - 1].GetComponent<RectTransform>().GetWorldCorners(v);
+            //If the bottom item has moved off the bottom of the screen, move it to the top and display the new item to display
             if (!screenRect.Contains(v[1]) && itemBoxList[itemBoxList.Count - 1].transform.position.y < 0)
             {
                 itemBoxList[itemBoxList.Count - 1].transform.SetPositionAndRotation(itemBoxList[0].transform.position, itemBoxList[0].transform.rotation);
@@ -69,10 +86,12 @@ public class GearInventoryGUI : VisualInventoryBase
                 neededToMove = true;
             }
         }
+        //If the bottom item button is not already displaying the bottom item in the inventory
         if (lastActive < itemList.Count - 1)
         {
             Vector3[] v = new Vector3[4];
             itemBoxList[0].GetComponent<RectTransform>().GetWorldCorners(v);
+            //If the top item has moved off the top of the screen, move it to the bottom and display the new item to display
             if (!screenRect.Contains(v[0]) && itemBoxList[0].transform.position.y > 0)
             {
                 itemBoxList[0].transform.SetPositionAndRotation(itemBoxList[itemBoxList.Count - 1].transform.position, itemBoxList[itemBoxList.Count - 1].transform.rotation);
@@ -95,20 +114,28 @@ public class GearInventoryGUI : VisualInventoryBase
             CheckForOutOfBounds();
     }
 
+    /// <summary>
+    /// Centers an item on the wheel when it is clicked
+    /// </summary>
+    /// <param name="button">What item box to move to</param>
     public virtual void MoveToButton(int button)
     {
+        //Moves to the item box
         GetComponent<GearTurner>().moveToButton(button);
+        //Checks to see if this pushes any other item boxes off the screen
         CheckForOutOfBounds();
-        //also does what happens when you select an item
+        //Also does what happens when you select an item
         selectedItem = button - 1;
     }
 
+    /// <summary>
+    /// Changes the type of inventory to display
+    /// </summary>
+    /// <param name="filter">How to filter the inventory</param>
     public void ChangeInventory(int filter)
     {
         GetComponent<GearTurner>().ResetRotation();
         Destroy();
         GenerateInventory();
     }
-
-    public virtual void Discard(){}
 }

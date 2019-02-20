@@ -30,14 +30,21 @@ public class StoredItem
         amount = amt;
     }
 
-    public int CompareTo(StoredItem m)
+    /// <summary>
+    /// Compares two item, used when sorting the inventory
+    /// Sorting order:
+    /// Materials (sorted by amount then name if same amount) -> Battle Item (sorted by amount then name if same amount) -> Equippable (sorted by slot then total strength)
+    /// </summary>
+    /// <param name="other">The item to compare this one to</param>
+    /// <returns>1 if the other item is higher up in order, -1 if this item is higher up in order</returns>
+    public int CompareTo(StoredItem other)
     {
         if (Registry.ItemRegistry[name] is EquippableBase)
         {
             EquippableBase item1 = ((EquippableBase)Registry.ItemRegistry[name]);
-            if (Registry.ItemRegistry[m.name] is EquippableBase)
+            if (Registry.ItemRegistry[other.name] is EquippableBase)
             {
-                EquippableBase item2 = ((EquippableBase)Registry.ItemRegistry[m.name]);
+                EquippableBase item2 = ((EquippableBase)Registry.ItemRegistry[other.name]);
                 if (item1.equipSlot > item2.equipSlot)
                 {
                     return 1;
@@ -66,11 +73,11 @@ public class StoredItem
                     }
                     else
                     {
-                        return name.CompareTo(m.name);
+                        return name.CompareTo(other.name);
                     }
                 }
             }
-            else if (Registry.ItemRegistry[m.name] is BattleItemBase)
+            else if (Registry.ItemRegistry[other.name] is BattleItemBase)
             {
                 return 1;
             }
@@ -81,24 +88,24 @@ public class StoredItem
         }
         else if (Registry.ItemRegistry[name] is BattleItemBase)
         {
-            if (Registry.ItemRegistry[m.name] is EquippableBase)
+            if (Registry.ItemRegistry[other.name] is EquippableBase)
             {
                 return -1;
             }
-            else if (Registry.ItemRegistry[m.name] is BattleItemBase)
+            else if (Registry.ItemRegistry[other.name] is BattleItemBase)
             {
-                if (amount > m.amount)
+                if (amount > other.amount)
                 {
                     return -1;
                 }
-                else if (amount < m.amount)
+                else if (amount < other.amount)
                 {
                     return 1;
                 }
                 else
                 {
                     //for now just sorting by name, might sort by effect at a later junction
-                    return name.CompareTo(m.name);
+                    return name.CompareTo(other.name);
                 }
             }
             else
@@ -109,27 +116,27 @@ public class StoredItem
         else
         {
 
-            if (Registry.ItemRegistry[m.name] is EquippableBase)
+            if (Registry.ItemRegistry[other.name] is EquippableBase)
             {
                 return -1;
             }
-            else if (Registry.ItemRegistry[m.name] is BattleItemBase)
+            else if (Registry.ItemRegistry[other.name] is BattleItemBase)
             {
                 return -1;
             }
             else
             {
-                if (amount > m.amount)
+                if (amount > other.amount)
                 {
                     return -1;
                 }
-                else if (amount < m.amount)
+                else if (amount < other.amount)
                 {
                     return 1;
                 }
                 else
                 {
-                    return name.CompareTo(m.name);
+                    return name.CompareTo(other.name);
                 }
             }
         }
@@ -138,7 +145,6 @@ public class StoredItem
 
 public class Inventory
 {
-
     public static List<StoredItem> itemList = new List<StoredItem>();
 
     public static SortingType sortingType = SortingType.AmountDecreasing;
@@ -197,6 +203,12 @@ public class Inventory
         file.Close();
     }
 
+    /// <summary>
+    /// Returns a list of items from the inventory filtered in a specified way
+    /// </summary>
+    /// <param name="filter">Way to filter the returned list.
+    ///                      -1 = no filter, 0-6 grabs equippables by the slot they belong in, 7 = all equippables, 8 = all battle items, 9 = all materials</param>
+    /// <returns>List of all requested items</returns>
     public static List<StoredItem> GetItemList(int filter)
     {
         List<StoredItem> returnedList = new List<StoredItem>();
@@ -208,6 +220,7 @@ public class Inventory
                     returnedList.Add(Copy(i));
                 }
                 break;
+            //If only grabbing equippables for a cerain slot
             case 0:
             case 1:
             case 2:
@@ -249,6 +262,12 @@ public class Inventory
         return returnedList;
     }
 
+    /// <summary>
+    /// Adds a new item ot the inventory, making sur not to exceed the max stack for the item if there is one
+    /// </summary>
+    /// <param name="itemName">Name of the item to add</param>
+    /// <param name="amount">Amount to add</param>
+    /// <returns>Returns how many of the item were successfully added to the inventory</returns>
     public static int AddItem(string itemName, int amount)
     {
         if (Registry.ItemRegistry[itemName] is EquippableBase)
@@ -283,6 +302,12 @@ public class Inventory
         }
     }
 
+    /// <summary>
+    /// Removes an amount of the specified item from the inventory, removing the item itself if there isn't any left
+    /// </summary>
+    /// <param name="itemName">Name of the item to remove</param>
+    /// <param name="amount">Amount to remove</param>
+    /// <returns>How many were successfully removed</returns>
     public static int RemoveItem(string itemName, int amount)
     {
         for (int i = 0; i < itemList.Count; i++)
@@ -301,13 +326,18 @@ public class Inventory
         return 0;
     }
 
-    public static int GetItemAmount(string i)
+    /// <summary>
+    /// Gets the amount of an item that exist in the inventory
+    /// </summary>
+    /// <param name="itemName">Item to count</param>
+    /// <returns>Amount of that item that exist in the inventory</returns>
+    public static int GetItemAmount(string itemName)
     {
-        if (Registry.ItemRegistry[i] is EquippableBase) {
+        if (Registry.ItemRegistry[itemName] is EquippableBase) {
             int amt = 0;
             foreach (StoredItem s in itemList)
             {
-                if (s.Name == i)
+                if (s.Name == itemName)
                     amt++;
             }
             return amt;
@@ -316,18 +346,27 @@ public class Inventory
         {
             foreach (StoredItem s in itemList)
             {
-                if (s.Name == i)
+                if (s.Name == itemName)
                     return s.amount;
             }
         }
         return 0;
     }
 
-    private static StoredItem Copy(StoredItem i)
+    /// <summary>
+    /// Returns a deep copy of the item to avoid pass by reference errors with GetItemList
+    /// </summary>
+    /// <param name="item">What item to copy</param>
+    /// <returns>A deep copy of the given item</returns>
+    private static StoredItem Copy(StoredItem item)
     {
-        return new StoredItem(i.Name, i.amount);
+        return new StoredItem(item.Name, item.amount);
     }
-
+    
+    /// <summary>
+    /// Sorts the inventory
+    /// </summary>
+    /// <param name="sorting">How to sort the inventory</param>
     public static void SortInventory(int sorting)
     {
         itemList.Sort((x, y) => x.CompareTo(y));

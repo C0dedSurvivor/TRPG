@@ -13,7 +13,7 @@ public class Skill {
     public int unlockLevel;
     public int unlockCost;
 
-    //how large the aoe is (even numbers put the extra space on bottom)
+    //how large the aoe is (even numbers put the extra space on right and bottom respectively)
     public int xRange;
     public int yRange;
 
@@ -21,43 +21,46 @@ public class Skill {
 
     //What needs to be unlocked before this one can be, n = id of dependency
     public List<int> dependencies = new List<int>();
-    //list of skill parts in order of execution
+    //List of skill parts in order of execution
     public List<SkillPartBase> partList = new List<SkillPartBase>();
+    
+    public string flavorText;
 
-    public Skill(string n, int tT, int cost, int targetRange, int xR, int yR, int unlockC, int unlockLvl)
+    public Skill(string name, int target, int cost, int targetRange, int xAOE, int yAOE, int unlockCost, int unlockLvl, string flavorText = "")
     {
-        name = n;
-        targetType = tT;
+        this.name = name;
+        targetType = target;
         aEtherCost = cost;
         targettingRange = targetRange;
-        xRange = xR;
-        yRange = yR;
-        unlockCost = unlockC;
+        xRange = xAOE;
+        yRange = yAOE;
+        this.unlockCost = unlockCost;
         unlockLevel = unlockLvl;
+        this.flavorText = flavorText;
     }
 
-    //adds the ID of a skill that needs to be unlocked before this one becomes unlockable
-    public void addDependency(int d)
+    //Adds the ID of a skill that needs to be unlocked before this one becomes unlockable
+    public void AddDependency(int id)
     {
-        dependencies.Add(d);
+        dependencies.Add(id);
     }
 
-    public void addDamagePart(int target, int damage, int flatDamage, int percentMaxHealth, int percentCurrentHealth)
+    public void AddDamagePart(int target, int damage, int flatDamage, int percentMaxHealth, int percentCurrentHealth)
     {
         partList.Add(new DamagePart(target, damage, flatDamage, percentMaxHealth, percentCurrentHealth));
     }
 
-    public void addHealPart(int target, int healing, int flatHealing, int percentMaxHealth, int percentCurrentHealth)
+    public void AddHealPart(int target, int healing, int flatHealing, int percentMaxHealth, int percentCurrentHealth)
     {
         partList.Add(new HealingPart(target, healing, flatHealing, percentMaxHealth, percentCurrentHealth));
     }
 
-    public void addStatPart(int target, string affectedStat, int flat, int multiplier, int dur, int chance = 100)
+    public void AddStatPart(int target, string affectedStat, int flat, int multiplier, int duration, int chance = 100)
     {
-        partList.Add(new StatChangePart(target, affectedStat, flat, multiplier, dur, chance));
+        partList.Add(new StatChangePart(target, affectedStat, flat, multiplier, duration, chance));
     }
 
-    public void addStatusPart(int target, string status, bool remove, int chance)
+    public void AddStatusPart(int target, string status, bool remove, int chance = 100)
     {
         partList.Add(new StatusEffectPart(target, status, remove, chance));
     }

@@ -6,8 +6,12 @@ using UnityEngine.EventSystems;
 
 public class GridInventoryGUI : VisualInventoryBase
 {
+    //The viewport for the inventory display
     public Transform contentArea;
 
+    /// <summary>
+    /// Generates the item boxes for all items in the given inventory
+    /// </summary>
     public void GenerateInventory()
     {
         Close();
@@ -24,6 +28,9 @@ public class GridInventoryGUI : VisualInventoryBase
         enabled = true;
     }
 
+    /// <summary>
+    /// Clears all of the visibles and data
+    /// </summary>
     public virtual void Close()
     {
         for (int i = 0; i < itemBoxList.Count; i++)
@@ -35,11 +42,19 @@ public class GridInventoryGUI : VisualInventoryBase
         enabled = false;
     }
 
+    /// <summary>
+    /// Selects an item when the player clicks on it
+    /// </summary>
+    /// <param name="item">The index of the item they clicked on</param>
     public virtual void SelectItem(int item)
     {
         selectedItem = item;
     }
     
+    /// <summary>
+    /// Discards an item from the inventory and updates the visuals
+    /// Only works for single item stacks
+    /// </summary>
     public virtual void Discard()
     {
         itemList.RemoveAt(selectedItem);

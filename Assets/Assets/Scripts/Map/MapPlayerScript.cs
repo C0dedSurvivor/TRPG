@@ -10,6 +10,7 @@ public class MapPlayerScript : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+        //Locks and hides the cursor on startup
         Cursor.lockState = CursorLockMode.Locked;
 	}
 	
@@ -17,7 +18,7 @@ public class MapPlayerScript : MonoBehaviour {
 	void Update () {
         if (!PauseGUI.paused && Battle.battleState == BattleState.None)
         {
-            //only for starting battles right now, later can be used for doors and NPCs
+            //Interacts with any objects directly in front of the player that have a PlaerInteraction method
             if (Input.GetKeyDown("r"))
             {
                 RaycastHit hit;
@@ -27,7 +28,7 @@ public class MapPlayerScript : MonoBehaviour {
                 }
             }
 
-            //walk
+            //Movement
             if (Input.GetKey("w") && !Input.GetKey("s"))
             {
                 transform.Translate(Vector3.forward * walkingSpeed * Time.deltaTime);
@@ -44,13 +45,14 @@ public class MapPlayerScript : MonoBehaviour {
             {
                 transform.Translate(Vector3.right * walkingSpeed * Time.deltaTime);
             }
+            //Jumping
             if(Input.GetKeyDown(KeyCode.Space) && Physics.Raycast(transform.position + Vector3.down, Vector3.down, 0.001f))
             {
                 Debug.Log("jumping");
                 GetComponent<Rigidbody>().AddForce(Vector3.up * 300.0f);
             }
 
-            //turn
+            //Turning left and right via the mouse
             transform.Rotate(Input.GetAxis("Mouse X") * transform.up * turningSpeed * Time.deltaTime);
         }
     }

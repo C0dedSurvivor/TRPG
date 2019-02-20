@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 
 public class Enemy : BattleParticipant{
-    //will be used for advanced AIs
+    //Will be used later for advanced AIs
+    //See Battle's MoveEnemies() for more information
     int packVar;
     int aggro;
     

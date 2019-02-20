@@ -100,7 +100,7 @@ public class BattleParticipant {
         cHealth = mHealth;
         equippedWeapon = "Wooden Sword";
 
-        //grab all the skills
+        //Grab all the skill trees and skills for this pawn
         List<int> treeList = GameStorage.GetPlayerSkillList("");
         foreach (int tree in treeList)
         {
@@ -114,17 +114,33 @@ public class BattleParticipant {
         }
     }
 
-    public void AddMod(string affectedStat, int flatMod, int multMod, int dur)
+    /// <summary>
+    /// Adds the stat mod created from these parts to this pawn's list of stat mods
+    /// </summary>
+    /// <param name="affectedStat">What stat is changed</param>
+    /// <param name="flatMod">What flat value to modify the stat by</param>
+    /// <param name="multMod">What multiplier to apply to the stat</param>
+    /// <param name="duration">How long the mod lasts</param>
+    public void AddMod(string affectedStat, int flatMod, int multMod, int duration)
     {
-        modifierList.Add(new statMod(affectedStat, flatMod, multMod, dur));
+        modifierList.Add(new statMod(affectedStat, flatMod, multMod, duration));
     }
 
-    public void AddMod(statMod s)
+    /// <summary>
+    /// Adds the stat mod to this pawn's list of stat mods
+    /// </summary>
+    /// <param name="mod">The mod to add</param>
+    public void AddMod(statMod mod)
     {
-        modifierList.Add(s);
+        modifierList.Add(mod);
     }
 
-    public void AddStatusEffect(string status, int dur = -1)
+    /// <summary>
+    /// Adds the specified status effect to this pawn
+    /// </summary>
+    /// <param name="status">Status effect to add</param>
+    /// <param name="duration">The duration of the status effect, -1 if time is not the condition on which it is removed</param>
+    public void AddStatusEffect(string status, int duration = -1)
     {
         string s;
         if (status.IndexOf(" ") != -1)
@@ -138,28 +154,34 @@ public class BattleParticipant {
 
         if (Registry.StatusEffectRegistry[s].stackable || !statusList.Contains(status))
         {
-            statusList.Add(status, dur);
+            statusList.Add(status, duration);
         }
         else if(statusList.Contains(status) && Registry.StatusEffectRegistry[s].refreshOnDuplication)
         {
-            statusList.Refresh(status, dur);
+            statusList.Refresh(status, duration);
         }
 
         if (s.CompareTo("sleep") == 0)
             moved = true;
     }
 
-    public void RemoveStatusEffect(string s)
+    /// <summary>
+    /// Removes the specified status effect from this pawn
+    /// </summary>
+    /// <param name="status">The status effect to remove</param>
+    public void RemoveStatusEffect(string status)
     {
-        if (statusList.Contains(s))
+        if (statusList.Contains(status))
         {
-            statusList.Remove(s);
-            if (s.CompareTo("sleep") == 0)
-                moved = false;
+            statusList.Remove(status);
         }
     }
-
-    //gets the combined total of all stat mods that affect a single stat on this partcipant
+    
+    /// <summary>
+    /// Gets the combined total of all stat mods that affect a single stat on this partcipant
+    /// </summary>
+    /// <param name="affectedStat">What stat to check for</param>
+    /// <returns>A new statMod containing the combined values of all statMods affecting this pawn for the specified stat</returns>
     public statMod GetStatMod(string affectedStat)
     {
         statMod StatMod = new statMod(affectedStat, 0, 1, 0);
@@ -176,7 +198,12 @@ public class BattleParticipant {
         return StatMod;
     }
 
-    //some weapons get different effects based on distance
+    //
+    /// <summary>
+    /// Some weapons have different effects at different distances from their target
+    /// </summary>
+    /// <param name="dist">Distance from the target</param>
+    /// <returns>The multiplier at that distance, default 1.0</returns>
     private float GetDistMod(int dist)
     {
         float damageMod = 1.0f;
@@ -192,8 +219,13 @@ public class BattleParticipant {
         }
         return damageMod;
     }
+    
+    //
+    //
+    //All of these grab the combined total of base stat, weapon stats and stat mods for a certain stat
+    //
+    //
 
-    //all of these grab the combined total of base stat, weapon stats and stat mods for a certain stat
     public int GetEffectiveMaxHealth()
     {
         int value = mHealth;
@@ -317,8 +349,11 @@ public class BattleParticipant {
         value += GetStatMod("move").flatMod;
         return value;
     }
-
-    //Returns true if sent value matches the code of a tile type this participant can move over
+    
+    /// <summary>
+    /// Returns true if sent value matches the code of a tile type this participant can move over
+    /// </summary>
+    /// <param name="tileValue">Tile type to check for</param>
     public bool ValidMoveTile(int tileValue)
     {
         if (tileValue == 1 || tileValue == 4 || tileValue == 5)
@@ -329,22 +364,32 @@ public class BattleParticipant {
             return true;
         return false;
     }
-
-    //makes sure you can't be overhealed
-    public void Heal(int h)
+    
+    /// <summary>
+    /// Heals the pawn, making sure it isn't healed past its max health
+    /// </summary>
+    /// <param name="healAmount">Max amount of health to gain</param>
+    public void Heal(int healAmount)
     {
-        cHealth = Mathf.Clamp(cHealth + h, 0, GetEffectiveMaxHealth());
+        cHealth = Mathf.Clamp(cHealth + healAmount, 0, GetEffectiveMaxHealth());
     }
 
-    //makes sure you can't be overkilled
-    public void Damage(int d)
+    //
+    /// <summary>
+    /// Deals damage to the pawn, makes sure it isn't overkilled
+    /// Also dispells effects that are removed by dealing damage
+    /// </summary>
+    /// <param name="damage">Amount of damage to deal</param>
+    public void Damage(int damage)
     {
-        cHealth = Mathf.Clamp(cHealth - d, 0, GetEffectiveMaxHealth());
-        if (d > 0 && statusList.Contains("sleep"))
+        cHealth = Mathf.Clamp(cHealth - damage, 0, GetEffectiveMaxHealth());
+        if (damage > 0 && statusList.Contains("sleep"))
             statusList.Remove("sleep");
     }
-
-    //Iterates through all stat changes and removes any that expire and deals with end of turn status effects
+    
+    /// <summary>
+    /// Iterates through all stat changes and removes any that expire and deals with end of turn status effects
+    /// </summary>
     public void EndOfTurn()
     {
         for(int i = 0; i < modifierList.Count; i++)

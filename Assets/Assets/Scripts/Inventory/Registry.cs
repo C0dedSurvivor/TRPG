@@ -20,7 +20,9 @@ public struct MovementType
     }
 }
 
-//some weapons have different stats or effects based on how far away the enemy being hit is
+/// <summary>
+/// Some weapons have different stats or effects based on how far away the pawn being hit is
+/// </summary>
 public struct RangeDependentAttack
 {
     //At what distance the wepon gets these different stats
@@ -43,11 +45,11 @@ public struct RangeDependentAttack
 public struct WeaponType
 {
     string name;
-    //how far away the weapon's range starts at (i.e. bow range starts 1 block away from the player)
+    //How far away the weapon's range starts at (i.e. bow range starts 1 block away from the player)
     public int sRange;
-    //the range of the weapon starting at the sRange (i.e. lances have a range of 2)
+    //The range of the weapon starting at the sRange (i.e. lances have a range of 2)
     public int range;
-    //the diagonal range of the weapon
+    //The diagonal range of the weapon
     public int diagCut;
     //Is the weapon ranged. If it is, attack spaces don't depend on whether the previous space is passable
     public bool ranged;
@@ -90,6 +92,9 @@ public struct WeaponType
     }
 }
 
+/// <summary>
+/// Template for an enemy
+/// </summary>
 public struct enemyType
 {
     string name;
@@ -100,7 +105,7 @@ public struct enemyType
     int level1MDef;
     int level1Health;
 
-    //average stat growth per level, slightly randomized per level for variation
+    //Average stat growth per level, slightly randomized per level for variation
     int atkGrowth;
     int mAtkGrowth;
     int defGrowth;
@@ -108,15 +113,18 @@ public struct enemyType
     int healthGrowth;
 }
 
+/// <summary>
+/// All of the information pertaining to a specific status effect type
+/// </summary>
 public struct statusEffectInfo
 {
-    //can multiple of this effect exist on one participant
+    //Can multiple of this effect exist on one participant
     public bool stackable;
-    //if another copy of this effect is added, refresh the duration instead of having only one or stacking
+    //If another copy of this effect is added, refresh the duration instead of having only one or stacking
     public bool refreshOnDuplication;
-    //determines whether a number can be put next to the name to scale the effect
+    //Determines whether a number can be put next to the name to scale the effect
     public bool scalable;
-    //does this effect persist between battles
+    //Does this effect persist between battles
     public bool persists;
 
     public statusEffectInfo(bool stacks, bool refresh, bool scales, bool persistence)
@@ -128,23 +136,29 @@ public struct statusEffectInfo
     }
 }
 
+/// <summary>
+/// Stores all immutable information for access by other files
+/// </summary>
 public class Registry{
-
+    //List of information on all items
     public static IDictionary<string, ItemBase> ItemRegistry = new Dictionary<string, ItemBase>();
+    //List of information on all movement types
     public static IDictionary<int, MovementType> MovementRegistry = new Dictionary<int, MovementType>();
+    //List of information on all weapon types
     public static IDictionary<int, WeaponType> WeaponTypeRegistry = new Dictionary<int, WeaponType>();
+    //List of information on all status effects
     public static IDictionary<string, statusEffectInfo> StatusEffectRegistry = new Dictionary<string, statusEffectInfo>();
 
     public static void FillRegistry()
     {
-        //adds all the different movement types
+        //Adds all the different movement types
         MovementRegistry.Add(1, new MovementType("tank", false, true, true, 1));
         MovementRegistry.Add(2, new MovementType("average", false, true, true, 2));
         MovementRegistry.Add(3, new MovementType("horse calvalry", false, false, true, 3));
         MovementRegistry.Add(4, new MovementType("flying calvalry", true, true, false, 3));
         MovementRegistry.Add(5, new MovementType("water walker", true, true, true, 2));
 
-        //adds all weapon types to registry
+        //Adds all weapon types to registry
         WeaponTypeRegistry.Add(0, new WeaponType("Sword", 0, 1, 0, false, false));
         RangeDependentAttack rda = new RangeDependentAttack(2, false, 0, 0.85f);
         WeaponTypeRegistry.Add(1, new WeaponType("Lance", 0, 2, 0, false, false, rda));
@@ -155,7 +169,7 @@ public class Registry{
         WeaponTypeRegistry.Add(6, new WeaponType("Bow", 1, 1, 1, true, false));
         WeaponTypeRegistry.Add(7, new WeaponType("Healing Staff", 0, 2, 1, true, true));
 
-        //adds all the weapons
+        //Adds all the weapons
         ItemRegistry.Add("Wooden Sword", new EquippableBase(0, 0, 0, 0, 2, 0, 0, 500, "A wooden training sword. Not gonna do a lot of damage, but it can get the job done"));
         ItemRegistry.Add("Iron Sword", new EquippableBase(0, 0, 0, 0, 5, 0, 0, 500, "Pretty middle of the road as swords go, but a solid choice nonetheless"));
         ItemRegistry.Add("Steel Sword", new EquippableBase(0, 0, 0, 0, 8, 0, 5, 500, "A very well built sword, solid and sharp"));
@@ -190,7 +204,7 @@ public class Registry{
         ItemRegistry.Add("Aluminum Bow", new EquippableBase(0, 6, 0, 0, 11, 0, 20, 500));
         ItemRegistry.Add("Arlia", new EquippableBase(0, 6, 0, 0, 14, 0, 20, 500));
 
-        //add all the testing items
+        //Adds all the testing items
         ItemRegistry.Add("Animal Tooth", new ItemBase(99, 5, "Might be worth some money"));
         ItemRegistry.Add("Arrows", new ItemBase(100, 4, "For shooting with a bow. Not much more to say here"));
         ItemRegistry.Add("Bandage", new ItemBase(150, 20, "Old fashioned healing, but it does what it needs to"));
@@ -211,7 +225,7 @@ public class Registry{
         ItemRegistry.Add("Ruby", new ItemBase(50, 5000, "A beautiful ruby. Can be sold for a high price to shops"));
         ItemRegistry.Add("Staff of Healing", new EquippableBase(0, 7, 1, 20, 0, 5, 0, 1000, "Heals things"));
 
-        //adds all the effects
+        //Adds all the effects
         StatusEffectRegistry.Add("sleep", new statusEffectInfo(false, false, false, false));
         StatusEffectRegistry.Add("DoT", new statusEffectInfo(true, false, true, false));
         StatusEffectRegistry.Add("paralysis", new statusEffectInfo(false, false, false, false));

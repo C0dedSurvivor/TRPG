@@ -1,20 +1,20 @@
 ﻿
 public class HealingPart : SkillPartBase{
     
-    //healing value (put through equation)
+    //Healing value, affected by your strength
     public int healing;
-    //flat healing value
+    //Flat healing value
     public int flatHealing;
-    //max health percent healing
-    public int mHpHPercent;
+    //Max health percent healing
+    public int maxHpPercent;
 
-    public HealingPart(int tT, int h, int fH, int mHpHp, int chance = 100)
+    public HealingPart(int target, int heal, int flatHeal, int maxHPHeal, int chance = 100)
     {
         skillPartType = "healing";
-        targetType = tT;
-        healing = h;
-        flatHealing = fH;
-        mHpHPercent = mHpHp;
+        targetType = target;
+        healing = heal;
+        flatHealing = flatHeal;
+        maxHpPercent = maxHPHeal;
         chanceToProc = chance;
     }
 }

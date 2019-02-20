@@ -13,6 +13,10 @@ public class StatusEffect
         duration = dur;
     }
 
+    /// <summary>
+    /// Returns the name of the status, parsing it if it has a strength modifier at the end
+    /// </summary>
+    /// <returns></returns>
     public string GetName()
     {
         if (effect.IndexOf(" ") == -1)
@@ -20,6 +24,10 @@ public class StatusEffect
         return effect.Substring(0, effect.IndexOf(" "));
     }
 
+    /// <summary>
+    /// Gets the intensity modifier of the status if there is one
+    /// EX: "burn 3"
+    /// </summary>
     public int GetIntensity()
     {
         if (effect.IndexOf(" ") == -1)

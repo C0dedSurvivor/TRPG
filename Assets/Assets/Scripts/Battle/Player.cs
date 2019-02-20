@@ -21,6 +21,7 @@ public class Player : BattleParticipant
 	private string mDefenseGrowthType = "TempString";
     private string healthGrowthType = "TempString";
 
+    //Points used to unlock skills
     private int skillPoints = 10;
 
     public int SkillPoints
@@ -37,6 +38,7 @@ public class Player : BattleParticipant
     public Player(int x, int y, int mT, string name) : base(name)
     {
         position = new Vector2Int(x, y);
+        //Generates default player data if that player's file doesn't exist
         if (!File.Exists("Assets/Resources/Storage/Players/" + name + ".data")) {
             moveType = mT;
             attack = 15 + mT;
@@ -70,6 +72,9 @@ public class Player : BattleParticipant
         }
     }
 
+    /// <summary>
+    /// Saves the player data to its respective file
+    /// </summary>
     public void SavePlayer()
     {
         Debug.Log("Saving the player");
@@ -113,6 +118,9 @@ public class Player : BattleParticipant
         file.Close();
     }
 
+    /// <summary>
+    /// Loads the player data from its respective file if it exists
+    /// </summary>
     public void LoadPlayer()
     {
         Stream inStream = File.OpenRead("Assets/Resources/Storage/Players/" + name + ".data");
@@ -157,12 +165,16 @@ public class Player : BattleParticipant
     /// <summary>
     /// Equips the new item, returning the old one so it can be returned to the inventory. 
     /// </summary>
-    public string EquipItem(string i, int slot) {
+    public string EquipItem(string newEquippable, int slot) {
         string item = equipment[slot];
-        equipment[slot] = i;
+        equipment[slot] = newEquippable;
 		return item;
     }
 
+    /// <summary>
+    /// Changes the current health of the player to match if the max health is decreased
+    /// </summary>
+    /// <param name="prevMax">The previous max hp</param>
     public void CheckHealthChange(int prevMax)
     {
         if (cHealth > GetEffectiveMaxHealth())
@@ -183,8 +195,10 @@ public class Player : BattleParticipant
 		exp += e;
 		CheckForLevel();
 	}
-
-    //sees if you have enough EXP to level up and does the level up if so
+    
+    /// <summary>
+    /// Sees if you have enough EXP to level up and does the level up if so
+    /// </summary>
 	private void CheckForLevel(){
 		if (exp > GetExpPerLevel ()) {
 			exp -= GetExpPerLevel ();
@@ -291,13 +305,20 @@ public class Player : BattleParticipant
 			CheckForLevel();
 		}
 	}
-
-    //gets how much EXP is needed to get to the next level
+    
+    /// <summary>
+    /// Gets how much EXP is needed to get to the next level
+    /// </summary>
+    /// <returns>The amount of EXP needed to level up</returns>
 	private int GetExpPerLevel(){
 		return -20 + level * 50;
     }
-
-    //This pysically cannot be used any more, please fix
+    
+    /// <summary>
+    /// Unlocks a skill and subtracts the corresponding cost from the skill points total
+    /// </summary>
+    /// <param name="treeID">What tree this skill exists in</param>
+    /// <param name="skillID">What skill in that tree is being unlocked</param>
     public void UnlockSkill(int treeID, int skillID)
     {
         skillTreeList[treeID][skillID].unlocked = true;

@@ -58,6 +58,9 @@ public class ShopkeepGUI : GearInventoryGUI
         Destroy();
     }
 
+    /// <summary>
+    /// Clears all of the visibles and data
+    /// </summary>
     public override void Destroy()
     {
         base.Destroy();
@@ -66,10 +69,10 @@ public class ShopkeepGUI : GearInventoryGUI
 
     public void SortShop()
     {
-        //does the initial sorting
+        //Does the initial sorting
         itemList.Sort((x, y) => x.CompareTo(y));
 
-        //sorts unbuyable items to the bottom and disables it
+        //Sorts unbuyable items to the bottom and disables it
         int place = 0;
         for (int i = 0; i < itemList.Count; i++)
         {
@@ -85,6 +88,7 @@ public class ShopkeepGUI : GearInventoryGUI
             }
         }
 
+        //Re-generates the visual inventory
         Destroy();
         GenerateInventory();
 

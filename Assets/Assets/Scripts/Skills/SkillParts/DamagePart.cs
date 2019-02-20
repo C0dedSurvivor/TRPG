@@ -1,23 +1,23 @@
 ﻿
 public class DamagePart : SkillPartBase{
 
-    //damage value (put through equation)
+    //Raw damage value, affected by enemy defense
     public int damage;
-    //flat damage value
+    //Flat damage value
     public int flatDamage;
-    //max health percent damage
-    public int mHpDPercent;
-    //remaining health percent damage
-    public int rHpDPercent;
+    //Max health percent damage
+    public int maxHpPercent;
+    //Remaining health percent damage
+    public int remainingHpPercent;
 
-    public DamagePart(int tT, int d, int fD, int mHpDp, int rHpDp, int chance = 100)
+    public DamagePart(int target, int damage, int flatDamage, int maxHpDamage, int remainingHpDamage, int chance = 100)
     {
         skillPartType = "damage";
-        targetType = tT;
-        damage = d;
-        flatDamage = fD;
-        mHpDPercent = mHpDp;
-        rHpDPercent = rHpDp;
+        targetType = target;
+        this.damage = damage;
+        this.flatDamage = flatDamage;
+        maxHpPercent = maxHpDamage;
+        remainingHpPercent = remainingHpDamage;
         chanceToProc = chance;
     }
 }

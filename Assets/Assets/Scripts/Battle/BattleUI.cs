@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class BattleUI : MonoBehaviour {
-    //all of the ui pieces that make up a battle menu
+    //All of the ui pieces that make up a battle menu
     public Battle BattleScript;
     public Button toggleaEther;
     public Button toggleDanger;
@@ -52,7 +52,7 @@ public class BattleUI : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        //if a battle is actually going on
+        //If a battle is actually going on
         if(Battle.battleState != BattleState.None)
         {
             toggleDanger.gameObject.SetActive(true);
@@ -67,7 +67,7 @@ public class BattleUI : MonoBehaviour {
                 swap.gameObject.SetActive(false);
             }
 
-            //if a player has a movement spot selected
+            //If a player has a movement spot selected
             if (BattleScript.moveMarker != null && BattleScript.moveMarker.activeSelf)
             {
                 confirmMove.gameObject.SetActive(true);
@@ -77,7 +77,7 @@ public class BattleUI : MonoBehaviour {
                 confirmMove.gameObject.SetActive(false);
             }
 
-            //if a player is selected
+            //If a player is selected
             if (BattleScript.selectedPlayer != -1)
             {
                 playerStats.SetActive(true);
@@ -96,10 +96,10 @@ public class BattleUI : MonoBehaviour {
                     quickSkill3.gameObject.SetActive(true);
                 }
 
-                //if both an enemy and a player are selected
+                //If both an enemy and a player are selected
                 if (BattleScript.selectedEnemy != -1)
                 {
-                    //if it is actually an enemy
+                    //If it is actually an enemy
                     if (BattleScript.selectedEnemy < BattleScript.enemyList.Length){
                         float ed = (BattleScript.enemyList[BattleScript.selectedEnemy].cHealth - BattleScript.GetDamageValues(GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]], BattleScript.enemyList[BattleScript.selectedEnemy])) / (BattleScript.enemyList[BattleScript.selectedEnemy].mHealth * 1.0f);
                         if (ed >= 0.75)
@@ -137,7 +137,7 @@ public class BattleUI : MonoBehaviour {
                         }
                         damageNote2.gameObject.SetActive(true);
                     }
-                    //if it is a second player
+                    //If it is actually a second player
                     else
                     {
                         damageNote1.text = "Healing is fun.";
@@ -159,12 +159,12 @@ public class BattleUI : MonoBehaviour {
                 denyAttack.gameObject.SetActive(false);
             }
 
-            //if an enemy is selected
+            //If an enemy is selected
             if (BattleScript.selectedEnemy != -1)
             {
                 enemyStats.SetActive(true);
                 Text[] stats = enemyStats.GetComponentsInChildren<Text>();
-                //if it is actually an enemy
+                //If it is actually an enemy
                 if (BattleScript.selectedEnemy < BattleScript.enemyList.Length)
                 {
                     stats[1].text = "Atk: " + BattleScript.enemyList[BattleScript.selectedEnemy].GetEffectiveAtk();
@@ -175,6 +175,7 @@ public class BattleUI : MonoBehaviour {
                     stats[6].text = "Crit: " + BattleScript.enemyList[BattleScript.selectedEnemy].GetEffectiveCrit() + "%";
                     stats[7].text = "Health: " + BattleScript.enemyList[BattleScript.selectedEnemy].cHealth + "/" + BattleScript.enemyList[BattleScript.selectedEnemy].mHealth;
                 }
+                //If it is actually a second player
                 else
                 {
                     stats[1].text = "Atk: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Length]].GetEffectiveAtk();
@@ -204,7 +205,7 @@ public class BattleUI : MonoBehaviour {
                 endPlayerTurn.gameObject.SetActive(false);
             }
 
-            //if it's damage time
+            //If it's damage time
             if (Battle.battleState == BattleState.Attack)
             {
                 denyAttack.gameObject.SetActive(true);

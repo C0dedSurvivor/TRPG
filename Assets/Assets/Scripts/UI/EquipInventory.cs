@@ -13,13 +13,17 @@ public class EquipInventory : GridInventoryGUI
 
     public GameObject unequipButton;
 
-    //to hide the skill pieces
+    //To hide the skill pieces
     public GameObject skillText;
     public GameObject skillButton;
 
-    //currently selected equipment slot
+    //Currently selected equipment slot
     private int invSlot;
 
+    /// <summary>
+    /// Opens the equippables viewer for a given slot
+    /// </summary>
+    /// <param name="inv">What filter to use</param>
     public void OpenEquipInventory(int inv)
     {
         invSlot = inv;
@@ -37,6 +41,9 @@ public class EquipInventory : GridInventoryGUI
             unequipButton.SetActive(false);
     }
 
+    /// <summary>
+    /// Closes the inventory viewer, hides the inventory options and shows the skill options
+    /// </summary>
     public override void Close()
     {
         base.Close();
@@ -47,6 +54,10 @@ public class EquipInventory : GridInventoryGUI
         skillButton.SetActive(true);
     }
 
+    /// <summary>
+    /// When a player selects an item from the inventory
+    /// </summary>
+    /// <param name="item">Item they selected</param>
     public override void SelectItem(int item)
     {
         base.SelectItem(item);
@@ -54,47 +65,73 @@ public class EquipInventory : GridInventoryGUI
         discardButton.SetActive(true);
     }
 
+    /// <summary>
+    /// Discards an item from the inventory
+    /// </summary>
     public override void Discard()
     {
         base.Discard();
+        //Removes the item from the inventory
         Inventory.RemoveItem(itemList[selectedItem].Name, 1);
         equipButton.SetActive(false);
         discardButton.SetActive(false);
+        //Refreshes the inventory viewer
         OpenEquipInventory(invSlot);
     }
 
+    /// <summary>
+    /// Equips an item from the inventory, placing the old item back into the inventory
+    /// </summary>
     public void Equip()
     {
+        //Grabs the current max health of the player in case it changes after the item is equipped
         int previousHealth = GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].mHealth;
+        //Equip the new item. If the slot already has something equipped, put that item back into the inventory
         if (GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot) != null)
             Inventory.AddItem(GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].EquipItem(itemList[selectedItem].Name, invSlot), 1);
         else
             GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].EquipItem(itemList[selectedItem].Name, invSlot);
+        //Removes the item to be equipped from the inventory and sorts it
         Inventory.RemoveItem(itemList[selectedItem].Name, 1);
         Inventory.SortInventory((int)Inventory.sortingType);
+        //Checks to see if max health was affected and modifies current health accordingly
         GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].CheckHealthChange(previousHealth);
+        //Updates the equipped item and stat display for the player
         GetComponentInParent<PauseGUI>().UpdatePlayerEquipped();
         selectedItem = -1;
         equipButton.SetActive(false);
         discardButton.SetActive(false);
+        //Refreshes the inventory viewer
         OpenEquipInventory(invSlot);
     }
 
+    /// <summary>
+    /// Unequips and item from the player, placing it back in the inventory
+    /// </summary>
     public void Unequip()
     {
+        //Grabs the current max health of the player in case it changes after the item is de-equipped
         int previousHealth = GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].mHealth;
+        //Adds the item back to the inventory and sorts it
         Inventory.AddItem(GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].EquipItem(null, invSlot), 1);
         Inventory.SortInventory((int)Inventory.sortingType);
-        Debug.Log(GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot));
+        //Debug.Log(GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot));
+        //Checks to see if max health was affected and modifies current health accordingly
         GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].CheckHealthChange(previousHealth);
+        //Updates the equipped item and stat display for the player
         GetComponentInParent<PauseGUI>().UpdatePlayerEquipped();
         selectedItem = -1;
         equipButton.SetActive(false);
         discardButton.SetActive(false);
         unequipButton.SetActive(false);
+        //Refreshes the inventory viewer
         OpenEquipInventory(invSlot);
     }
 
+    /// <summary>
+    /// If the player is mousing over an equippable, displays the item info panel and updates the contained information accordingly
+    /// </summary>
+    /// <param name="item">The ID of the item being moused over, negative for an equipped item and positive for an unequipped item</param>
     public override void MouseOverItem(int item)
     {
         itemInfo.SetActive(true);
@@ -102,7 +139,7 @@ public class EquipInventory : GridInventoryGUI
         //if (itemInfo.transform.localPosition.y < 0 && Mathf.Abs(itemInfo.transform.localPosition.y) + itemInfo.GetComponent<VerticalLayoutGroup>().preferredHeight > Screen.height / 2)
         //    itemInfo.transform.position = new Vector3(itemInfo.transform.position.x, Screen.height / 2 - itemInfo.GetComponent<VerticalLayoutGroup>().preferredHeight / 2, itemInfo.transform.position.z);
 
-        //if mousing over an equipped item
+        //If mousing over an equipped item
         if (item < 0)
         {
             if (GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(-item - 1) != null)
@@ -164,7 +201,7 @@ public class EquipInventory : GridInventoryGUI
             else
                 itemInfo.SetActive(false);
         }
-        //if the player is mousing over an unequipped item for a slot with nothing equipped
+        //If the player is mousing over an unequipped item for a slot with nothing equipped
         else if (GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot) == null)
         {
             item1Info.transform.GetChild(0).GetComponent<Text>().text = itemList[item].Name;
@@ -219,7 +256,7 @@ public class EquipInventory : GridInventoryGUI
             item1Info.transform.GetChild(7).GetComponent<Text>().text = "Sells for: " + Registry.ItemRegistry[itemList[item].Name].SellAmount;
             item2Info.SetActive(false);
         }
-        //if player is mousing over an unequipped item for an inventory with an equipped item
+        //If player is mousing over an unequipped item for an inventory slot with an equipped item
         else
         {
             string itemName = GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot);
@@ -328,8 +365,13 @@ public class EquipInventory : GridInventoryGUI
             item2Info.transform.GetChild(6).GetComponent<Text>().text = Registry.ItemRegistry[itemList[item].Name].FlavorText;
             item2Info.transform.GetChild(7).GetComponent<Text>().text = "Sells for: " + Registry.ItemRegistry[itemList[item].Name].SellAmount;
 
-            //sets the comparison colors
-            //health
+            //
+            //
+            //Sets the comparison colors for all of the stats
+            //
+            //
+
+            //Health
             if (((EquippableBase)Registry.ItemRegistry[itemName]).health > ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).health)
             {
                 item1Info.transform.GetChild(2).GetComponent<Text>().color = Color.green;
@@ -346,7 +388,7 @@ public class EquipInventory : GridInventoryGUI
                 item2Info.transform.GetChild(2).GetComponent<Text>().color = Color.blue;
             }
 
-            //strength
+            //Strength
             if (((EquippableBase)Registry.ItemRegistry[itemName]).statType == ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).statType)
             {
                 if (((EquippableBase)Registry.ItemRegistry[itemName]).strength > ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).strength)
@@ -371,7 +413,7 @@ public class EquipInventory : GridInventoryGUI
                 item2Info.transform.GetChild(3).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
             }
 
-            //defense
+            //Defense
             if (((EquippableBase)Registry.ItemRegistry[itemName]).statType == ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).statType)
             {
                 if (((EquippableBase)Registry.ItemRegistry[itemName]).defense > ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).defense)
@@ -396,7 +438,7 @@ public class EquipInventory : GridInventoryGUI
                 item2Info.transform.GetChild(4).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
             }
 
-            //crit chance
+            //Crit chance
             if (((EquippableBase)Registry.ItemRegistry[itemName]).critChanceMod > ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).critChanceMod)
             {
                 item1Info.transform.GetChild(5).GetComponent<Text>().color = Color.green;

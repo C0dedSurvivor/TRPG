@@ -32,6 +32,7 @@ public class EquipInventory : GridInventoryGUI
 
         GenerateInventory();
 
+        Debug.Log("Disabling skill stuff");
         skillText.SetActive(false);
         skillButton.SetActive(false);
 
@@ -70,9 +71,9 @@ public class EquipInventory : GridInventoryGUI
     /// </summary>
     public override void Discard()
     {
-        base.Discard();
         //Removes the item from the inventory
         Inventory.RemoveItem(itemList[selectedItem].Name, 1);
+        base.Discard();
         equipButton.SetActive(false);
         discardButton.SetActive(false);
         //Refreshes the inventory viewer

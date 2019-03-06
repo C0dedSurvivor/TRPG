@@ -205,7 +205,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 753b973effca8cc4ea41ed4b41ae13fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  offset: 4.5
+  offset: 0
   buttonCount: 6
   buttonDifference: 9
   dragging: 0
@@ -2742,7 +2742,7 @@ MonoBehaviour:
   lineRendererPrefab: {fileID: 114979247252570042, guid: 6977e6857189c104b85b93495e811ef2,
     type: 3}
   displayWindow: {fileID: 1647374554}
-  skillWindow: {fileID: 1133858844}
+  skillWindow: {fileID: 593592359}
   skillInfo: {fileID: 2140322337}
   failedSkillUnlock: {fileID: 475855054}
   quickSkillSwitcher: {fileID: 1684832320}
@@ -3908,13 +3908,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 409583622}
-  m_LocalRotation: {x: 0.18924403, y: -0, z: -0, w: 0.98193014}
-  m_LocalPosition: {x: 0, y: 4, z: -6.43}
+  m_LocalRotation: {x: 0.18223555, y: 0, z: 0, w: 0.9832549}
+  m_LocalPosition: {x: 0, y: 4.5, z: -6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1990799081}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 21.817001, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 21, y: 0, z: 0}
 --- !u!81 &409583624
 AudioListener:
   m_ObjectHideFlags: 0
@@ -6771,7 +6771,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: -4
+  item: 0
 --- !u!1 &785329008
 GameObject:
   m_ObjectHideFlags: 0
@@ -7721,7 +7721,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: -2
+  item: 0
 --- !u!1 &907049198
 GameObject:
   m_ObjectHideFlags: 0
@@ -9728,7 +9728,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: -3
+  item: 0
 --- !u!1 &1179066791
 GameObject:
   m_ObjectHideFlags: 0
@@ -13625,7 +13625,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: -5
+  item: 0
 --- !u!114 &1621057845
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13638,7 +13638,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: -7
+  item: 0
 --- !u!1 &1633231436
 GameObject:
   m_ObjectHideFlags: 0
@@ -13880,7 +13880,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: -6
+  item: 0
 --- !u!1 &1674480163
 GameObject:
   m_ObjectHideFlags: 0
@@ -14974,7 +14974,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: -8
+  item: 0
 --- !u!1 &1787679770
 GameObject:
   m_ObjectHideFlags: 0
@@ -15066,7 +15066,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: -1
+  item: 0
 --- !u!1 &1796605977
 GameObject:
   m_ObjectHideFlags: 0
@@ -16268,11 +16268,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 753b973effca8cc4ea41ed4b41ae13fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  offset: 12.6
-  buttonCount: 18
+  offset: 0
+  buttonCount: 0
   buttonDifference: 6.3
   dragging: 0
-  frozen: 0
+  frozen: 1
 --- !u!114 &1837521224
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17360,7 +17360,6 @@ MonoBehaviour:
     type: 3}
   MoveMarkerPrefab: {fileID: 1261110841027062, guid: 6a952fac86e94ca4ebe186689a99a8c9,
     type: 3}
-  BattleUIPrefab: {fileID: 0}
   CameraPrefab: {fileID: 1501565722295194, guid: a5b05d43bfa9f8b479d366a0b76ce541,
     type: 3}
   skillCastConfirmMenu: {fileID: 1591088126}
@@ -17385,9 +17384,8 @@ MonoBehaviour:
   hoveredSpell: -1
   selectedSpell: -1
   selectedMoveSpot: {x: -1, y: -1}
-  moveMarker: {fileID: 1261110841027062, guid: 6a952fac86e94ca4ebe186689a99a8c9, type: 3}
+  moveMarker: {fileID: 0}
   animSpeed: 0.1
-  movesGenerated: 0
   movingEnemy: 0
 --- !u!4 &1970206862
 Transform:
@@ -17597,7 +17595,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   walkingSpeed: 8
   sprintSpeed: 16
-  turningSpeed: 25
+  turningSpeed: 75
+  mapCamera: {fileID: 409583622}
 --- !u!54 &1990799083
 Rigidbody:
   m_ObjectHideFlags: 0

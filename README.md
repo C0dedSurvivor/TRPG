@@ -32,7 +32,8 @@ Click on an item to select it to discard
 ## Controls:
 Move - WASD <br />
 Interact with object in world - R <br />
-Enter/Leave/Navigate pause menu - Escape
+Enter/Leave/Navigate pause menu - Escape <br />
+Zoom camera in or out in map - Control + scroll wheel
 
 ## Known bugs:
 * Enemies can walk through walls and end on impassable spaces

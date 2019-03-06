@@ -31,3 +31,6 @@ ehthumbs.db
 [Bb]uild
 sysinfo.txt
 *.stackdump
+
+# Project Specific Excludes
+*\Assets\Resources\Storage\Players\*

@@ -8,6 +8,12 @@ public class MapPlayerScript : MonoBehaviour {
     public int sprintSpeed = 16;
     public int turningSpeed = 75;
 
+    const double CAMERA_ADJUST_SPEED = 1.5f;
+    const int MAX_CAMERA_DISTANCE = 10;
+    const int MIN_CAMERA_DISTANCE = 4;
+
+    public GameObject mapCamera;
+
 	// Use this for initialization
 	void Start () {
         //Locks and hides the cursor on startup
@@ -18,7 +24,7 @@ public class MapPlayerScript : MonoBehaviour {
 	void Update () {
         if (!PauseGUI.paused && Battle.battleState == BattleState.None)
         {
-            //Interacts with any objects directly in front of the player that have a PlaerInteraction method
+            //Interacts with any objects directly in front of the player that have a PlayerInteraction method
             if (Input.GetKeyDown("r"))
             {
                 RaycastHit hit;
@@ -50,6 +56,13 @@ public class MapPlayerScript : MonoBehaviour {
             {
                 Debug.Log("jumping");
                 GetComponent<Rigidbody>().AddForce(Vector3.up * 300.0f);
+            }
+            //Camera controls
+            if (Input.GetKey(KeyCode.LeftControl))
+            {
+                float change = Input.GetAxis("Mouse ScrollWheel");
+                if ((change > 0 && Vector3.Distance(mapCamera.transform.position, transform.position) > MIN_CAMERA_DISTANCE) || (change < 0 && Vector3.Distance(mapCamera.transform.position, transform.position) < MAX_CAMERA_DISTANCE))
+                    mapCamera.transform.Translate(Vector3.forward * change);
             }
 
             //Turning left and right via the mouse

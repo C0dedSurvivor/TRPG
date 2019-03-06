@@ -120,7 +120,6 @@ public class Battle : MonoBehaviour
     public GameObject EnemyBattleModelPrefab;
     public GameObject PlayerBattleModelPrefab;
     public GameObject MoveMarkerPrefab;
-    public GameObject BattleUIPrefab;
     public GameObject CameraPrefab;
     public GameObject skillCastConfirmMenu;
 
@@ -135,7 +134,7 @@ public class Battle : MonoBehaviour
     //Whether or not the players can swap positions, only true if no one has moved yet
     public bool canSwap;
 
-    //Declares the map size, unchanged post initialization. Default is 20x20, camera will not change view to accomidate larger currently
+    //Declares the map size, unchanged post initialization. Default is 20x20, camera will not change view to accomodate larger currently
     int mapSizeX;
     int mapSizeY;
     //Affects what the enemies take into account when making their moves, see MoveEnemies() for more information
@@ -256,7 +255,7 @@ public class Battle : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         battleState = BattleState.BattleSetup;
     }
-    
+
     /// <summary>
     /// Update is called once per frame
     /// Controls the battle's finite state machine and player input
@@ -378,7 +377,7 @@ public class Battle : MonoBehaviour
                     break;
             }
 
-            //If anything happened that could have changed the state of one or more tiles this frame
+            //If anything happened that could have changed the state of one or more tiles
             if (updateTilesThisFrame)
             {
                 UpdateTileMap();
@@ -400,17 +399,14 @@ public class Battle : MonoBehaviour
     private void EndEnemyTurn()
     {
         //resets to allow players to move and starts player's turn
-        for (int j = 0; j < GameStorage.activePlayerList.Count; j++)
+        foreach(int pID in GameStorage.activePlayerList)
         {
-            if (GameStorage.playerMasterList[GameStorage.activePlayerList[j]].cHealth > 0 && !GameStorage.playerMasterList[GameStorage.activePlayerList[j]].statusList.Contains("sleep"))
-                GameStorage.playerMasterList[GameStorage.activePlayerList[j]].moved = false;
+            if (GameStorage.playerMasterList[pID].cHealth > 0 && !GameStorage.playerMasterList[pID].statusList.Contains("sleep"))
+                GameStorage.playerMasterList[pID].moved = false;
+            GameStorage.playerMasterList[pID].EndOfTurn();
         }
         movingEnemy = 0;
         turn++;
-        foreach (int pID in GameStorage.activePlayerList)
-        {
-            GameStorage.playerMasterList[pID].EndOfTurn();
-        }
         foreach (Enemy e in enemyList)
         {
             e.EndOfTurn();
@@ -418,7 +414,7 @@ public class Battle : MonoBehaviour
         if (battleState != BattleState.ReturnCamera)
             battleState = BattleState.Player;
     }
-    
+
     /// <summary>
     /// Resets all variables and clears all visibles at the start and end of each battle
     /// </summary>
@@ -567,7 +563,7 @@ public class Battle : MonoBehaviour
             updateTilesThisFrame = true;
         }
     }
-    
+
     /// <summary>
     /// If player wants to end the turn before all ally pawns have been moved
     /// </summary>
@@ -575,42 +571,11 @@ public class Battle : MonoBehaviour
     {
         moveMarker.SetActive(false);
         canSwap = false;
-        for (int j = 0; j < GameStorage.activePlayerList.Count; j++)
+        foreach(int pID in GameStorage.activePlayerList)
         {
-            GameStorage.playerMasterList[GameStorage.activePlayerList[j]].moved = true;
+            GameStorage.playerMasterList[pID].moved = true;
         }
         FinishedMovingPawn();
-    }
-
-    /// <summary>
-    /// Activates when a spell button starts being hovered
-    /// </summary>
-    public void HoveringSpell(int buttonID)
-    {
-        hoveredSpell = buttonID;
-        updateTilesThisFrame = true;
-    }
-    
-    /// <summary>
-    /// Activates when a spell button is no longer hovered
-    /// </summary>
-    public void StopHoveringSpell()
-    {
-        hoveredSpell = -1;
-        updateTilesThisFrame = true;
-    }
-    
-    /// <summary>
-    /// Called then the player selects a spell they want to try and cast from their quick cast list
-    /// </summary>
-    /// <param name="buttonID">The place in the spell quick list to grab the spell from</param>
-    public void SelectSpell(int buttonID)
-    {
-        if (selectedSpell == buttonID)
-            selectedSpell = -1;
-        else
-            selectedSpell = buttonID;
-        updateTilesThisFrame = true;
     }
 
     /// <summary>
@@ -674,7 +639,7 @@ public class Battle : MonoBehaviour
                     {
                         p.y *= 2;
                     }
-
+                    
                     if (moveXFirst)
                     {
                         moveMarker.GetComponent<LineRenderer>().SetPosition(1, new Vector3(p.x, 0, 0));
@@ -692,7 +657,6 @@ public class Battle : MonoBehaviour
         //if player tries to cast a spell
         if (selectedSpell != -1)
         {
-            actionTaken = true;
             if (BattleTile.skillLegitTarget)
             {
                 selectedEnemy = EnemyAtPos(pos.x, pos.y);
@@ -703,6 +667,7 @@ public class Battle : MonoBehaviour
                     skillCastConfirmMenu.GetComponentInChildren<Text>().text = "Are you sure you want to cast there?";
                 skillCastConfirmMenu.SetActive(true);
             }
+            actionTaken = true;
         }
         if (!actionTaken && hoveredSpell == -1)
         {
@@ -724,7 +689,7 @@ public class Battle : MonoBehaviour
             }
         }
     }
-    
+
     /// <summary>
     /// Sets up the movement animation to the position they want to go to for the player
     /// </summary>
@@ -754,62 +719,6 @@ public class Battle : MonoBehaviour
     }
 
     /// <summary>
-    /// Checks to see if the given enemy can move to the given position this turn
-    /// </summary>
-    /// <param name="enemyID">The ID of the enemy to check for</param>
-    /// <param name="x">The X of the position to check for</param>
-    /// <param name="y">The Y of the position to check for</param>
-    private bool ValidEnemyMove(int enemyID, int x, int y)
-    {
-        //Makes sure the ending position does not overlap with an existing character
-        if (PlayerAtPos(x + enemyList[enemyID].position.x, y + enemyList[enemyID].position.y) != -1)
-            return false;
-        if (EnemyAtPos(x + enemyList[enemyID].position.x, y + enemyList[enemyID].position.y) != -1 && !(x == 0 && y == 0))
-            return false;
-
-        bool validPath = true;
-        for (int cX = 1; cX <= Mathf.Abs(x); cX++)
-        {
-            if (!enemyList[enemyID].ValidMoveTile(battleMap[cX * Mathf.RoundToInt(Mathf.Sign(x)) + enemyList[enemyID].position.x, enemyList[enemyID].position.y]) || PlayerAtPos(cX + enemyList[enemyID].position.x, enemyList[enemyID].position.y) != -1)
-                validPath = false;
-        }
-
-        if (validPath)
-        {
-            for (int cY = 1; cY <= Mathf.Abs(y); cY++)
-            {
-                if (!enemyList[enemyID].ValidMoveTile(battleMap[x + enemyList[enemyID].position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + enemyList[enemyID].position.y]) || PlayerAtPos(x + enemyList[enemyID].position.x, cY + enemyList[enemyID].position.y) != -1)
-                    validPath = false;
-            }
-        }
-
-        if (validPath)
-        {
-            moveXFirst = true;
-        }
-        else
-        {
-            //if invalid by x, y, check y, x
-            for (int cY = 1; cY <= Mathf.Abs(y); cY++)
-            {
-                if (!enemyList[enemyID].ValidMoveTile(battleMap[enemyList[enemyID].position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + enemyList[enemyID].position.y]) || PlayerAtPos(enemyList[enemyID].position.x, cY + enemyList[enemyID].position.y) != -1)
-                    return false;
-            }
-            if (validPath)
-            {
-                for (int cX = 1; cX <= Mathf.Abs(x); cX++)
-                {
-                    if (!enemyList[enemyID].ValidMoveTile(battleMap[cX * Mathf.RoundToInt(Mathf.Sign(x)) + enemyList[enemyID].position.x, y + enemyList[enemyID].position.y]) || PlayerAtPos(cX + enemyList[enemyID].position.x, y + enemyList[enemyID].position.y) != -1)
-                        return false;
-                }
-            }
-            if (validPath)
-                moveXFirst = false;
-        }
-        return true;
-    }
-    
-    /// <summary>
     /// Finds the optimal move for the enemy currently moving
     /// </summary>
     private void MoveEnemies()
@@ -838,131 +747,37 @@ public class Battle : MonoBehaviour
         int n = movingEnemy;
         List<EnemyMove> possibleMoves = new List<EnemyMove>();
         EnemyMove fallbackMove = new EnemyMove(0, 0, 100, 0, true);
-        int maxMove = enemyList[n].GetMoveSpeed();
+        List<Pair<Vector2Int, bool>> moveSpots = GetViableMovements(enemyList[n]);
         WeaponType weapon;
         if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[n].equippedWeapon]).subType, out weapon))
             Debug.Log("Weapon Type does not exist in the Registry.");
-        for (int x = -maxMove; x <= maxMove; x++)
+        foreach (Pair<Vector2Int, bool> pos in moveSpots)
         {
-            for (int y = -maxMove; y <= maxMove; y++)
+            List<Vector2Int> attackSpots = GetViableAttackSpaces(weapon, new Vector2Int(pos.First.x, pos.First.y));
+            bool attacksThisMove = false;
+            foreach (Vector2Int aPos in attackSpots)
             {
-                if (Mathf.Abs(x) + Mathf.Abs(y) <= maxMove && x + enemyList[n].position.x >= 0 && x + enemyList[n].position.x < mapSizeX && y + enemyList[n].position.y >= 0 && y + enemyList[n].position.y < mapSizeY)
+                if (PlayerAtPos(aPos.x, aPos.y) != -1)
                 {
-                    //if enemy can move to this tile
-                    if (ValidEnemyMove(n, x, y))
+                    possibleMoves.Add(new EnemyMove(pos.First.x, pos.First.y, aPos.x, aPos.y, 15 - (Mathf.Abs(pos.First.x - enemyList[n].position.x) + Mathf.Abs(pos.First.y - enemyList[n].position.y)), 1, pos.Second));
+                    attacksThisMove = true;
+                }
+            }
+            if (!attacksThisMove)
+            {
+                foreach (int pID in GameStorage.activePlayerList)
+                {
+                    //If this move is the closest the enemy can get to a player, make it the move that happens if no attacks are possible
+                    if (Mathf.Abs(GameStorage.playerMasterList[pID].position.x - pos.First.x) + Mathf.Abs(GameStorage.playerMasterList[pID].position.y - pos.First.y) < fallbackMove.priority)
                     {
-                        int priority = 0;
-                        int reasonPriority = 0;
-
-                        //checks weapon ranges
-                        for (int i = 1; i <= weapon.range; i++)
+                        fallbackMove = new EnemyMove(pos.First.x, pos.First.y, Mathf.Abs(GameStorage.playerMasterList[pID].position.x - pos.First.x) + Mathf.Abs(GameStorage.playerMasterList[pID].position.y - pos.First.y), 0, pos.Second);
+                    }
+                    //If this move ties with the current fallback move for distance from a player, pick a random one
+                    else if (Mathf.Abs(GameStorage.playerMasterList[pID].position.x - pos.First.x) + Mathf.Abs(GameStorage.playerMasterList[pID].position.y - pos.First.y) == fallbackMove.priority)
+                    {
+                        if (Random.Range(0, 2) == 1)
                         {
-                            if (PlayerAtPos(x + enemyList[n].position.x + weapon.sRange + i, y + enemyList[n].position.y) != -1)
-                            {
-                                if (!weapon.ranged && i > 1)
-                                {
-                                    bool validMelee = true;
-                                    for (int j = 1; j < i; j++)
-                                    {
-                                        if (!enemyList[n].ValidMoveTile(battleMap[x + enemyList[n].position.x + weapon.sRange + j, y + enemyList[n].position.y]))
-                                            validMelee = false;
-                                    }
-                                    if (validMelee)
-                                        possibleMoves.Add(new EnemyMove(x + enemyList[n].position.x, y + enemyList[n].position.y, x + enemyList[n].position.x + weapon.sRange + i, y + enemyList[n].position.y, maxMove * 3 - (Mathf.Abs(x + weapon.sRange + i) + Mathf.Abs(y)), 1, moveXFirst));
-                                }
-                                else
-                                {
-                                    possibleMoves.Add(new EnemyMove(x + enemyList[n].position.x, y + enemyList[n].position.y, x + enemyList[n].position.x + weapon.sRange + i, y + enemyList[n].position.y, maxMove * 3 - (Mathf.Abs(x + weapon.sRange + i) + Mathf.Abs(y)), 1, moveXFirst));
-                                }
-                            }
-                            if (PlayerAtPos(x + enemyList[n].position.x - weapon.sRange - i, y + enemyList[n].position.y) != -1)
-                            {
-                                if (!weapon.ranged && i > 1)
-                                {
-                                    bool validMelee = true;
-                                    for (int j = 1; j < i; j++)
-                                    {
-                                        if (enemyList[n].ValidMoveTile(battleMap[x + enemyList[n].position.x - weapon.sRange - j, y + enemyList[n].position.y]))
-                                            validMelee = false;
-                                    }
-                                    if (validMelee)
-                                        possibleMoves.Add(new EnemyMove(x + enemyList[n].position.x, y + enemyList[n].position.y, x + enemyList[n].position.x - weapon.sRange - i, y + enemyList[n].position.y, maxMove * 3 - (Mathf.Abs(x - weapon.sRange - i) + Mathf.Abs(y)), 1, moveXFirst));
-                                }
-                                else
-                                {
-                                    possibleMoves.Add(new EnemyMove(x + enemyList[n].position.x, y + enemyList[n].position.y, x + enemyList[n].position.x - weapon.sRange - i, y + enemyList[n].position.y, maxMove * 3 - (Mathf.Abs(x - weapon.sRange - i) + Mathf.Abs(y)), 1, moveXFirst));
-                                }
-                            }
-                            if (PlayerAtPos(x + enemyList[n].position.x, y + enemyList[n].position.y + weapon.sRange + i) != -1)
-                            {
-                                if (!weapon.ranged && i > 1)
-                                {
-                                    bool validMelee = true;
-                                    for (int j = 1; j < i; j++)
-                                    {
-                                        if (enemyList[n].ValidMoveTile(battleMap[x + enemyList[n].position.x, y + enemyList[n].position.y + weapon.sRange + j]))
-                                            validMelee = false;
-                                    }
-                                    if (validMelee)
-                                        possibleMoves.Add(new EnemyMove(x + enemyList[n].position.x, y + enemyList[n].position.y, x + enemyList[n].position.x, y + enemyList[n].position.y + weapon.sRange + i, maxMove * 3 - (Mathf.Abs(x) + Mathf.Abs(y + weapon.sRange + i)), 1, moveXFirst));
-                                }
-                                else
-                                {
-                                    possibleMoves.Add(new EnemyMove(x + enemyList[n].position.x, y + enemyList[n].position.y, x + enemyList[n].position.x, y + enemyList[n].position.y + weapon.sRange + i, maxMove * 3 - (Mathf.Abs(x) + Mathf.Abs(y + weapon.sRange + i)), 1, moveXFirst));
-                                }
-                            }
-                            if (PlayerAtPos(x + enemyList[n].position.x, y + enemyList[n].position.y - weapon.sRange - i) != -1)
-                            {
-                                if (!weapon.ranged && i > 1)
-                                {
-                                    bool validMelee = true;
-                                    for (int j = 1; j < i; j++)
-                                    {
-                                        if (enemyList[n].ValidMoveTile(battleMap[x + enemyList[n].position.x, y + enemyList[n].position.y - weapon.sRange - j]))
-                                            validMelee = false;
-                                    }
-                                    if (validMelee)
-                                        possibleMoves.Add(new EnemyMove(x + enemyList[n].position.x, y + enemyList[n].position.y, x + enemyList[n].position.x, y + enemyList[n].position.y - weapon.sRange - i, maxMove * 3 - (Mathf.Abs(x) + Mathf.Abs(y - weapon.sRange - i)), 1, moveXFirst));
-                                }
-                                else
-                                {
-                                    possibleMoves.Add(new EnemyMove(x + enemyList[n].position.x, y + enemyList[n].position.y, x + enemyList[n].position.x, y + enemyList[n].position.y - weapon.sRange - i, maxMove * 3 - (Mathf.Abs(x) + Mathf.Abs(y - weapon.sRange - i)), 1, moveXFirst));
-                                }
-                            }
-                        }
-                        for (int i = 0; i <= weapon.diagCut; i++)
-                        {
-                            if (PlayerAtPos(x + enemyList[n].position.x - i, y + enemyList[n].position.y + i) != -1)
-                            {
-                                possibleMoves.Add(new EnemyMove(x + enemyList[n].position.x, y + enemyList[n].position.y, x + enemyList[n].position.x - i, y + enemyList[n].position.y + i, maxMove * 3 - (Mathf.Abs(x - i) + Mathf.Abs(y + i)), 1, moveXFirst));
-                            }
-                            if (PlayerAtPos(x + enemyList[n].position.x + i, y + enemyList[n].position.y + i) != -1)
-                            {
-                                possibleMoves.Add(new EnemyMove(x + enemyList[n].position.x, y + enemyList[n].position.y, x + enemyList[n].position.x + i, y + enemyList[n].position.y + i, maxMove * 3 - (Mathf.Abs(x + i) + Mathf.Abs(y + i)), 1, moveXFirst));
-                            }
-                            if (PlayerAtPos(x + enemyList[n].position.x - i, y + enemyList[n].position.y - i) != -1)
-                            {
-                                possibleMoves.Add(new EnemyMove(x + enemyList[n].position.x, y + enemyList[n].position.y, x + enemyList[n].position.x - i, y + enemyList[n].position.y - i, maxMove * 3 - (Mathf.Abs(x - i) + Mathf.Abs(y - i)), 1, moveXFirst));
-                            }
-                            if (PlayerAtPos(x + enemyList[n].position.x + i, y + enemyList[n].position.y - i) != -1)
-                            {
-                                possibleMoves.Add(new EnemyMove(x + enemyList[n].position.x, y + enemyList[n].position.y, x + enemyList[n].position.x + i, y + enemyList[n].position.y - i, maxMove * 3 - (Mathf.Abs(x + i) + Mathf.Abs(y - i)), 1, moveXFirst));
-                            }
-                        }
-
-                        foreach (int pID in GameStorage.activePlayerList)
-                        {
-                            if (Mathf.Abs(GameStorage.playerMasterList[pID].position.x - (enemyList[n].position.x + x)) + Mathf.Abs(GameStorage.playerMasterList[pID].position.y - (enemyList[n].position.y + y)) < fallbackMove.priority)
-                            {
-                                fallbackMove = new EnemyMove(x + enemyList[n].position.x, y + enemyList[n].position.y, Mathf.Abs(GameStorage.playerMasterList[pID].position.x - (enemyList[n].position.x + x)) + Mathf.Abs(GameStorage.playerMasterList[pID].position.y - (enemyList[n].position.y + y)), 0, moveXFirst);
-                            }
-                            else if (Mathf.Approximately(Mathf.Abs(GameStorage.playerMasterList[pID].position.x - (enemyList[n].position.x + x)) + Mathf.Abs(GameStorage.playerMasterList[pID].position.y - (enemyList[n].position.y + y)), fallbackMove.priority))
-                            {
-                                if (Random.Range(0, 2) == 1)
-                                {
-                                    fallbackMove = new EnemyMove(x + enemyList[n].position.x, y + enemyList[n].position.y, Mathf.Abs(GameStorage.playerMasterList[pID].position.x - (enemyList[n].position.x + x)) + Mathf.Abs(GameStorage.playerMasterList[pID].position.y - (enemyList[n].position.y + y)), 0, moveXFirst);
-                                }
-                            }
+                            fallbackMove = new EnemyMove(pos.First.x, pos.First.y, Mathf.Abs(GameStorage.playerMasterList[pID].position.x - pos.First.x) + Mathf.Abs(GameStorage.playerMasterList[pID].position.y - pos.First.y), 0, pos.Second);
                         }
                     }
                 }
@@ -999,7 +814,7 @@ public class Battle : MonoBehaviour
         enemyList[n].moved = true;
         chosenMove = possibleMoves[0];
     }
-    
+
     /// <summary>
     /// Gets how much damage p1 would do when attacking p2
     /// </summary>
@@ -1026,7 +841,7 @@ public class Battle : MonoBehaviour
         else
             return Mathf.RoundToInt((p1.GetEffectiveMAtk(dist) * 3.0f) / p2.GetEffectiveMDef(dist));
     }
-    
+
     /// <summary>
     /// Performs attack, then checks for an executes possible counterattack if both pawns are still alive
     /// </summary>
@@ -1170,7 +985,7 @@ public class Battle : MonoBehaviour
         }
         return -1;
     }
-    
+
     /// <summary>
     /// Checks if there is an enemy at the given x and y values
     /// </summary>
@@ -1183,7 +998,7 @@ public class Battle : MonoBehaviour
         }
         return -1;
     }
-    
+
     /// <summary>
     /// Updates the data of each tile in the battlefield with its significance at the current moment
     /// </summary>
@@ -1285,104 +1100,28 @@ public class Battle : MonoBehaviour
         //if we need to render player moves
         else if (battleState == BattleState.Player && selectedPlayer != -1)
         {
-            int maxMove = GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].GetMoveSpeed();
+            List<Pair<Vector2Int, bool>> moveSpots = GetViableMovements(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]]);
             WeaponType weapon;
             if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon]).subType, out weapon))
                 Debug.Log("Weapon Type does not exist in the Registry.");
-            for (int x = -maxMove; x <= maxMove; x++)
+            foreach (Pair<Vector2Int, bool> pos in moveSpots)
             {
-                for (int y = -maxMove; y <= maxMove; y++)
-                {
-                    if (Mathf.Abs(x) + Mathf.Abs(y) <= maxMove && x + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x >= 0 && x + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x < mapSizeX && y + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y >= 0 && y + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y < mapSizeY)
-                    {
-                        bool goodTile = true;
-                        if (PlayerAtPos(x + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, y + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y) != -1)
-                            goodTile = false;
-                        if (EnemyAtPos(x + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, y + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y) != -1)
-                            goodTile = false;
-                        if (x == 0 && y == 0)
-                            goodTile = true;
-                        if (goodTile)
-                        {
-                            for (int cX = 1; cX <= Mathf.Abs(x); cX++)
-                            {
-                                if (!GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].ValidMoveTile(battleMap[cX * Mathf.RoundToInt(Mathf.Sign(x)) + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y]))
-                                {
-                                    goodTile = false;
-                                }
-                                if (EnemyAtPos(cX * Mathf.RoundToInt(Mathf.Sign(y)) + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y) != -1)
-                                    goodTile = false;
-                            }
-                            if (goodTile)
-                            {
-                                for (int cY = 1; cY <= Mathf.Abs(y); cY++)
-                                {
-                                    if (!GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].ValidMoveTile(battleMap[x + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y]))
-                                    {
-                                        goodTile = false;
-                                    }
-                                    if (EnemyAtPos(x + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y) != -1)
-                                        goodTile = false;
-                                }
-                            }
-                            //if invalid by x, y, check y, x
-                            if (!goodTile)
-                            {
-                                goodTile = true;
-                                for (int cY = 1; cY <= Mathf.Abs(y); cY++)
-                                {
-                                    if (!GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].ValidMoveTile(battleMap[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y]))
-                                    {
-                                        goodTile = false;
-                                    }
-                                    if (EnemyAtPos(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y) != -1)
-                                        goodTile = false;
-                                }
-                                if (goodTile)
-                                {
-                                    for (int cX = 1; cX <= Mathf.Abs(x); cX++)
-                                    {
-                                        if (!GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].ValidMoveTile(battleMap[cX * Mathf.RoundToInt(Mathf.Sign(x)) + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, y + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y]))
-                                        {
-                                            goodTile = false;
-                                        }
-                                        if (EnemyAtPos(cX * Mathf.RoundToInt(Mathf.Sign(x)) + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, y + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y) != -1)
-                                            goodTile = false;
-                                    }
-                                }
-                            }
-                            if (goodTile)
-                            {
-                                //marks the tile as a moveable spot
-                                tileList[x + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, (mapSizeY - 1) - (y + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y)].GetComponent<BattleTile>().playerMoveRange = true;
-                                RenderWeaponRanges(x + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, y + GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y, weapon, "attack area");
-                            }
-                        }
-                    }
-                }
+                tileList[pos.First.x, (mapSizeY - 1) - pos.First.y].GetComponent<BattleTile>().playerMoveRange = true;
+                RenderWeaponRanges(pos.First.x, pos.First.y, weapon, "attack area");
             }
         }
         if (showDanger)
         {
             for (int n = 0; n < enemyList.Length; n++)
             {
-                int maxMove = enemyList[n].GetMoveSpeed();
+                List<Pair<Vector2Int, bool>> moveSpots = GetViableMovements(enemyList[n]);
                 WeaponType weapon;
                 if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[n].equippedWeapon]).subType, out weapon))
                     Debug.Log("Weapon Type does not exist in the Registry.");
-                for (int x = -maxMove; x <= maxMove; x++)
+                foreach (Pair<Vector2Int, bool> pos in moveSpots)
                 {
-                    for (int y = -maxMove; y <= maxMove; y++)
-                    {
-                        if (Mathf.Abs(x) + Mathf.Abs(y) <= maxMove && x + enemyList[n].position.x >= 0 && x + enemyList[n].position.x < mapSizeX && y + enemyList[n].position.y >= 0 && y + enemyList[n].position.y < mapSizeY)
-                        {
-                            if (ValidEnemyMove(n, x, y))
-                            {
-                                tileList[x + enemyList[n].position.x, (mapSizeY - 1) - (y + enemyList[n].position.y)].GetComponent<BattleTile>().enemyDanger = true;
-                                RenderWeaponRanges(x + enemyList[n].position.x, y + enemyList[n].position.y, weapon, "danger area");
-                            }
-                        }
-                    }
+                    tileList[pos.First.x, (mapSizeY - 1) - pos.First.y].GetComponent<BattleTile>().enemyDanger = true;
+                    RenderWeaponRanges(pos.First.x, pos.First.y, weapon, "danger area");
                 }
             }
         }
@@ -1412,87 +1151,209 @@ public class Battle : MonoBehaviour
     /// <param name="tileValue">Whether this check is for an enemy (danger area) or a player (attack area)</param>
     public void RenderWeaponRanges(int x, int y, WeaponType weapon, string tileValue)
     {
-        for (int i = 1; i <= weapon.range; i++)
+        List<Vector2Int> attackSpots = GetViableAttackSpaces(weapon, new Vector2Int(x, y));
+        foreach (Vector2Int pos in attackSpots)
         {
-            if (!weapon.ranged && i > 1)
-            {
-                if (ViableMeleeSpot(x + weapon.sRange + i, y, tileValue))
-                    tileList[x + weapon.sRange + i, (mapSizeY - 1) - y].GetComponent<BattleTile>().ChangeValueByKey(tileValue);
-            }
-            else
-            {
-                tileList[x + weapon.sRange + i, (mapSizeY - 1) - y].GetComponent<BattleTile>().ChangeValueByKey(tileValue);
-            }
-            if (!weapon.ranged && i > 1)
-            {
-                if (ViableMeleeSpot(x - weapon.sRange - i, y, tileValue))
-                    tileList[x - weapon.sRange - i, (mapSizeY - 1) - y].GetComponent<BattleTile>().ChangeValueByKey(tileValue);
-            }
-            else
-            {
-                tileList[x - weapon.sRange - i, (mapSizeY - 1) - y].GetComponent<BattleTile>().ChangeValueByKey(tileValue);
-            }
-            if (!weapon.ranged && i > 1)
-            {
-                if (ViableMeleeSpot(x, y + weapon.sRange + i, tileValue))
-                    tileList[x, (mapSizeY - 1) - (y + weapon.sRange + i)].GetComponent<BattleTile>().ChangeValueByKey(tileValue);
-            }
-            else
-            {
-                tileList[x, (mapSizeY - 1) - (y + weapon.sRange + i)].GetComponent<BattleTile>().ChangeValueByKey(tileValue);
-            }
-            if (!weapon.ranged && i > 1)
-            {
-                if (ViableMeleeSpot(x, y - weapon.sRange - i, tileValue))
-                    tileList[x, (mapSizeY - 1) - (y - weapon.sRange - i)].GetComponent<BattleTile>().ChangeValueByKey(tileValue);
-            }
-            else
-            {
-                tileList[x, (mapSizeY - 1) - (y - weapon.sRange - i)].GetComponent<BattleTile>().ChangeValueByKey(tileValue);
-            }
-        }
-        if (weapon.diagCut > 0)
-        {
-            for (int i = 1; i <= weapon.diagCut; i++)
-            {
-                if (y + i < mapSizeY)
-                {
-                    if (x - i >= 0)
-                    {
-                        tileList[x - i, (mapSizeY - 1) - (y + i)].GetComponent<BattleTile>().ChangeValueByKey(tileValue);
-                    }
-                    if (x + i < mapSizeX)
-                    {
-                        tileList[x + i, (mapSizeY - 1) - (y + i)].GetComponent<BattleTile>().ChangeValueByKey(tileValue);
-                    }
-                }
-                if (y - i >= 0)
-                {
-                    if (x - i >= 0)
-                    {
-                        tileList[x - i, (mapSizeY - 1) - (y - i)].GetComponent<BattleTile>().ChangeValueByKey(tileValue);
-                    }
-                    if (x + i < mapSizeX)
-                    {
-                        tileList[x + i, (mapSizeY - 1) - (y - i)].GetComponent<BattleTile>().ChangeValueByKey(tileValue);
-                    }
-                }
-            }
+            tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().ChangeValueByKey(tileValue);
         }
     }
 
     /// <summary>
-    /// Checks to see whether a tile would be a viable melee attack target
+    /// Gets all of the places a given pawn can move to
     /// </summary>
-    /// <param name="x">The grid x position of the spot to check</param>
-    /// <param name="y">The grid y position of the spot to check</param>
-    /// <param name="tileValue">Whether this check is for an enemy (danger area) or a player (attack area)</param>
-    public bool ViableMeleeSpot(int x, int y, string tileValue)
+    /// <param name="entity">The entity moving</param>
+    /// <returns>First = a valid position, Second = whether or not moving horizontally first is valid</returns>
+    private List<Pair<Vector2Int, bool>> GetViableMovements(BattleParticipant entity)
     {
-        if (battleMap[x, y] == 1 || battleMap[x, y] == 3 || battleMap[x, y] == 4 || battleMap[x, y] == 5)
-            if ((tileValue == "danger area" && tileList[x - 1, (mapSizeY - 1) - (y - 1)].GetComponent<BattleTile>().enemyDanger) || (tileValue == "attack area" && tileList[x - 1, (mapSizeY - 1) - (y - 1)].GetComponent<BattleTile>().playerAttackRange))
-                return true;
-        return false;
+        List<Pair<Vector2Int, bool>> moveSpots = new List<Pair<Vector2Int, bool>>();
+        bool isPlayer = entity is Player;
+        int maxMove = entity.GetMoveSpeed();
+        WeaponType weapon;
+        if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[entity.equippedWeapon]).subType, out weapon))
+            Debug.Log("Weapon Type does not exist in the Registry.");
+        for (int x = -maxMove; x <= maxMove; x++)
+        {
+            for (int y = -maxMove; y <= maxMove; y++)
+            {
+                if (Mathf.Abs(x) + Mathf.Abs(y) <= maxMove && x + entity.position.x >= 0 && x + entity.position.x < mapSizeX && y + entity.position.y >= 0 && y + entity.position.y < mapSizeY)
+                {
+                    //It is automatically valid if the entity is moving to itself
+                    if (x == 0 && y == 0)
+                    {
+                        moveSpots.Add(new Pair<Vector2Int, bool>(new Vector2Int(entity.position.x, entity.position.y), true));
+                        continue;
+                    }
+                    bool goodTile = true;
+                    //It is an invalid move position if it would overlap with an existing entity
+                    if (PlayerAtPos(x + entity.position.x, y + entity.position.y) != -1)
+                        goodTile = false;
+                    if (EnemyAtPos(x + entity.position.x, y + entity.position.y) != -1)
+                        goodTile = false;
+                    //If it passes all of the preliminary tests
+                    if (goodTile)
+                    {
+                        //Check every tile along the path, starting by moving horizontally
+                        for (int cX = 1; cX <= Mathf.Abs(x); cX++)
+                        {
+                            if (!entity.ValidMoveTile(battleMap[cX * Mathf.RoundToInt(Mathf.Sign(x)) + entity.position.x, entity.position.y]))
+                            {
+                                goodTile = false;
+                            }
+                            if (isPlayer ? EnemyAtPos(cX * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.x, entity.position.y) != -1 : PlayerAtPos(cX * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.x, entity.position.y) != -1)
+                                goodTile = false;
+                        }
+                        //If all tiles along the horizontal path pass the test, check vertical from the end of that path
+                        if (goodTile)
+                        {
+                            for (int cY = 1; cY <= Mathf.Abs(y); cY++)
+                            {
+                                if (!entity.ValidMoveTile(battleMap[x + entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y]))
+                                {
+                                    goodTile = false;
+                                }
+                                if (isPlayer ? EnemyAtPos(x + entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y) != -1 : PlayerAtPos(x + entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y) != -1)
+                                    goodTile = false;
+                            }
+                            //If it passes the x-first set of tests, mark it as a valid move tile by moving x first
+                            if (goodTile)
+                            {
+                                moveSpots.Add(new Pair<Vector2Int, bool>(new Vector2Int(x + entity.position.x, y + entity.position.y), true));
+                                continue;
+                            }
+                        }
+                        //if invalid by x, y, check y, x
+                        goodTile = true;
+                        //Check every tile along the path, starting by moving vertically
+                        for (int cY = 1; cY <= Mathf.Abs(y); cY++)
+                        {
+                            if (!entity.ValidMoveTile(battleMap[entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y]))
+                            {
+                                goodTile = false;
+                            }
+                            if (isPlayer ? EnemyAtPos(entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y) != -1 : PlayerAtPos(entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y) != -1)
+                                goodTile = false;
+                        }
+                        //If all tiles along the vertical path pass the test, check horizontal from the end of that path
+                        if (goodTile)
+                        {
+                            for (int cX = 1; cX <= Mathf.Abs(x); cX++)
+                            {
+                                if (!entity.ValidMoveTile(battleMap[cX * Mathf.RoundToInt(Mathf.Sign(x)) + entity.position.x, y + entity.position.y]))
+                                {
+                                    goodTile = false;
+                                }
+                                if (isPlayer ? EnemyAtPos(cX * Mathf.RoundToInt(Mathf.Sign(x)) + entity.position.x, y + entity.position.y) != -1 : PlayerAtPos(cX * Mathf.RoundToInt(Mathf.Sign(x)) + entity.position.x, y + entity.position.y) != -1)
+                                    goodTile = false;
+                            }
+                        }
+                        //If it passes the y-first set of tests, mark it as a valid move tile by moving y first
+                        if (goodTile)
+                        {
+                            moveSpots.Add(new Pair<Vector2Int, bool>(new Vector2Int(x + entity.position.x, y + entity.position.y), false));
+                        }
+                    }
+                }
+            }
+        }
+        return moveSpots;
+    }
+
+    /// <summary>
+    /// Returns a list of all the spaces attackable from a given position by the given weapon type
+    /// </summary>
+    private List<Vector2Int> GetViableAttackSpaces(WeaponType weapon, Vector2Int center)
+    {
+        List<Vector2Int> attackSpots = new List<Vector2Int>();
+        for (int i = 1; i <= weapon.range; i++)
+        {
+            //If the weapon is melee and the space is not directly next to the attacker there needs to be a clear line to it
+            if (!weapon.ranged && i > 1)
+            {
+                if (center.x + weapon.sRange + i < mapSizeX && battleMap[center.x + weapon.sRange + i, (mapSizeY - 1) - center.y] != 6 && attackSpots.Contains(new Vector2Int(center.x + weapon.sRange + i - 1, center.y)))
+                    attackSpots.Add(new Vector2Int(center.x + weapon.sRange + i, center.y));
+
+                if (center.x - weapon.sRange - i >= 0 && battleMap[center.x - weapon.sRange - i, (mapSizeY - 1) - center.y] != 6 && attackSpots.Contains(new Vector2Int(center.x - weapon.sRange - i + 1, center.y)))
+                    attackSpots.Add(new Vector2Int(center.x - weapon.sRange - i, center.y));
+
+                if (center.y + weapon.sRange + i < mapSizeY && battleMap[center.x, (mapSizeY - 1) - (center.y + weapon.sRange + i)] != 6 && attackSpots.Contains(new Vector2Int(center.x, center.y + weapon.sRange + i - 1)))
+                    attackSpots.Add(new Vector2Int(center.x, center.y + weapon.sRange + i));
+
+                if (center.y - weapon.sRange - i >= 0 && battleMap[center.x, (mapSizeY - 1) - (center.y - weapon.sRange - i)] != 6 && attackSpots.Contains(new Vector2Int(center.x, center.y - weapon.sRange - i + 1)))
+                    attackSpots.Add(new Vector2Int(center.x, center.y - weapon.sRange - i));
+            }
+            //If the weapon is ranged or the space is right against the attacker it just needs to be a place entities can exist
+            else
+            {
+                if (center.x + weapon.sRange + i < mapSizeX && battleMap[center.x + weapon.sRange + i, (mapSizeY - 1) - center.y] != 6)
+                    attackSpots.Add(new Vector2Int(center.x + weapon.sRange + i, center.y));
+                if (center.x - weapon.sRange - i >= 0 && battleMap[center.x - weapon.sRange - i, (mapSizeY - 1) - center.y] != 6)
+                    attackSpots.Add(new Vector2Int(center.x - weapon.sRange - i, center.y));
+                if (center.y + weapon.sRange + i < mapSizeY && battleMap[center.x, (mapSizeY - 1) - (center.y + weapon.sRange + i)] != 6)
+                    attackSpots.Add(new Vector2Int(center.x, center.y + weapon.sRange + i));
+                if (center.y - weapon.sRange - i >= 0 && battleMap[center.x, (mapSizeY - 1) - (center.y - weapon.sRange - i)] != 6)
+                    attackSpots.Add(new Vector2Int(center.x, center.y - weapon.sRange - i));
+            }
+        }
+        //Checks the diagonal attack spaces if there are any
+        for (int i = 1; i <= weapon.diagCut; i++)
+        {
+            if (center.y + i < mapSizeY)
+            {
+                if (center.x - i >= 0 && battleMap[center.x - i, (mapSizeY - 1) - (center.y + 1)] != 6)
+                {
+                    attackSpots.Add(new Vector2Int(center.x - i, center.y + i));
+                }
+                if (center.x + i < mapSizeX && battleMap[center.x + i, (mapSizeY - 1) - (center.y + 1)] != 6)
+                {
+                    attackSpots.Add(new Vector2Int(center.x + i, center.y + i));
+                }
+            }
+            if (center.y - i >= 0)
+            {
+                if (center.x - i >= 0 && battleMap[center.x - i, (mapSizeY - 1) - (center.y - 1)] != 6)
+                {
+                    attackSpots.Add(new Vector2Int(center.x - i, center.y - i));
+                }
+                if (center.x + i < mapSizeX && battleMap[center.x + i, (mapSizeY - 1) - (center.y - 1)] != 6)
+                {
+                    attackSpots.Add(new Vector2Int(center.x + i, center.y - i));
+                }
+            }
+        }
+        return attackSpots;
+    }
+
+    #region Spell Casting
+
+    /// <summary>
+    /// Activates when a spell button starts being hovered
+    /// </summary>
+    public void HoveringSpell(int buttonID)
+    {
+        hoveredSpell = buttonID;
+        updateTilesThisFrame = true;
+    }
+
+    /// <summary>
+    /// Activates when a spell button is no longer hovered
+    /// </summary>
+    public void StopHoveringSpell()
+    {
+        hoveredSpell = -1;
+        updateTilesThisFrame = true;
+    }
+
+    /// <summary>
+    /// Called then the player selects a spell they want to try and cast from their quick cast list
+    /// </summary>
+    /// <param name="buttonID">The place in the spell quick list to grab the spell from</param>
+    public void SelectSpell(int buttonID)
+    {
+        if (selectedSpell == buttonID)
+            selectedSpell = -1;
+        else
+            selectedSpell = buttonID;
+        updateTilesThisFrame = true;
     }
 
     /// <summary>
@@ -1757,4 +1618,6 @@ public class Battle : MonoBehaviour
         selectedEnemy = -1;
         skillCastConfirmMenu.SetActive(false);
     }
+
+    #endregion
 }

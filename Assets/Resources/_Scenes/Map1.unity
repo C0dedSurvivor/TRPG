@@ -6771,7 +6771,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: 0
+  item: -4
 --- !u!1 &785329008
 GameObject:
   m_ObjectHideFlags: 0
@@ -7721,7 +7721,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: 0
+  item: -2
 --- !u!1 &907049198
 GameObject:
   m_ObjectHideFlags: 0
@@ -9728,7 +9728,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: 0
+  item: -3
 --- !u!1 &1179066791
 GameObject:
   m_ObjectHideFlags: 0
@@ -11312,6 +11312,17 @@ MonoBehaviour:
         m_CallState: 2
       - m_Target: {fileID: 1837521224}
         m_MethodName: Destroy
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1289096160}
+        m_MethodName: Save
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -13625,7 +13636,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: 0
+  item: -5
 --- !u!114 &1621057845
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13638,7 +13649,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: 0
+  item: -7
 --- !u!1 &1633231436
 GameObject:
   m_ObjectHideFlags: 0
@@ -13880,7 +13891,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: 0
+  item: -6
 --- !u!1 &1674480163
 GameObject:
   m_ObjectHideFlags: 0
@@ -14974,7 +14985,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: 0
+  item: -8
 --- !u!1 &1787679770
 GameObject:
   m_ObjectHideFlags: 0
@@ -15066,7 +15077,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6102a9db31a40e47a935aca0266e81b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: 0
+  item: -1
 --- !u!1 &1796605977
 GameObject:
   m_ObjectHideFlags: 0
@@ -17502,7 +17513,7 @@ GameObject:
   - component: {fileID: 1990799083}
   m_Layer: 0
   m_Name: MapPlayer
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

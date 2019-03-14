@@ -119,7 +119,7 @@ public class BattleUI : MonoBehaviour {
                             damageNote1.text = "This enemy will not live for much longer.";
                         }
                         float pd = (GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]].cHealth - BattleScript.GetDamageValues(BattleScript.enemyList[BattleScript.selectedEnemy], GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]])) / (GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]].mHealth * 1.0f);
-                        if (Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]].equippedWeapon]).subType].ranged != Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[BattleScript.enemyList[BattleScript.selectedEnemy].equippedWeapon]).subType].ranged)
+                        if (Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]].equippedWeapon.Name]).subType].ranged != Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[BattleScript.enemyList[BattleScript.selectedEnemy].equippedWeapon.Name]).subType].ranged)
                         {
                             damageNote2.text = "And they shouldn't be able to counterattack me from this range.";
                         }

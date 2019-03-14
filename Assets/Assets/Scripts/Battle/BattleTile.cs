@@ -5,6 +5,7 @@ using UnityEngine;
 public class BattleTile : MonoBehaviour {
 
     Material myMat;
+    public Battle battle;
     
     public Color skillRangeColor = new Color(0.0f, 0.0f, 0.7f, 0.4f);
     public Color playerMoveInDanger = new Color(1.0f, 0.7f, 0.0f, 0.4f);
@@ -29,6 +30,18 @@ public class BattleTile : MonoBehaviour {
         myMat = GetComponent<Renderer>().material;
         Reset();
 	}
+
+    //Keeping this here as a warning to future-me
+    //Didn't work, would only register clicks sometimes
+    /*
+    private void OnMouseOver()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            battle.SpaceInteraction(arrayID);
+        }
+    }
+    */
 
     /// <summary>
     /// Determines what color this tile should be

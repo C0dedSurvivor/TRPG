@@ -13,7 +13,7 @@ public enum SortingType
 
 public class StoredItem
 {
-    private string name;
+    protected string name;
     public int amount;
 
     public string Name
@@ -155,43 +155,51 @@ public class Inventory
         {
             Stream inStream = File.OpenRead("Assets/Resources/Storage/Inventory.data");
             BinaryReader file = new BinaryReader(inStream);
+            int amt = file.ReadInt32();
+            for(int i = 0; i < amt; i++)
+            {
+                itemList.Add(new StoredItem(file.ReadString(), file.ReadInt32()));
+            }
             file.Close();
         }
-        Debug.Log(AddItem("Animal Tooth", 5));
-        Debug.Log(AddItem("Arrows", 19));
-        Debug.Log(AddItem("Bandage", 3));
-        Debug.Log(AddItem("Bar of Iron", 14));
-        Debug.Log(AddItem("Battle Axe", 1));
-        Debug.Log(AddItem("Bloodstone Necklace", 1));
-        Debug.Log(AddItem("Copper Ore", 24));
-        Debug.Log(AddItem("Crossbow", 1));
-        Debug.Log(AddItem("Dagger", 1));
-        Debug.Log(AddItem("Demonic Sword", 1));
-        Debug.Log(AddItem("Egg", 42));
-        Debug.Log(AddItem("Empty Bottle (Large)", 2));
-        Debug.Log(AddItem("Feather", 42));
-        Debug.Log(AddItem("Helmet", 1));
-        Debug.Log(AddItem("Magic Dust", 127));
-        Debug.Log(AddItem("Mana Potion (Large)", 5));
-        Debug.Log(AddItem("Potion of Healing (Large)", 2));
-        Debug.Log(AddItem("Ruby", 5));
-        AddItem("Wooden Sword", 1);
-        AddItem("Iron Sword", 1);
-        AddItem("Steel Sword", 1);
-        AddItem("Mirendell", 1);
+        else
+        {
+            Debug.Log(AddItem("Animal Tooth", 5));
+            Debug.Log(AddItem("Arrows", 19));
+            Debug.Log(AddItem("Bandage", 3));
+            Debug.Log(AddItem("Bar of Iron", 14));
+            Debug.Log(AddItem(new Equippable("Battle Axe")));
+            Debug.Log(AddItem(new Equippable("Bloodstone Necklace")));
+            Debug.Log(AddItem("Copper Ore", 24));
+            Debug.Log(AddItem(new Equippable("Crossbow")));
+            Debug.Log(AddItem(new Equippable("Dagger")));
+            Debug.Log(AddItem(new Equippable("Demonic Sword")));
+            Debug.Log(AddItem("Egg", 42));
+            Debug.Log(AddItem("Empty Bottle (Large)", 2));
+            Debug.Log(AddItem("Feather", 42));
+            Debug.Log(AddItem(new Equippable("Helmet")));
+            Debug.Log(AddItem("Magic Dust", 127));
+            Debug.Log(AddItem("Mana Potion (Large)", 5));
+            Debug.Log(AddItem("Potion of Healing (Large)", 2));
+            Debug.Log(AddItem("Ruby", 5));
+            AddItem(new Equippable("Wooden Sword"));
+            AddItem(new Equippable("Iron Sword"));
+            AddItem(new Equippable("Steel Sword"));
+            AddItem(new Equippable("Mirendell"));
 
-        AddItem("Wooden Lance", 1);
-        AddItem("Iron Lance", 1);
-        AddItem("Steel Lance", 1);
-        AddItem("Sapphire Lance", 1);
-        AddItem("Leviantal", 1);
+            AddItem(new Equippable("Wooden Lance"));
+            AddItem(new Equippable("Iron Lance"));
+            AddItem(new Equippable("Steel Lance"));
+            AddItem(new Equippable("Sapphire Lance"));
+            AddItem(new Equippable("Leviantal"));
 
-        AddItem("Wooden Axe", 1);
-        AddItem("Iron Axe", 1);
-        AddItem("Steel Axe", 1);
-        AddItem("Xarok", 1);
+            AddItem(new Equippable("Wooden Axe"));
+            AddItem(new Equippable("Iron Axe"));
+            AddItem(new Equippable("Steel Axe"));
+            AddItem(new Equippable("Xarok"));
 
-        AddItem("Staff of Healing", 1);
+            AddItem(new Equippable("Staff of Healing"));
+        }
 
         SortInventory((int)sortingType);
     }
@@ -200,6 +208,12 @@ public class Inventory
     {
         Stream outStream = File.OpenWrite("Assets/Resources/Storage/Inventory.data");
         BinaryWriter file = new BinaryWriter(outStream);
+        file.Write(itemList.Count);
+        foreach(StoredItem item in itemList)
+        {
+            file.Write(item.Name);
+            file.Write(item.amount);
+        }
         file.Close();
     }
 
@@ -220,7 +234,7 @@ public class Inventory
                     returnedList.Add(Copy(i));
                 }
                 break;
-            //If only grabbing equippables for a cerain slot
+            //If only grabbing equippables for a certain slot
             case 0:
             case 1:
             case 2:
@@ -263,21 +277,14 @@ public class Inventory
     }
 
     /// <summary>
-    /// Adds a new item ot the inventory, making sur not to exceed the max stack for the item if there is one
+    /// Adds a material or battle item to the inventory, making sure not to exceed the max stack for the item if there is one
     /// </summary>
     /// <param name="itemName">Name of the item to add</param>
     /// <param name="amount">Amount to add</param>
     /// <returns>Returns how many of the item were successfully added to the inventory</returns>
     public static int AddItem(string itemName, int amount)
     {
-        if (Registry.ItemRegistry[itemName] is EquippableBase)
-        {
-            itemList.Add(new StoredItem(itemName));
-            return 1;
-        }
-        //if it is either a base material or a battle item, code don't care
-        else
-        {
+        
             ItemBase item = Registry.ItemRegistry[itemName];
             foreach (StoredItem stored in itemList)
             {
@@ -299,7 +306,12 @@ public class Inventory
             //if it doesn't already exist
             itemList.Add(new StoredItem(itemName, Mathf.Min(item.MaxStack, amount)));
             return Mathf.Min(item.MaxStack, amount);
-        }
+    }
+
+    public static int AddItem(Equippable equippable)
+    {
+            itemList.Add(equippable);
+            return 1;
     }
 
     /// <summary>
@@ -360,7 +372,7 @@ public class Inventory
     /// <returns>A deep copy of the given item</returns>
     private static StoredItem Copy(StoredItem item)
     {
-        return new StoredItem(item.Name, item.amount);
+        return item is Equippable ? new Equippable(item.Name) : new StoredItem(item.Name, item.amount);
     }
     
     /// <summary>

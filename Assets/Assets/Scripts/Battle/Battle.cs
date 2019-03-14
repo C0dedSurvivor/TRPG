@@ -20,9 +20,12 @@ public enum EffectTriggers
     LeaveMagicDamage,
     BasicAttack,
     SpellCast,
+    KillAnEnemy,
     GettingHealed,
     Healing,
     StartOfMatch,
+    StartOfTurn,
+    EndOfTurn,
     EndOfMatch
 }
 
@@ -35,7 +38,7 @@ public struct EnemyMove
     public Vector2Int attackPosition;
     public int priority;
     public int reasonPriority;
-    public bool xFirst;
+    public bool yFirst;
 
     public EnemyMove(int x, int y, int p, int rP, bool xF)
     {
@@ -43,7 +46,7 @@ public struct EnemyMove
         attackPosition = new Vector2Int(-1, -1);
         priority = p;
         reasonPriority = rP;
-        xFirst = xF;
+        yFirst = xF;
     }
     public EnemyMove(int x, int y, int aX, int aY, int p, int rP, bool xF)
     {
@@ -51,7 +54,7 @@ public struct EnemyMove
         attackPosition = new Vector2Int(aX, aY);
         priority = p;
         reasonPriority = rP;
-        xFirst = xF;
+        yFirst = xF;
     }
 
     /// <summary>
@@ -166,14 +169,14 @@ public class Battle : MonoBehaviour
     public GameObject moveMarker;
 
     //Stores where the pieces need to be moved to to match up with where they need to be
-    private List<MoveQueue> playerAnimMoves = new List<MoveQueue>();
-    private List<MoveQueue> enemyAnimMoves = new List<MoveQueue>();
+    private Queue<MoveQueue> playerAnimMoves = new Queue<MoveQueue>();
+    private Queue<MoveQueue> enemyAnimMoves = new Queue<MoveQueue>();
     //How fast the pieces move
     public float animSpeed = 0.1f;
 
     public int movingEnemy;
     private EnemyMove chosenMove;
-    private bool moveXFirst;
+    private bool moveYFirst;
 
     //The initial and final positions for animations involving the camera
     private Vector3 cameraInitPos;
@@ -184,6 +187,8 @@ public class Battle : MonoBehaviour
     //Whether a change has been made that would affect the states of one or more tiles
     //Keeps updateTiles from being called every frame
     private bool updateTilesThisFrame = false;
+
+    private Vector2Int spellCastPosition = new Vector2Int(-1, -1);
 
     // Use this for initialization
     void Awake()
@@ -216,11 +221,6 @@ public class Battle : MonoBehaviour
         enemyList[1] = new Enemy(10, 5, 2, 5, 5);
         enemyList[2] = new Enemy(12, 5, 2, 5, 5);
         enemyList[3] = new Enemy(14, 5, 5, 5, 5);
-        for (int i = 0; i < GameStorage.activePlayerList.Count; i++)
-        {
-            GameStorage.playerMasterList[GameStorage.activePlayerList[i]].position = new Vector2Int(6 + 2 * i, 10 + i % 2);
-            GameStorage.playerMasterList[GameStorage.activePlayerList[i]].moved = false;
-        }
         //grabs the map layout
         battleMap = GameStorage.GrabBattleMap(centerX, centerY, xSize, ySize);
         //finds the top left corner of the current map
@@ -240,14 +240,22 @@ public class Battle : MonoBehaviour
         //Calculates where the camera needs to end up to frame the battle correctly
         cameraFinalPos = new Vector3(topLeft.x + (xSize / 2), 19, topLeft.y + (ySize / 2));
         battleCamera.GetComponent<Camera>().tag = "MainCamera";
-        //moves the player and enemy models into their correct position
+        //Moves the player and enemy models into their correct position and sets up default values
         for (int i = 0; i < GameStorage.activePlayerList.Count; i++)
         {
+            GameStorage.playerMasterList[GameStorage.activePlayerList[i]].position = new Vector2Int(6 + 2 * i, 10 + i % 2);
+            GameStorage.playerMasterList[GameStorage.activePlayerList[i]].moved = false;
+            GameStorage.playerMasterList[GameStorage.activePlayerList[i]].StartOfMatch();
+            CheckEventTriggers(GameStorage.playerMasterList[GameStorage.activePlayerList[i]], EffectTriggers.StartOfMatch);
+            CheckEventTriggers(GameStorage.playerMasterList[GameStorage.activePlayerList[i]], EffectTriggers.StartOfTurn);
             playerModels[i] = Instantiate(PlayerBattleModelPrefab);
             playerModels[i].transform.position = new Vector3(GameStorage.playerMasterList[GameStorage.activePlayerList[i]].position.x + topLeft.x, 1, (mapSizeY - 1) - GameStorage.playerMasterList[GameStorage.activePlayerList[i]].position.y + topLeft.y);
         }
         for (int i = 0; i < enemyList.Length; i++)
         {
+            enemyList[i].StartOfMatch();
+            CheckEventTriggers(enemyList[i], EffectTriggers.StartOfMatch);
+            CheckEventTriggers(enemyList[i], EffectTriggers.StartOfTurn);
             enemyModels[i] = Instantiate(EnemyBattleModelPrefab);
             enemyModels[i].transform.position = new Vector3(enemyList[i].position.x + topLeft.x, 1, (mapSizeY - 1) - enemyList[i].position.y + topLeft.y);
         }
@@ -269,7 +277,7 @@ public class Battle : MonoBehaviour
                 case BattleState.None:
                     break;
                 case BattleState.BattleSetup:
-                    Debug.Log(battleCamera.transform.position + "|" + battleCamera.transform.rotation.eulerAngles);
+                    //Debug.Log(battleCamera.transform.position + "|" + battleCamera.transform.rotation.eulerAngles);
                     battleCamera.transform.position = (Vector3.Lerp(battleCamera.transform.position, cameraFinalPos, 0.1f));
                     battleCamera.transform.rotation = (Quaternion.Lerp(battleCamera.transform.rotation, cameraFinalRot, 0.1f));
                     if (GameStorage.Approximately(battleCamera.transform.position, cameraFinalPos) && GameStorage.Approximately(battleCamera.transform.rotation, cameraFinalRot))
@@ -293,13 +301,14 @@ public class Battle : MonoBehaviour
                     }
                     break;
                 case BattleState.MovePlayer:
-                    Vector2 initPlayerPos = new Vector2(GameStorage.playerMasterList[GameStorage.activePlayerList[playerAnimMoves[0].entityID]].position.x + topLeft.x, (mapSizeY - 1) - GameStorage.playerMasterList[GameStorage.activePlayerList[playerAnimMoves[0].entityID]].position.y + topLeft.y);
-                    playerModels[playerAnimMoves[0].entityID].transform.Translate(Vector2.Lerp(Vector2.zero, playerAnimMoves[0].relativeMove, animSpeed).x, 0, Vector2.Lerp(Vector2.zero, playerAnimMoves[0].relativeMove, animSpeed).y);
-                    if (Mathf.Approximately(playerAnimMoves[0].relativeMove.x + initPlayerPos.x, playerModels[playerAnimMoves[0].entityID].transform.position.x) && Mathf.Approximately(playerAnimMoves[0].relativeMove.y + initPlayerPos.y, playerModels[playerAnimMoves[0].entityID].transform.position.z))
+                    MoveQueue move = playerAnimMoves.Peek();
+                    Vector2 initPlayerPos = new Vector2(GameStorage.playerMasterList[GameStorage.activePlayerList[move.entityID]].position.x + topLeft.x, (mapSizeY - 1) - GameStorage.playerMasterList[GameStorage.activePlayerList[move.entityID]].position.y + topLeft.y);
+                    playerModels[move.entityID].transform.Translate(Vector2.Lerp(Vector2.zero, move.relativeMove, animSpeed).x, 0, Vector2.Lerp(Vector2.zero, move.relativeMove, animSpeed).y);
+                    if (Mathf.Approximately(move.relativeMove.x + initPlayerPos.x, playerModels[move.entityID].transform.position.x) && Mathf.Approximately(move.relativeMove.y + initPlayerPos.y, playerModels[move.entityID].transform.position.z))
                     {
                         //moves the player and player model
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[playerAnimMoves[0].entityID]].position.Set(Mathf.RoundToInt(GameStorage.playerMasterList[GameStorage.activePlayerList[playerAnimMoves[0].entityID]].position.x + playerAnimMoves[0].relativeMove.x), Mathf.RoundToInt(GameStorage.playerMasterList[GameStorage.activePlayerList[playerAnimMoves[0].entityID]].position.y - playerAnimMoves[0].relativeMove.y));
-                        playerAnimMoves.Remove(playerAnimMoves[0]);
+                        GameStorage.playerMasterList[GameStorage.activePlayerList[move.entityID]].position.Set(Mathf.RoundToInt(GameStorage.playerMasterList[GameStorage.activePlayerList[move.entityID]].position.x + move.relativeMove.x), Mathf.RoundToInt(GameStorage.playerMasterList[GameStorage.activePlayerList[move.entityID]].position.y - move.relativeMove.y));
+                        playerAnimMoves.Dequeue();
 
                         //if the player is done moving
                         if (playerAnimMoves.Count == 0)
@@ -324,17 +333,19 @@ public class Battle : MonoBehaviour
                     }
                     break;
                 case BattleState.MoveEnemy:
-                    Vector2 initEnemyPos = new Vector2(enemyList[enemyAnimMoves[0].entityID].position.x + topLeft.x, (mapSizeY - 1) - enemyList[enemyAnimMoves[0].entityID].position.y + topLeft.y);
-                    enemyModels[enemyAnimMoves[0].entityID].transform.Translate(Vector2.Lerp(Vector2.zero, enemyAnimMoves[0].relativeMove, animSpeed).x, 0, Vector2.Lerp(Vector2.zero, enemyAnimMoves[0].relativeMove, animSpeed).y);
-                    if (Mathf.Approximately(enemyAnimMoves[0].relativeMove.x + initEnemyPos.x, enemyModels[enemyAnimMoves[0].entityID].transform.position.x) && Mathf.Approximately(enemyAnimMoves[0].relativeMove.y + initEnemyPos.y, enemyModels[enemyAnimMoves[0].entityID].transform.position.z))
+                    MoveQueue animation = enemyAnimMoves.Peek();
+                    Vector2 initEnemyPos = new Vector2(enemyList[animation.entityID].position.x + topLeft.x, (mapSizeY - 1) - enemyList[animation.entityID].position.y + topLeft.y);
+                    enemyModels[animation.entityID].transform.Translate(Vector2.Lerp(Vector2.zero, animation.relativeMove, animSpeed).x, 0, Vector2.Lerp(Vector2.zero, animation.relativeMove, animSpeed).y);
+                    if (Mathf.Approximately(animation.relativeMove.x + initEnemyPos.x, enemyModels[animation.entityID].transform.position.x) && Mathf.Approximately(animation.relativeMove.y + initEnemyPos.y, enemyModels[animation.entityID].transform.position.z))
                     {
-                        //moves the enemy and enemy model
-                        enemyList[enemyAnimMoves[0].entityID].position.Set(Mathf.RoundToInt(enemyList[enemyAnimMoves[0].entityID].position.x + enemyAnimMoves[0].relativeMove.x), Mathf.RoundToInt(enemyList[enemyAnimMoves[0].entityID].position.y - enemyAnimMoves[0].relativeMove.y));
-                        enemyAnimMoves.Remove(enemyAnimMoves[0]);
+                        //Moves the enemy and enemy model
+                        enemyList[animation.entityID].position.Set(Mathf.RoundToInt(enemyList[animation.entityID].position.x + animation.relativeMove.x), Mathf.RoundToInt(enemyList[animation.entityID].position.y - animation.relativeMove.y));
+                        enemyAnimMoves.Dequeue();
+                        //If the enemy is done moving
                         if (enemyAnimMoves.Count == 0)
                         {
                             updateTilesThisFrame = true;
-                            //attacks if enemy can
+                            //Attacks if enemy can
                             if (chosenMove.attackPosition.x != -1)
                             {
                                 PerformEnemyAttack(movingEnemy, chosenMove.attackPosition.x, chosenMove.attackPosition.y);
@@ -369,7 +380,6 @@ public class Battle : MonoBehaviour
                         else
                             print("I'm looking at nothing!");
                     }
-
                     if (selectedSpell != -1)
                     {
                         updateTilesThisFrame = true;
@@ -399,17 +409,21 @@ public class Battle : MonoBehaviour
     private void EndEnemyTurn()
     {
         //resets to allow players to move and starts player's turn
-        foreach(int pID in GameStorage.activePlayerList)
+        foreach (int pID in GameStorage.activePlayerList)
         {
             if (GameStorage.playerMasterList[pID].cHealth > 0 && !GameStorage.playerMasterList[pID].statusList.Contains("sleep"))
                 GameStorage.playerMasterList[pID].moved = false;
             GameStorage.playerMasterList[pID].EndOfTurn();
+            GameStorage.playerMasterList[pID].StartOfTurn();
+            CheckEventTriggers(GameStorage.playerMasterList[pID], EffectTriggers.StartOfTurn);
         }
         movingEnemy = 0;
         turn++;
         foreach (Enemy e in enemyList)
         {
             e.EndOfTurn();
+            e.StartOfTurn();
+            CheckEventTriggers(e, EffectTriggers.StartOfTurn);
         }
         if (battleState != BattleState.ReturnCamera)
             battleState = BattleState.Player;
@@ -458,6 +472,7 @@ public class Battle : MonoBehaviour
             {
                 tileList[x, y] = Instantiate(battleTile, new Vector3(xPos + x, 0.5f, yPos + y), Quaternion.Euler(0, 0, 0));
                 tileList[x, y].GetComponent<BattleTile>().arrayID = new Vector2Int(x, (mapSizeY - 1) - y);
+                tileList[x, y].GetComponent<BattleTile>().battle = this;
             }
         }
     }
@@ -571,7 +586,7 @@ public class Battle : MonoBehaviour
     {
         moveMarker.SetActive(false);
         canSwap = false;
-        foreach(int pID in GameStorage.activePlayerList)
+        foreach (int pID in GameStorage.activePlayerList)
         {
             GameStorage.playerMasterList[pID].moved = true;
         }
@@ -582,110 +597,118 @@ public class Battle : MonoBehaviour
     /// Deals with all of the possibilities of what the player could want to do when they click on a tile
     /// </summary>
     /// <param name="pos">What tile they clicked on</param>
-    private void SpaceInteraction(Vector2Int pos)
+    public void SpaceInteraction(Vector2Int pos)
     {
-        bool actionTaken = false;
-        switch (battleState)
+        //If the player should actually be able to interact with a tile
+        if (battleState == BattleState.Player || battleState == BattleState.Attack)
         {
-            case BattleState.Swap:
-                if (selectedPlayer != -1)
+            updateTilesThisFrame = true;
+
+            bool actionTaken = false;
+            switch (battleState)
+            {
+                case BattleState.Swap:
+                    if (selectedPlayer != -1)
+                    {
+                        int n = PlayerAtPos(pos.x, pos.y);
+                        GameStorage.playerMasterList[GameStorage.activePlayerList[n]].position = GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position;
+                        GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position = pos;
+                        playerModels[n].transform.position = new Vector3(GameStorage.playerMasterList[GameStorage.activePlayerList[n]].position.x + topLeft.x, 1, (mapSizeY - 1) - GameStorage.playerMasterList[GameStorage.activePlayerList[n]].position.y + topLeft.y);
+                        playerModels[selectedPlayer].transform.position = new Vector3(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x + topLeft.x, 1, (mapSizeY - 1) - GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y + topLeft.y);
+                        selectedPlayer = -1;
+                        actionTaken = true;
+                    }
+                    break;
+                case BattleState.Player:
+                    //if player is moving something
+                    if (tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerMoveRange && !GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].moved)
+                    {
+                        selectedMoveSpot.Set(pos.x, pos.y);
+                        moveMarker.transform.position = new Vector3(pos.x + topLeft.x, 1, (mapSizeY - 1) - pos.y + topLeft.y);
+                        moveMarker.SetActive(true);
+
+                        //update the line renderer
+                        moveMarker.GetComponent<LineRenderer>().SetPosition(0, Vector3.zero);
+                        moveYFirst = true;
+                        Vector2Int p = new Vector2Int(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x - selectedMoveSpot.x, GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y - selectedMoveSpot.y);
+
+                        Vector2 moveDifference = new Vector2(selectedMoveSpot.x - GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, selectedMoveSpot.y - GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y);
+
+                        for (int y = 0; y <= Mathf.Abs(moveDifference.y); y++)
+                        {
+                            if (!GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].ValidMoveTile(battleMap[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y + y * Mathf.RoundToInt(Mathf.Sign(moveDifference.y))]))
+                                moveYFirst = false;
+                            if (EnemyAtPos(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y + y * Mathf.RoundToInt(Mathf.Sign(moveDifference.y))) != -1)
+                                moveYFirst = false;
+                        }
+
+                        for (int x = 0; x <= Mathf.Abs(moveDifference.x); x++)
+                        {
+                            if (!GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].ValidMoveTile(battleMap[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x + x * Mathf.RoundToInt(Mathf.Sign(moveDifference.x)), selectedMoveSpot.y]))
+                                moveYFirst = false;
+                            if (EnemyAtPos(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x + x * Mathf.RoundToInt(Mathf.Sign(moveDifference.x)), selectedMoveSpot.y) != -1)
+                                moveYFirst = false;
+                        }
+
+                        Debug.Log("Move Y First check 1 " + moveYFirst);
+                        if (selectedMoveSpot.x != GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x)
+                        {
+                            p.x *= 2;
+                        }
+                        if (selectedMoveSpot.y != GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y)
+                        {
+                            p.y *= 2;
+                        }
+
+                        Debug.Log(moveYFirst);
+                        if (moveYFirst)
+                        {
+                            moveMarker.GetComponent<LineRenderer>().SetPosition(1, new Vector3(p.x, 0, 0));
+                            moveMarker.GetComponent<LineRenderer>().SetPosition(2, new Vector3(p.x, 0, -p.y));
+                        }
+                        else
+                        {
+                            moveMarker.GetComponent<LineRenderer>().SetPosition(1, new Vector3(0, 0, -p.y));
+                            moveMarker.GetComponent<LineRenderer>().SetPosition(2, new Vector3(p.x, 0, -p.y));
+                        }
+                        actionTaken = true;
+                    }
+                    break;
+            }
+            //If player tries to cast a spell
+            if (selectedSpell != -1)
+            {
+                if (BattleTile.skillLegitTarget)
                 {
-                    int n = PlayerAtPos(pos.x, pos.y);
-                    GameStorage.playerMasterList[GameStorage.activePlayerList[n]].position = GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position;
-                    GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position = pos;
-                    playerModels[n].transform.position = new Vector3(GameStorage.playerMasterList[GameStorage.activePlayerList[n]].position.x + topLeft.x, 1, (mapSizeY - 1) - GameStorage.playerMasterList[GameStorage.activePlayerList[n]].position.y + topLeft.y);
-                    playerModels[selectedPlayer].transform.position = new Vector3(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x + topLeft.x, 1, (mapSizeY - 1) - GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y + topLeft.y);
-                    selectedPlayer = -1;
-                    actionTaken = true;
-                }
-                break;
-            case BattleState.Player:
-                //if player is moving something
-                if (tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerMoveRange && !GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].moved)
-                {
-                    selectedMoveSpot.Set(pos.x, pos.y);
-                    moveMarker.transform.position = new Vector3(pos.x + topLeft.x, 1, (mapSizeY - 1) - pos.y + topLeft.y);
-                    moveMarker.SetActive(true);
-
-                    //update the line renderer
-                    moveMarker.GetComponent<LineRenderer>().SetPosition(0, Vector3.zero);
-                    moveXFirst = true;
-                    Vector2Int p = new Vector2Int(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x - selectedMoveSpot.x, GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y - selectedMoveSpot.y);
-
-                    Vector2 moveDifference = new Vector2(selectedMoveSpot.x - GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, selectedMoveSpot.y - GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y);
-
-                    for (int x = 0; x <= Mathf.Abs(moveDifference.x); x++)
-                    {
-                        if (!GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].ValidMoveTile(battleMap[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x + x * Mathf.RoundToInt(Mathf.Sign(moveDifference.x)), GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y]))
-                            moveXFirst = false;
-                        if (EnemyAtPos(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x + x * Mathf.RoundToInt(Mathf.Sign(moveDifference.x)), GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y) != -1)
-                            moveXFirst = false;
-                    }
-
-                    for (int y = 0; y <= Mathf.Abs(moveDifference.y); y++)
-                    {
-                        if (!GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].ValidMoveTile(battleMap[selectedMoveSpot.x, GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y + y * Mathf.RoundToInt(Mathf.Sign(moveDifference.y))]))
-                            moveXFirst = false;
-                        if (EnemyAtPos(selectedMoveSpot.x, GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y + y * Mathf.RoundToInt(Mathf.Sign(moveDifference.y))) != -1)
-                            moveXFirst = false;
-                    }
-
-                    Debug.Log("Move X First check 1 " + moveXFirst);
-                    if (selectedMoveSpot.x != GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x)
-                    {
-                        p.x *= 2;
-                    }
-                    if (selectedMoveSpot.y != GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y)
-                    {
-                        p.y *= 2;
-                    }
-                    
-                    if (moveXFirst)
-                    {
-                        moveMarker.GetComponent<LineRenderer>().SetPosition(1, new Vector3(p.x, 0, 0));
-                        moveMarker.GetComponent<LineRenderer>().SetPosition(2, new Vector3(p.x, 0, -p.y));
-                    }
+                    selectedEnemy = EnemyAtPos(pos.x, pos.y);
+                    //Generates the choice menu
+                    if (selectedMoveSpot.x != -1)
+                        skillCastConfirmMenu.GetComponentInChildren<Text>().text = "You have a move selected. Move and cast?";
                     else
-                    {
-                        moveMarker.GetComponent<LineRenderer>().SetPosition(1, new Vector3(0, 0, -p.y));
-                        moveMarker.GetComponent<LineRenderer>().SetPosition(2, new Vector3(p.x, 0, -p.y));
-                    }
-                    actionTaken = true;
+                        skillCastConfirmMenu.GetComponentInChildren<Text>().text = "Are you sure you want to cast there?";
+                    spellCastPosition = new Vector2Int(pos.x, pos.y);
+                    skillCastConfirmMenu.SetActive(true);
                 }
-                break;
-        }
-        //if player tries to cast a spell
-        if (selectedSpell != -1)
-        {
-            if (BattleTile.skillLegitTarget)
-            {
-                selectedEnemy = EnemyAtPos(pos.x, pos.y);
-                //generates the choice menu
-                if (selectedMoveSpot.x != -1)
-                    skillCastConfirmMenu.GetComponentInChildren<Text>().text = "You have a move selected. Move and cast?";
-                else
-                    skillCastConfirmMenu.GetComponentInChildren<Text>().text = "Are you sure you want to cast there?";
-                skillCastConfirmMenu.SetActive(true);
+                actionTaken = true;
             }
-            actionTaken = true;
-        }
-        if (!actionTaken && hoveredSpell == -1)
-        {
-            //selecting a different player
-            if (battleState != BattleState.Attack)
+            if (!actionTaken && hoveredSpell == -1)
             {
-                selectedPlayer = PlayerAtPos(pos.x, pos.y);
-                selectedMoveSpot = new Vector2Int(-1, -1);
-                moveMarker.SetActive(false);
-                //selectedSpell = -1;
-            }
+                //selecting a different player
+                if (battleState != BattleState.Attack)
+                {
+                    selectedPlayer = PlayerAtPos(pos.x, pos.y);
+                    selectedMoveSpot = new Vector2Int(-1, -1);
+                    moveMarker.SetActive(false);
+                    //selectedSpell = -1;
+                }
 
-            //selecting an enemy
-            selectedEnemy = EnemyAtPos(pos.x, pos.y);
-            if (tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerAttackRange)
-            {
-                if (selectedEnemy == -1)
-                    selectedEnemy = enemyList.Length + PlayerAtPos(pos.x, pos.y);
+                //selecting an enemy
+                selectedEnemy = EnemyAtPos(pos.x, pos.y);
+                if (tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerAttackRange)
+                {
+                    if (selectedEnemy == -1)
+                        selectedEnemy = enemyList.Length + PlayerAtPos(pos.x, pos.y);
+                }
             }
         }
     }
@@ -697,19 +720,19 @@ public class Battle : MonoBehaviour
     {
         if (selectedMoveSpot.x != -1)
         {
-            if (moveXFirst)
+            if (moveYFirst)
             {
                 if (!Mathf.Approximately(((mapSizeY - 1) - selectedMoveSpot.y) - playerModels[selectedPlayer].transform.position.z, 0))
-                    playerAnimMoves.Add(new MoveQueue(selectedPlayer, new Vector2(0, ((mapSizeY - 1) - selectedMoveSpot.y) - playerModels[selectedPlayer].transform.position.z + topLeft.y)));
+                    playerAnimMoves.Enqueue(new MoveQueue(selectedPlayer, new Vector2(0, ((mapSizeY - 1) - selectedMoveSpot.y) - playerModels[selectedPlayer].transform.position.z + topLeft.y)));
                 if (!Mathf.Approximately(selectedMoveSpot.x - playerModels[selectedPlayer].transform.position.x, 0))
-                    playerAnimMoves.Add(new MoveQueue(selectedPlayer, new Vector2(selectedMoveSpot.x - playerModels[selectedPlayer].transform.position.x + topLeft.x, 0)));
+                    playerAnimMoves.Enqueue(new MoveQueue(selectedPlayer, new Vector2(selectedMoveSpot.x - playerModels[selectedPlayer].transform.position.x + topLeft.x, 0)));
             }
             else
             {
                 if (!Mathf.Approximately(selectedMoveSpot.x - playerModels[selectedPlayer].transform.position.x, 0))
-                    playerAnimMoves.Add(new MoveQueue(selectedPlayer, new Vector2(selectedMoveSpot.x - playerModels[selectedPlayer].transform.position.x + topLeft.x, 0)));
+                    playerAnimMoves.Enqueue(new MoveQueue(selectedPlayer, new Vector2(selectedMoveSpot.x - playerModels[selectedPlayer].transform.position.x + topLeft.x, 0)));
                 if (!Mathf.Approximately(((mapSizeY - 1) - selectedMoveSpot.y) - playerModels[selectedPlayer].transform.position.z, 0))
-                    playerAnimMoves.Add(new MoveQueue(selectedPlayer, new Vector2(0, ((mapSizeY - 1) - selectedMoveSpot.y) - playerModels[selectedPlayer].transform.position.z + topLeft.y)));
+                    playerAnimMoves.Enqueue(new MoveQueue(selectedPlayer, new Vector2(0, ((mapSizeY - 1) - selectedMoveSpot.y) - playerModels[selectedPlayer].transform.position.z + topLeft.y)));
             }
             selectedMoveSpot = new Vector2Int(-1, -1);
             moveMarker.SetActive(false);
@@ -749,7 +772,7 @@ public class Battle : MonoBehaviour
         EnemyMove fallbackMove = new EnemyMove(0, 0, 100, 0, true);
         List<Pair<Vector2Int, bool>> moveSpots = GetViableMovements(enemyList[n]);
         WeaponType weapon;
-        if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[n].equippedWeapon]).subType, out weapon))
+        if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[n].equippedWeapon.Name]).subType, out weapon))
             Debug.Log("Weapon Type does not exist in the Registry.");
         foreach (Pair<Vector2Int, bool> pos in moveSpots)
         {
@@ -796,19 +819,20 @@ public class Battle : MonoBehaviour
         {
             possibleMoves.RemoveAt(Random.Range(0, 2));
         }
-        if (possibleMoves[0].xFirst)
+        Debug.Log(possibleMoves[0].yFirst);
+        if (possibleMoves[0].yFirst)
         {
             if (!Mathf.Approximately(((mapSizeY - 1) - possibleMoves[0].movePosition.y) - enemyModels[n].transform.position.z, 0))
-                enemyAnimMoves.Add(new MoveQueue(n, new Vector2(0, ((mapSizeY - 1) - possibleMoves[0].movePosition.y) - enemyModels[n].transform.position.z + topLeft.y)));
+                enemyAnimMoves.Enqueue(new MoveQueue(n, new Vector2(0, ((mapSizeY - 1) - possibleMoves[0].movePosition.y) - enemyModels[n].transform.position.z + topLeft.y)));
             if (!Mathf.Approximately(possibleMoves[0].movePosition.x - enemyModels[n].transform.position.x, 0))
-                enemyAnimMoves.Add(new MoveQueue(n, new Vector2(possibleMoves[0].movePosition.x - enemyModels[n].transform.position.x + topLeft.x, 0)));
+                enemyAnimMoves.Enqueue(new MoveQueue(n, new Vector2(possibleMoves[0].movePosition.x - enemyModels[n].transform.position.x + topLeft.x, 0)));
         }
         else
         {
             if (!Mathf.Approximately(possibleMoves[0].movePosition.x - enemyModels[n].transform.position.x, 0))
-                enemyAnimMoves.Add(new MoveQueue(n, new Vector2(possibleMoves[0].movePosition.x - enemyModels[n].transform.position.x + topLeft.x, 0)));
+                enemyAnimMoves.Enqueue(new MoveQueue(n, new Vector2(possibleMoves[0].movePosition.x - enemyModels[n].transform.position.x + topLeft.x, 0)));
             if (!Mathf.Approximately(((mapSizeY - 1) - possibleMoves[0].movePosition.y) - enemyModels[n].transform.position.z, 0))
-                enemyAnimMoves.Add(new MoveQueue(n, new Vector2(0, ((mapSizeY - 1) - possibleMoves[0].movePosition.y) - enemyModels[n].transform.position.z + topLeft.y)));
+                enemyAnimMoves.Enqueue(new MoveQueue(n, new Vector2(0, ((mapSizeY - 1) - possibleMoves[0].movePosition.y) - enemyModels[n].transform.position.z + topLeft.y)));
         }
 
         enemyList[n].moved = true;
@@ -828,8 +852,8 @@ public class Battle : MonoBehaviour
         if (Mathf.Abs(p2.position.y - p1.position.y) > dist)
             dist = Mathf.Abs(p2.position.y - p1.position.y);
 
-        int type = ((EquippableBase)Registry.ItemRegistry[p1.equippedWeapon]).statType;
-        foreach (RangeDependentAttack r in Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[p1.equippedWeapon]).subType].specialRanges)
+        int type = ((EquippableBase)Registry.ItemRegistry[p1.equippedWeapon.Name]).statType;
+        foreach (RangeDependentAttack r in Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[p1.equippedWeapon.Name]).subType].specialRanges)
         {
             if (r.atDistance == dist)
             {
@@ -848,7 +872,7 @@ public class Battle : MonoBehaviour
     public void PerformPlayerAttack()
     {
         WeaponType pweapon;
-        if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon]).subType, out pweapon))
+        if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon.Name]).subType, out pweapon))
             Debug.Log("Weapon Type does not exist in the Registry.");
         //if healing a player
         if (selectedEnemy >= enemyList.Length)
@@ -859,7 +883,7 @@ public class Battle : MonoBehaviour
         else
         {
             float mod = 1.0f;
-            if (Random.Range(0.0f, 100.0f) < GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].critChance + ((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon]).critChanceMod) { mod = 1.5f; }
+            if (Random.Range(0.0f, 100.0f) < GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].critChance + ((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon.Name]).critChanceMod) { mod = 1.5f; }
             enemyList[selectedEnemy].Damage(Mathf.RoundToInt(GetDamageValues(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]], enemyList[selectedEnemy]) * mod));
             if (enemyList[selectedEnemy].cHealth <= 0)
             {
@@ -868,12 +892,12 @@ public class Battle : MonoBehaviour
             else
             {
                 WeaponType eweapon;
-                if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[selectedEnemy].equippedWeapon]).subType, out eweapon))
+                if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[selectedEnemy].equippedWeapon.Name]).subType, out eweapon))
                     Debug.Log("Weapon Type does not exist in the Registry.");
                 if (pweapon.ranged == eweapon.ranged)
                 {
                     mod = 1.0f;
-                    if (Random.Range(0.0f, 100.0f) < enemyList[selectedEnemy].critChance + ((EquippableBase)Registry.ItemRegistry[enemyList[selectedEnemy].equippedWeapon]).critChanceMod) { mod = 1.5f; }
+                    if (Random.Range(0.0f, 100.0f) < enemyList[selectedEnemy].critChance + ((EquippableBase)Registry.ItemRegistry[enemyList[selectedEnemy].equippedWeapon.Name]).critChanceMod) { mod = 1.5f; }
                     GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].Damage(Mathf.RoundToInt(GetDamageValues(enemyList[selectedEnemy], GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]]) * mod));
                     if (GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].cHealth <= 0)
                     {
@@ -898,7 +922,7 @@ public class Battle : MonoBehaviour
         int player = PlayerAtPos(pX, pY);
 
         float mod = 1.0f;
-        if (Random.Range(0.0f, 100.0f) < enemyList[enemy].critChance + ((EquippableBase)Registry.ItemRegistry[enemyList[enemy].equippedWeapon]).critChanceMod) { mod = 1.5f; }
+        if (Random.Range(0.0f, 100.0f) < enemyList[enemy].critChance + ((EquippableBase)Registry.ItemRegistry[enemyList[enemy].equippedWeapon.Name]).critChanceMod) { mod = 1.5f; }
         GameStorage.playerMasterList[GameStorage.activePlayerList[player]].Damage(Mathf.RoundToInt(GetDamageValues(enemyList[enemy], GameStorage.playerMasterList[GameStorage.activePlayerList[player]]) * mod));
         if (GameStorage.playerMasterList[GameStorage.activePlayerList[player]].cHealth <= 0)
         {
@@ -910,14 +934,14 @@ public class Battle : MonoBehaviour
         {
             WeaponType pweapon;
             WeaponType eweapon;
-            if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[enemy].equippedWeapon]).subType, out eweapon))
+            if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[enemy].equippedWeapon.Name]).subType, out eweapon))
                 Debug.Log("Weapon Type does not exist in the Registry.");
-            if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[player]].equippedWeapon]).subType, out pweapon))
+            if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[player]].equippedWeapon.Name]).subType, out pweapon))
                 Debug.Log("Weapon Type does not exist in the Registry.");
             if (pweapon.ranged == eweapon.ranged)
             {
                 mod = 1.0f;
-                if (Random.Range(0.0f, 100.0f) < GameStorage.playerMasterList[GameStorage.activePlayerList[player]].critChance + ((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[player]].equippedWeapon]).critChanceMod) { mod = 1.5f; }
+                if (Random.Range(0.0f, 100.0f) < GameStorage.playerMasterList[GameStorage.activePlayerList[player]].critChance + ((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[player]].equippedWeapon.Name]).critChanceMod) { mod = 1.5f; }
                 enemyList[enemy].Damage(Mathf.RoundToInt(GetDamageValues(GameStorage.playerMasterList[GameStorage.activePlayerList[player]], enemyList[enemy]) * mod));
                 if (enemyList[enemy].cHealth <= 0)
                 {
@@ -1029,7 +1053,7 @@ public class Battle : MonoBehaviour
                 skillPos = selectedMoveSpot;
             Skill displaySkill = GameStorage.skillTreeList[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[skillToShow - 1].x][GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[skillToShow - 1].y];
 
-            if (displaySkill.targetType == 1)
+            if (displaySkill.targetType == TargettingType.Self)
             {
                 tileList[skillPos.x, (mapSizeY - 1) - skillPos.y].GetComponent<BattleTile>().skillTargettable = true;
             }
@@ -1041,7 +1065,7 @@ public class Battle : MonoBehaviour
                     {
                         if (Mathf.Abs(x) + Mathf.Abs(y) <= displaySkill.targettingRange && x + skillPos.x >= 0 && x + skillPos.x < mapSizeX && y + skillPos.y >= 0 && y + skillPos.y < mapSizeY)
                         {
-                            if (displaySkill.targetType == 5)
+                            if (displaySkill.targetType == TargettingType.All)
                             {
                                 tileList[x + skillPos.x, (mapSizeY - 1) - (y + skillPos.y)].GetComponent<BattleTile>().skillTargettable = true;
                             }
@@ -1049,12 +1073,11 @@ public class Battle : MonoBehaviour
                             {
                                 tileList[x + skillPos.x, (mapSizeY - 1) - (y + skillPos.y)].GetComponent<BattleTile>().skillRange = true;
                             }
-
-                            if (displaySkill.targetType == 2 && EnemyAtPos(x + skillPos.x, y + skillPos.y) != -1)
+                            if (displaySkill.targetType == TargettingType.Ally && PlayerAtPos(x + skillPos.x, y + skillPos.y) != -1)
                             {
                                 tileList[x + skillPos.x, (mapSizeY - 1) - (y + skillPos.y)].GetComponent<BattleTile>().skillTargettable = true;
                             }
-                            else if (displaySkill.targetType == 3 && PlayerAtPos(x + skillPos.x, y + skillPos.y) != -1)
+                            else if (displaySkill.targetType == TargettingType.Enemy && EnemyAtPos(x + skillPos.x, y + skillPos.y) != -1)
                             {
                                 tileList[x + skillPos.x, (mapSizeY - 1) - (y + skillPos.y)].GetComponent<BattleTile>().skillTargettable = true;
                             }
@@ -1102,7 +1125,7 @@ public class Battle : MonoBehaviour
         {
             List<Pair<Vector2Int, bool>> moveSpots = GetViableMovements(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]]);
             WeaponType weapon;
-            if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon]).subType, out weapon))
+            if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon.Name]).subType, out weapon))
                 Debug.Log("Weapon Type does not exist in the Registry.");
             foreach (Pair<Vector2Int, bool> pos in moveSpots)
             {
@@ -1116,7 +1139,7 @@ public class Battle : MonoBehaviour
             {
                 List<Pair<Vector2Int, bool>> moveSpots = GetViableMovements(enemyList[n]);
                 WeaponType weapon;
-                if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[n].equippedWeapon]).subType, out weapon))
+                if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[n].equippedWeapon.Name]).subType, out weapon))
                     Debug.Log("Weapon Type does not exist in the Registry.");
                 foreach (Pair<Vector2Int, bool> pos in moveSpots)
                 {
@@ -1128,14 +1151,14 @@ public class Battle : MonoBehaviour
         if (battleState == BattleState.Attack)
         {
             WeaponType weapon;
-            if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon]).subType, out weapon))
+            if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon.Name]).subType, out weapon))
                 Debug.Log("Weapon Type does not exist in the Registry.");
             RenderWeaponRanges(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x, GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y, weapon, "attack area");
             for (int x = 0; x < mapSizeX; x++)
             {
                 for (int y = 0; y < mapSizeY; y++)
                 {
-                    if ((EnemyAtPos(x, y) == -1 || ((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon]).strength == 0) && (PlayerAtPos(x, y) == -1 || !weapon.heals))
+                    if ((EnemyAtPos(x, y) == -1 || ((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon.Name]).strength == 0) && (PlayerAtPos(x, y) == -1 || !weapon.heals))
                         tileList[x, (mapSizeY - 1) - y].GetComponent<BattleTile>().playerAttackRange = false;
                 }
             }
@@ -1162,14 +1185,14 @@ public class Battle : MonoBehaviour
     /// Gets all of the places a given pawn can move to
     /// </summary>
     /// <param name="entity">The entity moving</param>
-    /// <returns>First = a valid position, Second = whether or not moving horizontally first is valid</returns>
+    /// <returns>First = a valid position, Second = whether or not moving vertically first is valid</returns>
     private List<Pair<Vector2Int, bool>> GetViableMovements(BattleParticipant entity)
     {
         List<Pair<Vector2Int, bool>> moveSpots = new List<Pair<Vector2Int, bool>>();
         bool isPlayer = entity is Player;
         int maxMove = entity.GetMoveSpeed();
         WeaponType weapon;
-        if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[entity.equippedWeapon]).subType, out weapon))
+        if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[entity.equippedWeapon.Name]).subType, out weapon))
             Debug.Log("Weapon Type does not exist in the Registry.");
         for (int x = -maxMove; x <= maxMove; x++)
         {
@@ -1192,37 +1215,6 @@ public class Battle : MonoBehaviour
                     //If it passes all of the preliminary tests
                     if (goodTile)
                     {
-                        //Check every tile along the path, starting by moving horizontally
-                        for (int cX = 1; cX <= Mathf.Abs(x); cX++)
-                        {
-                            if (!entity.ValidMoveTile(battleMap[cX * Mathf.RoundToInt(Mathf.Sign(x)) + entity.position.x, entity.position.y]))
-                            {
-                                goodTile = false;
-                            }
-                            if (isPlayer ? EnemyAtPos(cX * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.x, entity.position.y) != -1 : PlayerAtPos(cX * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.x, entity.position.y) != -1)
-                                goodTile = false;
-                        }
-                        //If all tiles along the horizontal path pass the test, check vertical from the end of that path
-                        if (goodTile)
-                        {
-                            for (int cY = 1; cY <= Mathf.Abs(y); cY++)
-                            {
-                                if (!entity.ValidMoveTile(battleMap[x + entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y]))
-                                {
-                                    goodTile = false;
-                                }
-                                if (isPlayer ? EnemyAtPos(x + entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y) != -1 : PlayerAtPos(x + entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y) != -1)
-                                    goodTile = false;
-                            }
-                            //If it passes the x-first set of tests, mark it as a valid move tile by moving x first
-                            if (goodTile)
-                            {
-                                moveSpots.Add(new Pair<Vector2Int, bool>(new Vector2Int(x + entity.position.x, y + entity.position.y), true));
-                                continue;
-                            }
-                        }
-                        //if invalid by x, y, check y, x
-                        goodTile = true;
                         //Check every tile along the path, starting by moving vertically
                         for (int cY = 1; cY <= Mathf.Abs(y); cY++)
                         {
@@ -1230,6 +1222,7 @@ public class Battle : MonoBehaviour
                             {
                                 goodTile = false;
                             }
+                            //Checks if a member of the opposing team is in the way
                             if (isPlayer ? EnemyAtPos(entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y) != -1 : PlayerAtPos(entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y) != -1)
                                 goodTile = false;
                         }
@@ -1242,14 +1235,48 @@ public class Battle : MonoBehaviour
                                 {
                                     goodTile = false;
                                 }
+                                //Checks if a member of the opposing team is in the way
                                 if (isPlayer ? EnemyAtPos(cX * Mathf.RoundToInt(Mathf.Sign(x)) + entity.position.x, y + entity.position.y) != -1 : PlayerAtPos(cX * Mathf.RoundToInt(Mathf.Sign(x)) + entity.position.x, y + entity.position.y) != -1)
                                     goodTile = false;
                             }
+                            //If it passes the y-first set of tests, mark it as a valid move tile by moving y first
+                            if (goodTile)
+                            {
+                                moveSpots.Add(new Pair<Vector2Int, bool>(new Vector2Int(x + entity.position.x, y + entity.position.y), true));
+                                continue;
+                            }
                         }
-                        //If it passes the y-first set of tests, mark it as a valid move tile by moving y first
+                        //if invalid by y, x, check x, y
+                        goodTile = true;
+                        //Check every tile along the path, starting by moving horizontally
+                        for (int cX = 1; cX <= Mathf.Abs(x); cX++)
+                        {
+                            if (!entity.ValidMoveTile(battleMap[cX * Mathf.RoundToInt(Mathf.Sign(x)) + entity.position.x, entity.position.y]))
+                            {
+                                goodTile = false;
+                            }
+                            //Checks if a member of the opposing team is in the way
+                            if (isPlayer ? EnemyAtPos(cX * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.x, entity.position.y) != -1 : PlayerAtPos(cX * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.x, entity.position.y) != -1)
+                                goodTile = false;
+                        }
+                        //If all tiles along the horizontal path pass the test, check vertical from the end of that path
                         if (goodTile)
                         {
-                            moveSpots.Add(new Pair<Vector2Int, bool>(new Vector2Int(x + entity.position.x, y + entity.position.y), false));
+                            for (int cY = 1; cY <= Mathf.Abs(y); cY++)
+                            {
+                                if (!entity.ValidMoveTile(battleMap[x + entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y]))
+                                {
+                                    goodTile = false;
+                                }
+                                //Checks if a member of the opposing team is in the way
+                                if (isPlayer ? EnemyAtPos(x + entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y) != -1 : PlayerAtPos(x + entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y) != -1)
+                                    goodTile = false;
+                            }
+                            //If it passes the x-first set of tests, mark it as a valid move tile by moving x first
+                            if (goodTile)
+                            {
+                                moveSpots.Add(new Pair<Vector2Int, bool>(new Vector2Int(x + entity.position.x, y + entity.position.y), false));
+                            }
                         }
                     }
                 }
@@ -1323,6 +1350,30 @@ public class Battle : MonoBehaviour
         return attackSpots;
     }
 
+    /// <summary>
+    /// Checks for and executes and 
+    /// </summary>
+    /// <param name="triggered">The pawn we are checking</param>
+    /// <param name="trigger">The type of trigger that was tripped</param>
+    /// <param name="other">If the event involved another pawn, such as taking damage or giving healing</param>
+    /// <param name="data">If the event has other important data, such as the amount of damage taken</param>
+    private void CheckEventTriggers(BattleParticipant triggered, EffectTriggers trigger, BattleParticipant other = null, int data = 0)
+    {
+        List<SkillPartBase> list = triggered.GetTriggeredEffects(trigger);
+        Debug.Log(list.Count);
+        foreach(SkillPartBase effect in list)
+        {
+            if (effect.targetType == TargettingType.Self)
+            {
+                CastSkillEffect(effect, triggered, triggered);
+            }
+            else
+            {
+                CastSkillEffect(effect, triggered, other);
+            }
+        }
+    }
+
     #region Spell Casting
 
     /// <summary>
@@ -1362,226 +1413,101 @@ public class Battle : MonoBehaviour
     /// <param name="castedSpell">What spell is being cast</param>
     /// <param name="castedX">The x coordinate of the space to affect</param>
     /// <param name="castedY">The y coordinate of the space to affect</param>
-    /// <param name="enemyUsingMove">If it is an enemy casting the spell</param>
-    public void CastSkill(Skill castedSpell, int castedX, int castedY, int enemyUsingMove = -1)
+    /// <param name="IDUsingMove">If it is greater than the amount for players, it denotes an enemy</param>
+    public void CastSkill(Skill castedSpell, int castedX, int castedY, BattleParticipant caster)
     {
-        foreach (SkillPartBase s in castedSpell.partList)
+        Debug.Log(castedX + " " + castedY);
+        foreach (SkillPartBase effect in castedSpell.partList)
         {
-            //flat damage, then calculated damage, then remaining hp, then max hp
-            if (s.skillPartType.CompareTo("damage") == 0)
+            if (effect.targetType == TargettingType.Self)
             {
-                if (s.targetType == 1)
+                CastSkillEffect(effect, caster, caster);
+            }
+            else
+            {
+                bool castedByPlayer = caster is Player;
+                for (int x = -Mathf.FloorToInt((castedSpell.xRange - 1) / 2.0f); x <= Mathf.CeilToInt((castedSpell.xRange - 1) / 2.0f); x++)
                 {
-                    if (enemyUsingMove != -1)
+                    for (int y = -Mathf.FloorToInt((castedSpell.yRange - 1) / 2.0f); y <= Mathf.CeilToInt((castedSpell.yRange - 1) / 2.0f); y++)
                     {
-                        enemyList[enemyUsingMove].Damage((s as DamagePart).flatDamage);
-                        enemyList[enemyUsingMove].Damage(Mathf.RoundToInt(((s as DamagePart).damage * enemyList[enemyUsingMove].mAttack * 3.0f) / enemyList[enemyUsingMove].GetEffectiveDef()));
-                        enemyList[enemyUsingMove].Damage((int)(enemyList[enemyUsingMove].cHealth * (s as DamagePart).remainingHpPercent / 100.0f));
-                        enemyList[enemyUsingMove].Damage((int)(enemyList[enemyUsingMove].mHealth * (s as DamagePart).maxHpPercent / 100.0f));
-                    }
-                    else
-                    {
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].Damage((s as DamagePart).flatDamage);
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].Damage(Mathf.RoundToInt(((s as DamagePart).damage * GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].mAttack * 3.0f) / GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].GetEffectiveDef()));
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].Damage((int)(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].cHealth * (s as DamagePart).remainingHpPercent / 100.0f));
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].Damage((int)(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].mHealth * (s as DamagePart).maxHpPercent / 100.0f));
-                    }
-                }
-                else if (s.targetType == 2 || s.targetType == 5)
-                {
-                    int i = PlayerAtPos(castedX, castedY);
-                    if (enemyUsingMove != -1 && i != -1)
-                    {
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].Damage((s as DamagePart).flatDamage);
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].Damage(Mathf.RoundToInt(((s as DamagePart).damage * GameStorage.playerMasterList[GameStorage.activePlayerList[i]].mAttack * 3.0f) / GameStorage.playerMasterList[GameStorage.activePlayerList[i]].GetEffectiveDef()));
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].Damage((int)(GameStorage.playerMasterList[GameStorage.activePlayerList[i]].cHealth * (s as DamagePart).remainingHpPercent / 100.0f));
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].Damage((int)(GameStorage.playerMasterList[GameStorage.activePlayerList[i]].mHealth * (s as DamagePart).maxHpPercent / 100.0f));
-                    }
-                    else if (enemyUsingMove == -1 && EnemyAtPos(castedX, castedY) != -1)
-                    {
-                        i = EnemyAtPos(castedX, castedY);
-                        enemyList[i].Damage((s as DamagePart).flatDamage);
-                        enemyList[i].Damage(Mathf.RoundToInt(((s as DamagePart).damage * enemyList[i].mAttack * 3.0f) / enemyList[i].GetEffectiveDef()));
-                        enemyList[i].Damage((int)(enemyList[i].cHealth * (s as DamagePart).remainingHpPercent / 100.0f));
-                        enemyList[i].Damage((int)(enemyList[i].mHealth * (s as DamagePart).maxHpPercent / 100.0f));
-                    }
-                }
-                else if (s.targetType == 3 || s.targetType == 5)
-                {
-                    int i = PlayerAtPos(castedX, castedY);
-                    if (enemyUsingMove == -1 && i != -1)
-                    {
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].Damage((s as DamagePart).flatDamage);
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].Damage(Mathf.RoundToInt(((s as DamagePart).damage * GameStorage.playerMasterList[GameStorage.activePlayerList[i]].mAttack * 3.0f) / GameStorage.playerMasterList[GameStorage.activePlayerList[i]].GetEffectiveDef()));
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].Damage((int)(GameStorage.playerMasterList[GameStorage.activePlayerList[i]].cHealth * (s as DamagePart).remainingHpPercent / 100.0f));
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].Damage((int)(GameStorage.playerMasterList[GameStorage.activePlayerList[i]].mHealth * (s as DamagePart).maxHpPercent / 100.0f));
-                    }
-                    else if (enemyUsingMove != -1 && EnemyAtPos(castedX, castedY) != -1)
-                    {
-                        i = EnemyAtPos(castedX, castedY);
-                        enemyList[i].Damage((s as DamagePart).flatDamage);
-                        enemyList[i].Damage(Mathf.RoundToInt(((s as DamagePart).damage * enemyList[i].mAttack * 3.0f) / enemyList[i].GetEffectiveDef()));
-                        enemyList[i].Damage((int)(enemyList[i].cHealth * (s as DamagePart).remainingHpPercent / 100.0f));
-                        enemyList[i].Damage((int)(enemyList[i].mHealth * (s as DamagePart).maxHpPercent / 100.0f));
+                        if (effect.targetType == TargettingType.Ally || effect.targetType == TargettingType.All)
+                        {
+                            //If there is someone from the same team at the position
+                            if (castedByPlayer)
+                            {
+                                if (PlayerAtPos(x + castedX, y + castedY) != -1)
+                                {
+                                    Debug.Log("Trying to make it to casting the effect1:" + x + "|" + y);
+                                    CastSkillEffect(effect, caster, GameStorage.playerMasterList[GameStorage.activePlayerList[PlayerAtPos(x + castedX, y + castedY)]]);
+                                }
+                            }
+                            else if (EnemyAtPos(x + castedX, y + castedY) != -1)
+                                CastSkillEffect(effect, caster, enemyList[EnemyAtPos(x + castedX, y + castedY)]);
+                        }
+                        if(effect.targetType == TargettingType.Enemy || effect.targetType == TargettingType.All)
+                        {
+                            //If there is someone from the opposing team at the position
+                            if (castedByPlayer)
+                            {
+                                if (EnemyAtPos(x + castedX, y + castedY) != -1)
+                                {
+                                    Debug.Log("Trying to make it to casting the effect2:" + x + "|" + y + " " + EnemyAtPos(x + castedX, y + castedY));
+                                    CastSkillEffect(effect, caster, enemyList[EnemyAtPos(x + castedX, y + castedY)]);
+                                }
+                            }
+                            else if (PlayerAtPos(x + castedX, y + castedY) != -1)
+                                CastSkillEffect(effect, caster, GameStorage.playerMasterList[GameStorage.activePlayerList[PlayerAtPos(x + castedX, y + castedY)]]);
+                        }
                     }
                 }
             }
+        }
+    }
 
-            //flat healing, then calculated healing, then max hp
-            else if (s.skillPartType.CompareTo("healing") == 0)
-            {
-                if (s.targetType == 1)
-                {
-                    if (enemyUsingMove != -1)
-                    {
-                        enemyList[enemyUsingMove].Heal((s as HealingPart).flatHealing);
-                        enemyList[enemyUsingMove].Heal(Mathf.RoundToInt(((s as HealingPart).healing * enemyList[enemyUsingMove].mAttack * 3.0f) / enemyList[enemyUsingMove].GetEffectiveDef()));
-                        enemyList[enemyUsingMove].Heal((int)(enemyList[enemyUsingMove].mHealth * (s as HealingPart).maxHpPercent / 100.0f));
-                    }
-                    else
-                    {
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].Heal((s as HealingPart).flatHealing);
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].Heal(Mathf.RoundToInt(((s as HealingPart).healing * GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].mAttack * 3.0f) / GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].GetEffectiveDef()));
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].Heal((int)(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].mHealth * (s as HealingPart).maxHpPercent / 100.0f));
-                    }
-                }
-                else if (s.targetType == 2 || s.targetType == 5)
-                {
-                    int i = PlayerAtPos(castedX, castedY);
-                    if (enemyUsingMove != -1 && i != -1)
-                    {
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].Heal((s as HealingPart).flatHealing);
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].Heal(Mathf.RoundToInt(((s as HealingPart).healing * GameStorage.playerMasterList[GameStorage.activePlayerList[i]].mAttack * 3.0f) / GameStorage.playerMasterList[GameStorage.activePlayerList[i]].GetEffectiveDef()));
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].Heal((int)(GameStorage.playerMasterList[GameStorage.activePlayerList[i]].mHealth * (s as HealingPart).maxHpPercent / 100.0f));
-                    }
-                    else if (enemyUsingMove == -1 && EnemyAtPos(castedX, castedY) != -1)
-                    {
-                        i = EnemyAtPos(castedX, castedY);
-                        enemyList[i].Heal((s as HealingPart).flatHealing);
-                        enemyList[i].Heal(Mathf.RoundToInt(((s as HealingPart).healing * enemyList[i].mAttack * 3.0f) / enemyList[i].GetEffectiveDef()));
-                        enemyList[i].Heal((int)(enemyList[i].mHealth * (s as HealingPart).maxHpPercent / 100.0f));
-                    }
-                }
-                else if (s.targetType == 3 || s.targetType == 5)
-                {
-                    int i = PlayerAtPos(castedX, castedY);
-                    if (enemyUsingMove == -1 && i != -1)
-                    {
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].Heal((s as HealingPart).flatHealing);
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].Heal(Mathf.RoundToInt(((s as HealingPart).healing * GameStorage.playerMasterList[GameStorage.activePlayerList[i]].mAttack * 3.0f) / GameStorage.playerMasterList[GameStorage.activePlayerList[i]].GetEffectiveDef()));
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].Heal((int)(GameStorage.playerMasterList[GameStorage.activePlayerList[i]].mHealth * (s as HealingPart).maxHpPercent / 100.0f));
-                    }
-                    else if (enemyUsingMove != -1 && EnemyAtPos(castedX, castedY) != -1)
-                    {
-                        i = EnemyAtPos(castedX, castedY);
-                        enemyList[i].Heal((s as HealingPart).flatHealing);
-                        enemyList[i].Heal(Mathf.RoundToInt(((s as HealingPart).healing * enemyList[i].mAttack * 3.0f) / enemyList[i].GetEffectiveDef()));
-                        enemyList[i].Heal((int)(enemyList[i].mHealth * (s as HealingPart).maxHpPercent / 100.0f));
-                    }
-                }
-            }
+    /// <summary>
+    /// Executes the effects of a skill part on a pawn
+    /// </summary>
+    /// <param name="effect">The skill part to execute</param>
+    /// <param name="caster">The caster of the skill</param>
+    /// <param name="target">The target for the skill</param>
+    public void CastSkillEffect(SkillPartBase effect, BattleParticipant caster, BattleParticipant target)
+    {
+        Debug.Log("Made it to casting the effect");
 
-            //stat changes, self explanitory
-            else if (s.skillPartType.CompareTo("statChange") == 0)
-            {
-                if (s.targetType == 1)
-                {
-                    if (enemyUsingMove != -1)
-                    {
-                        enemyList[enemyUsingMove].AddMod((s as StatChangePart).StatMod);
-                    }
-                    else
-                    {
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].AddMod((s as StatChangePart).StatMod);
-                    }
-                }
-                else if (s.targetType == 2 || s.targetType == 5)
-                {
-                    int i = PlayerAtPos(castedX, castedY);
-                    if (enemyUsingMove != -1 && i != -1)
-                    {
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].AddMod((s as StatChangePart).StatMod);
-                    }
-                    else if (enemyUsingMove == -1 && EnemyAtPos(castedX, castedY) != -1)
-                    {
-                        i = EnemyAtPos(castedX, castedY);
-                        enemyList[i].AddMod((s as StatChangePart).StatMod);
-                    }
-                }
-                else if (s.targetType == 3 || s.targetType == 5)
-                {
-                    int i = PlayerAtPos(castedX, castedY);
-                    if (enemyUsingMove == -1 && i != -1)
-                    {
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[i]].AddMod((s as StatChangePart).StatMod);
-                    }
-                    else if (enemyUsingMove != -1 && EnemyAtPos(castedX, castedY) != -1)
-                    {
-                        i = EnemyAtPos(castedX, castedY);
-                        enemyList[i].AddMod((s as StatChangePart).StatMod);
-                    }
-                }
-            }
+        //Flat damage, then calculated damage, then remaining hp, then max hp
+        if (effect is DamagePart)
+        {
+            DamagePart trueEffect = effect as DamagePart;
+            target.Damage(trueEffect.flatDamage);
+            target.Damage(Mathf.RoundToInt((trueEffect.damage * caster.mAttack * 3.0f) / target.GetEffectiveDef()));
+            target.Damage((int)(target.cHealth * trueEffect.remainingHpPercent / 100.0f));
+            target.Damage((int)(target.mHealth * trueEffect.maxHpPercent / 100.0f));
+        }
 
-            //adds status effects
-            else if (s.skillPartType.CompareTo("statusEffect") == 0)
-            {
-                if (s.targetType == 1)
-                {
-                    if (enemyUsingMove != -1)
-                    {
-                        if ((s as StatusEffectPart).remove)
-                            enemyList[enemyUsingMove].RemoveStatusEffect((s as StatusEffectPart).status);
-                        else
-                            enemyList[enemyUsingMove].AddStatusEffect((s as StatusEffectPart).status);
-                    }
-                    else
-                    {
-                        if ((s as StatusEffectPart).remove)
-                            GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].RemoveStatusEffect((s as StatusEffectPart).status);
-                        else
-                            GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].AddStatusEffect((s as StatusEffectPart).status);
-                    }
-                }
-                else if (s.targetType == 2 || s.targetType == 5)
-                {
-                    int i = PlayerAtPos(castedX, castedY);
-                    if (enemyUsingMove != -1 && i != -1)
-                    {
-                        if ((s as StatusEffectPart).remove)
-                            GameStorage.playerMasterList[GameStorage.activePlayerList[i]].RemoveStatusEffect((s as StatusEffectPart).status);
-                        else
-                            GameStorage.playerMasterList[GameStorage.activePlayerList[i]].AddStatusEffect((s as StatusEffectPart).status);
-                    }
-                    else if (enemyUsingMove == -1 && EnemyAtPos(castedX, castedY) != -1)
-                    {
-                        i = EnemyAtPos(castedX, castedY);
-                        if ((s as StatusEffectPart).remove)
-                            enemyList[i].RemoveStatusEffect((s as StatusEffectPart).status);
-                        else
-                            enemyList[i].AddStatusEffect((s as StatusEffectPart).status);
-                    }
-                }
-                else if (s.targetType == 3 || s.targetType == 5)
-                {
-                    int i = PlayerAtPos(castedX, castedY);
-                    if (enemyUsingMove == -1 && i != -1)
-                    {
-                        if ((s as StatusEffectPart).remove)
-                            GameStorage.playerMasterList[GameStorage.activePlayerList[i]].RemoveStatusEffect((s as StatusEffectPart).status);
-                        else
-                            GameStorage.playerMasterList[GameStorage.activePlayerList[i]].AddStatusEffect((s as StatusEffectPart).status);
-                    }
-                    else if (enemyUsingMove != -1 && EnemyAtPos(castedX, castedY) != -1)
-                    {
-                        i = EnemyAtPos(castedX, castedY);
-                        if ((s as StatusEffectPart).remove)
-                            enemyList[i].RemoveStatusEffect((s as StatusEffectPart).status);
-                        else
-                            enemyList[i].AddStatusEffect((s as StatusEffectPart).status);
-                    }
-                }
-            }
+        //Flat healing, then calculated healing, then max hp
+        else if (effect is HealingPart)
+        {
+            HealingPart trueEffect = effect as HealingPart;
+            target.Heal(trueEffect.flatHealing);
+            target.Heal(Mathf.RoundToInt((trueEffect.healing * caster.mAttack * 3.0f) / target.GetEffectiveDef()));
+            target.Heal((int)(target.mHealth * trueEffect.maxHpPercent / 100.0f));
+        }
+
+        //Stat changes, self explanitory
+        else if (effect is StatChangePart)
+        {
+            StatChangePart trueEffect = effect as StatChangePart;
+            target.AddMod(trueEffect.StatMod);
+        }
+
+        //Adds or removes status effects
+        else if (effect is StatusEffectPart)
+        {
+            StatusEffectPart trueEffect = effect as StatusEffectPart;
+            if (trueEffect.remove)
+                target.RemoveStatusEffect(trueEffect.status);
+            else
+                target.AddStatusEffect(trueEffect.status);
         }
     }
 
@@ -1593,18 +1519,8 @@ public class Battle : MonoBehaviour
         skillCastConfirmMenu.SetActive(false);
         if (selectedMoveSpot.x != -1)
             ConfirmPlayerMove();
-        for (int x = 0; x < mapSizeX; x++)
-        {
-            for (int y = 0; y < mapSizeY; y++)
-            {
-                if (tileList[x, (mapSizeY - 1) - y].GetComponent<BattleTile>().skillTargetting)
-                {
-                    Debug.Log("Casting Skill at " + x + "|" + y);
-                    Skill displaySkill = GameStorage.skillTreeList[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[selectedSpell - 1].x][GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[selectedSpell - 1].y];
-                    CastSkill(displaySkill, x, y);
-                }
-            }
-        }
+        Skill displaySkill = GameStorage.skillTreeList[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[selectedSpell - 1].x][GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].skillQuickList[selectedSpell - 1].y];
+        CastSkill(displaySkill, spellCastPosition.x, spellCastPosition.y, GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]]);
         GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].moved = true;
         FinishedMovingPawn();
         CheckForDeath();
@@ -1616,6 +1532,7 @@ public class Battle : MonoBehaviour
     public void CancelSkillCast()
     {
         selectedEnemy = -1;
+        spellCastPosition = new Vector2Int(-1, -1);
         skillCastConfirmMenu.SetActive(false);
     }
 

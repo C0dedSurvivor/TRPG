@@ -36,7 +36,5 @@ Enter/Leave/Navigate pause menu - Escape <br />
 Zoom camera in or out in map - Control + scroll wheel
 
 ## Known bugs:
-* Enemies can walk through walls and end on impassable spaces
-* Movement animations sometimes move length-first when they should be breadth-first and visa versa
-* Jumping sometimes doesn't trigger properly
-* Battles sometimes don't end correctly upon all enemies dying (has only happened once and has proved irrepeatable so far)
+* Clicking on two players consecutively on your turn in a battle counts the second one as an enemy instead of switching control
+* Leaving the window then coming back to it makes some UI textures no longer display

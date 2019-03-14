@@ -153,7 +153,7 @@ public class PauseGUI : MonoBehaviour
         {
             Debug.Log(GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEquipped(i));
             if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEquipped(i) != null)
-                playerEquipment[i].overrideSprite = Resources.Load<Sprite>("Images/ItemIcons/" + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEquipped(i));
+                playerEquipment[i].overrideSprite = Resources.Load<Sprite>("Images/ItemIcons/" + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEquipped(i).Name);
             else
                 playerEquipment[i].overrideSprite = null;
         }

@@ -345,15 +345,13 @@ public class SkillTreeGUI : MonoBehaviour {
         skillInfo.transform.GetChild(1).GetComponent<Text>().text = "Skill Type: " + type;
         skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nRange: " + GameStorage.skillTreeList[currentSkillTree][skill].targettingRange;
         //1 = self, 2 = enemy, 3 = ally, 4 = passive, 5 = anywhere
-        if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == 1)
+        if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.Self)
             skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: Caster";
-        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == 2)
-            skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: Enemy";
-        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == 3)
+        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.Ally)
             skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: Ally";
-        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == 4)
-            skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nPassive";
-        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == 5)
+        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.Enemy)
+            skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: Enemy";
+        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.All)
             skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: Anywhere";
         skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nAOE: " + GameStorage.skillTreeList[currentSkillTree][skill].xRange + "x" + GameStorage.skillTreeList[currentSkillTree][skill].yRange;
         if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].unlocked)
@@ -497,7 +495,6 @@ public class SkillTreeGUI : MonoBehaviour {
                 }
             }
             skillPointCounter.text = "Skill Points: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].SkillPoints;
-            GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].SavePlayer();
         }
         else
         {

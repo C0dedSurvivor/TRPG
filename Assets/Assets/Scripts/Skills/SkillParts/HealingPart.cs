@@ -8,9 +8,8 @@ public class HealingPart : SkillPartBase{
     //Max health percent healing
     public int maxHpPercent;
 
-    public HealingPart(int target, int heal, int flatHeal, int maxHPHeal, int chance = 100)
+    public HealingPart(TargettingType target, int heal, int flatHeal, int maxHPHeal, int chance = 100)
     {
-        skillPartType = "healing";
         targetType = target;
         healing = heal;
         flatHealing = flatHeal;

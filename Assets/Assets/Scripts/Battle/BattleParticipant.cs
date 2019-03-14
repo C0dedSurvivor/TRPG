@@ -42,7 +42,8 @@ public class SkillInfo
     }
 }
 
-public class BattleParticipant {
+public class BattleParticipant
+{
     public string name;
 
     public int attack;
@@ -60,9 +61,9 @@ public class BattleParticipant {
     public int moveType = 1;
 
     //0 = weapon, 1 = helmet, 2 = chestplate, 3 = legs, 4 = boots, 5 = gloves, 6 = accessory 1, 7 = accessory 2
-    public string[] equipment = new string[8];
+    public Equippable[] equipment = new Equippable[8];
 
-    public string equippedWeapon
+    public Equippable equippedWeapon
     {
         get
         {
@@ -81,7 +82,8 @@ public class BattleParticipant {
     //x = skill tree id, y = spell id
     public Dictionary<int, Dictionary<int, SkillInfo>> skillTreeList = new Dictionary<int, Dictionary<int, SkillInfo>>();
 
-    public BattleParticipant(string name) {
+    public BattleParticipant(string name)
+    {
         this.name = name;
     }
 
@@ -98,7 +100,7 @@ public class BattleParticipant {
         critChance = 15 + mT;
         mHealth = 1;
         cHealth = mHealth;
-        equippedWeapon = "Wooden Sword";
+        equippedWeapon = new Equippable("Wooden Sword");
 
         //Grab all the skill trees and skills for this pawn
         List<int> treeList = GameStorage.GetPlayerSkillList("");
@@ -156,7 +158,7 @@ public class BattleParticipant {
         {
             statusList.Add(status, duration);
         }
-        else if(statusList.Contains(status) && Registry.StatusEffectRegistry[s].refreshOnDuplication)
+        else if (statusList.Contains(status) && Registry.StatusEffectRegistry[s].refreshOnDuplication)
         {
             statusList.Refresh(status, duration);
         }
@@ -176,7 +178,7 @@ public class BattleParticipant {
             statusList.Remove(status);
         }
     }
-    
+
     /// <summary>
     /// Gets the combined total of all stat mods that affect a single stat on this partcipant
     /// </summary>
@@ -186,9 +188,9 @@ public class BattleParticipant {
     {
         statMod StatMod = new statMod(affectedStat, 0, 1, 0);
 
-        foreach(statMod s in modifierList)
+        foreach (statMod s in modifierList)
         {
-            if(s.affectedStat.CompareTo(affectedStat) == 0)
+            if (s.affectedStat.CompareTo(affectedStat) == 0)
             {
                 StatMod.flatMod += s.flatMod;
                 StatMod.multMod += s.multMod;
@@ -209,7 +211,7 @@ public class BattleParticipant {
         float damageMod = 1.0f;
         if (equippedWeapon != null)
         {
-            foreach (RangeDependentAttack r in Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[equippedWeapon]).subType].specialRanges)
+            foreach (RangeDependentAttack r in Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[equippedWeapon.Name]).subType].specialRanges)
             {
                 if (r.atDistance == dist)
                 {
@@ -219,7 +221,19 @@ public class BattleParticipant {
         }
         return damageMod;
     }
-    
+
+
+    public List<SkillPartBase> GetTriggeredEffects(EffectTriggers trigger)
+    {
+        List<SkillPartBase> list = new List<SkillPartBase>();
+        foreach(Equippable equipped in equipment)
+        {
+            if(equipped != null)
+                list.AddRange(equipped.GetTriggeredEffects(trigger));
+        }
+        return list;
+    }
+
     //
     //
     //All of these grab the combined total of base stat, weapon stats and stat mods for a certain stat
@@ -229,11 +243,11 @@ public class BattleParticipant {
     public int GetEffectiveMaxHealth()
     {
         int value = mHealth;
-        foreach (string i in equipment)
+        foreach (Equippable i in equipment)
         {
             if (i != null)
             {
-                value += ((EquippableBase)Registry.ItemRegistry[i]).health;
+                value += ((EquippableBase)Registry.ItemRegistry[i.Name]).health;
             }
         }
 
@@ -243,12 +257,12 @@ public class BattleParticipant {
     public int GetEffectiveAtk(int dist = -1)
     {
         int value = attack;
-        foreach(string i in equipment)
+        foreach (Equippable i in equipment)
         {
-            if(i != null)
+            if (i != null)
             {
-                if(((EquippableBase)Registry.ItemRegistry[i]).statType == 0)
-                    value += ((EquippableBase)Registry.ItemRegistry[i]).strength;
+                if (((EquippableBase)Registry.ItemRegistry[i.Name]).statType == 0)
+                    value += ((EquippableBase)Registry.ItemRegistry[i.Name]).strength;
             }
         }
         value = Mathf.RoundToInt(value * GetDistMod(dist));
@@ -257,7 +271,7 @@ public class BattleParticipant {
 
         value += s.flatMod;
         value *= (int)(1.0f + 0.125f * s.multMod);
-        
+
         return value;
     }
 
@@ -265,12 +279,12 @@ public class BattleParticipant {
     {
         int value = defense;
 
-        foreach (string i in equipment)
+        foreach (Equippable i in equipment)
         {
             if (i != null)
             {
-                if (((EquippableBase)Registry.ItemRegistry[i]).statType == 0)
-                    value += ((EquippableBase)Registry.ItemRegistry[i]).defense;
+                if (((EquippableBase)Registry.ItemRegistry[i.Name]).statType == 0)
+                    value += ((EquippableBase)Registry.ItemRegistry[i.Name]).defense;
             }
         }
 
@@ -286,12 +300,12 @@ public class BattleParticipant {
     {
         int value = mAttack;
 
-        foreach (string i in equipment)
+        foreach (Equippable i in equipment)
         {
             if (i != null)
             {
-                if (((EquippableBase)Registry.ItemRegistry[i]).statType == 1)
-                    value += ((EquippableBase)Registry.ItemRegistry[i]).strength;
+                if (((EquippableBase)Registry.ItemRegistry[i.Name]).statType == 1)
+                    value += ((EquippableBase)Registry.ItemRegistry[i.Name]).strength;
             }
         }
 
@@ -308,12 +322,12 @@ public class BattleParticipant {
     {
         int value = defense;
 
-        foreach (string i in equipment)
+        foreach (Equippable i in equipment)
         {
             if (i != null)
             {
-                if (((EquippableBase)Registry.ItemRegistry[i]).statType == 1)
-                    value += ((EquippableBase)Registry.ItemRegistry[i]).defense;
+                if (((EquippableBase)Registry.ItemRegistry[i.Name]).statType == 1)
+                    value += ((EquippableBase)Registry.ItemRegistry[i.Name]).defense;
             }
         }
 
@@ -328,11 +342,11 @@ public class BattleParticipant {
     public int GetEffectiveCrit()
     {
         int value = critChance;
-        foreach(string i in equipment)
+        foreach (Equippable i in equipment)
         {
             if (i != null)
             {
-                value += ((EquippableBase)Registry.ItemRegistry[i]).critChanceMod;
+                value += ((EquippableBase)Registry.ItemRegistry[i.Name]).critChanceMod;
             }
         }
         statMod s = GetStatMod("crit");
@@ -349,7 +363,7 @@ public class BattleParticipant {
         value += GetStatMod("move").flatMod;
         return value;
     }
-    
+
     /// <summary>
     /// Returns true if sent value matches the code of a tile type this participant can move over
     /// </summary>
@@ -364,7 +378,7 @@ public class BattleParticipant {
             return true;
         return false;
     }
-    
+
     /// <summary>
     /// Heals the pawn, making sure it isn't healed past its max health
     /// </summary>
@@ -386,13 +400,35 @@ public class BattleParticipant {
         if (damage > 0 && statusList.Contains("sleep"))
             statusList.Remove("sleep");
     }
-    
+
+    public void StartOfMatch()
+    {
+        foreach (Equippable i in equipment)
+        {
+            if (i != null)
+            {
+                i.StartOfMatch();
+            }
+        }
+    }
+
+    public void StartOfTurn()
+    {
+        foreach (Equippable i in equipment)
+        {
+            if (i != null)
+            {
+                i.StartOfTurn();
+            }
+        }
+    }
+
     /// <summary>
     /// Iterates through all stat changes and removes any that expire and deals with end of turn status effects
     /// </summary>
     public void EndOfTurn()
     {
-        for(int i = 0; i < modifierList.Count; i++)
+        for (int i = 0; i < modifierList.Count; i++)
         {
             modifierList[i].countDown();
             if (modifierList[i].duration == 0)

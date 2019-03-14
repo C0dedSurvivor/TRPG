@@ -218,7 +218,10 @@ public class Registry{
         ItemRegistry.Add("Egg", new ItemBase(99, 4, "The infinite potential of new life. Or a good breakfast. Your choice"));
         ItemRegistry.Add("Empty Bottle (Large)", new ItemBase(100, 1, "A large bottle of the most dangerous substance, air. 100% of people exposed to it have died, y'know"));
         ItemRegistry.Add("Feather", new ItemBase(999, 1, "It's a feather. A chicken died this you monster"));
-        ItemRegistry.Add("Helmet", new EquippableBase(1, 0, 0, 0, 0, 5, 0, 100, "It's a helmet. Riding your bike has never been safer!"));
+        //Testing out passive effects
+        EquippableBase test = new EquippableBase(1, 0, 0, 0, 0, 5, 0, 100, "It's a helmet. Riding your bike has never been safer!");
+        test.AddEffect(new TriggeredEffect(EffectTriggers.StartOfTurn, 1, 2, new HealingPart(TargettingType.Self, 0, 10, 0)));
+        ItemRegistry.Add("Helmet", test);
         ItemRegistry.Add("Magic Dust", new ItemBase(100, 150, "A pile of sand-like substance used in creating aEther-conductive materials and machines"));
         ItemRegistry.Add("Mana Potion (Large)", new ItemBase(100, 150, "A bottle of contained aEther. Can be smashed to restore some aEther to the nearby environment"));
         ItemRegistry.Add("Potion of Healing (Large)", new ItemBase(100, 150, "Heals for 50 health"));

@@ -89,9 +89,9 @@ public class EquipInventory : GridInventoryGUI
         int previousHealth = GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].mHealth;
         //Equip the new item. If the slot already has something equipped, put that item back into the inventory
         if (GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot) != null)
-            Inventory.AddItem(GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].EquipItem(itemList[selectedItem].Name, invSlot), 1);
+            Inventory.AddItem(GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].EquipItem(itemList[selectedItem] as Equippable, invSlot));
         else
-            GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].EquipItem(itemList[selectedItem].Name, invSlot);
+            GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].EquipItem(itemList[selectedItem] as Equippable, invSlot);
         //Removes the item to be equipped from the inventory and sorts it
         Inventory.RemoveItem(itemList[selectedItem].Name, 1);
         Inventory.SortInventory((int)Inventory.sortingType);
@@ -114,7 +114,7 @@ public class EquipInventory : GridInventoryGUI
         //Grabs the current max health of the player in case it changes after the item is de-equipped
         int previousHealth = GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].mHealth;
         //Adds the item back to the inventory and sorts it
-        Inventory.AddItem(GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].EquipItem(null, invSlot), 1);
+        Inventory.AddItem(GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].EquipItem(null, invSlot));
         Inventory.SortInventory((int)Inventory.sortingType);
         //Debug.Log(GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot));
         //Checks to see if max health was affected and modifies current health accordingly
@@ -145,7 +145,7 @@ public class EquipInventory : GridInventoryGUI
         {
             if (GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(-item - 1) != null)
             {
-                string itemName = GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(-item - 1);
+                string itemName = GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(-item - 1).Name;
                 item1Info.transform.GetChild(0).GetComponent<Text>().text = itemName;
                 item1Info.transform.GetChild(1).GetComponent<Text>().text = "Equipment type: ";
                 switch (((EquippableBase)Registry.ItemRegistry[itemName]).equipSlot)
@@ -260,7 +260,7 @@ public class EquipInventory : GridInventoryGUI
         //If player is mousing over an unequipped item for an inventory slot with an equipped item
         else
         {
-            string itemName = GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot);
+            string itemName = GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot).Name;
             item1Info.transform.GetChild(0).GetComponent<Text>().text = itemName;
             item1Info.transform.GetChild(1).GetComponent<Text>().text = "Equipment type: ";
             switch (((EquippableBase)Registry.ItemRegistry[itemName]).equipSlot)

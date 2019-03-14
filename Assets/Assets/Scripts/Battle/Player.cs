@@ -47,8 +47,9 @@ public class Player : BattleParticipant
             mDefense = 15 + mT;
             critChance = 15 + mT;
             mHealth = 150 + mT;
+            //Divides by two to test healing
             cHealth = mHealth / 2;
-            equippedWeapon = "Dagger";
+            equippedWeapon = new Equippable("Dagger");
             skillQuickList.Add(new Vector2Int(1, 1));
             skillQuickList.Add(new Vector2Int(1, 2));
             skillQuickList.Add(new Vector2Int(1, 3));
@@ -64,7 +65,6 @@ public class Player : BattleParticipant
                         skillTreeList[tree][skill].unlocked = true;
                 }
             }
-            SavePlayer();
         }
         else
         {
@@ -96,7 +96,10 @@ public class Player : BattleParticipant
         file.Write(cHealth);
         file.Write(mHealth);
         file.Write(healthGrowthType);
-        file.Write(equippedWeapon);
+        foreach (Equippable equipped in equipment)
+        {
+            file.Write(equipped.Name);
+        }
         file.Write(skillQuickList[0].x);
         file.Write(skillQuickList[0].y);
         file.Write(skillQuickList[1].x);
@@ -141,7 +144,10 @@ public class Player : BattleParticipant
         cHealth = file.ReadInt32();
         mHealth = file.ReadInt32();
         healthGrowthType = file.ReadString();
-        equippedWeapon = file.ReadString();
+        for(int i = 0; i < equipment.Length; i++)
+        {
+            equipment[i] = new Equippable(file.ReadString());
+        }
         skillQuickList.Add(new Vector2Int(file.ReadInt32(), file.ReadInt32()));
         skillQuickList.Add(new Vector2Int(file.ReadInt32(), file.ReadInt32()));
         skillQuickList.Add(new Vector2Int(file.ReadInt32(), file.ReadInt32()));
@@ -158,15 +164,17 @@ public class Player : BattleParticipant
             }
         }
         file.Close();
-        cHealth /= 2;
-        equippedWeapon = "Demonic Sword";
+        //For testing healing
+        //cHealth /= 2;
+        //For testing specific weapons
+        //equippedWeapon = "Demonic Sword";
     }
 
     /// <summary>
     /// Equips the new item, returning the old one so it can be returned to the inventory. 
     /// </summary>
-    public string EquipItem(string newEquippable, int slot) {
-        string item = equipment[slot];
+    public Equippable EquipItem(Equippable newEquippable, int slot) {
+        Equippable item = equipment[slot];
         equipment[slot] = newEquippable;
 		return item;
     }
@@ -186,7 +194,7 @@ public class Player : BattleParticipant
     /// <summary>
     /// Returns the item equipped in inventory slot "slot". 
     /// </summary>
-    public string GetEquipped(int slot)
+    public Equippable GetEquipped(int slot)
     {
         return equipment[slot];
     }

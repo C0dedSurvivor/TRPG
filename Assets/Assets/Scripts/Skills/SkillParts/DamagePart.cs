@@ -10,9 +10,8 @@ public class DamagePart : SkillPartBase{
     //Remaining health percent damage
     public int remainingHpPercent;
 
-    public DamagePart(int target, int damage, int flatDamage, int maxHpDamage, int remainingHpDamage, int chance = 100)
+    public DamagePart(TargettingType target, int damage, int flatDamage, int maxHpDamage, int remainingHpDamage, int chance = 100)
     {
-        skillPartType = "damage";
         targetType = target;
         this.damage = damage;
         this.flatDamage = flatDamage;

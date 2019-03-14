@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
 
 //later this will be used to store players, inventories, quests etc. in between fights
 
@@ -13,7 +14,7 @@ public class GameStorage : MonoBehaviour {
     */
 
     public static List<Player> playerMasterList = new List<Player>();
-    public static List<int> activePlayerList = new List<int>(){0, 1, 2, 3};
+    public static List<int> activePlayerList = new List<int>() { 0, 1, 2, 3 };
 
     public static int playerCurrency;
 
@@ -21,7 +22,7 @@ public class GameStorage : MonoBehaviour {
      * 
      * Map storage and access
      * 
-    */ 
+    */
 
     const int mapXsize = 200;
     const int mapYsize = 200;
@@ -206,58 +207,58 @@ public class GameStorage : MonoBehaviour {
         //Adds all of the skills to the trees
 
         //test skill to test damage, healing and stat changes
-        Skill holyHandGrenade = new Skill("Holy Hand Grenade", 5, 1, 7, 5, 5, 0, 0);
-        holyHandGrenade.AddDamagePart(2, 3, 3, 0, 0);
-        holyHandGrenade.AddHealPart(3, 3, 3, 0, 0);
-        holyHandGrenade.AddStatPart(3, "atk", 5, 0, 3);
+        Skill holyHandGrenade = new Skill("Holy Hand Grenade", TargettingType.All, 1, 7, 5, 5, 0, 0);
+        holyHandGrenade.AddDamagePart(TargettingType.Enemy, 3, 3, 0, 0);
+        holyHandGrenade.AddHealPart(TargettingType.Ally, 3, 3, 0, 0);
+        holyHandGrenade.AddStatPart(TargettingType.Ally, "atk", 5, 0, 3);
         testSkillTree.Add(1, holyHandGrenade);
 
-        Skill firewall = new Skill("Firewall", 5, 4, 7, 1, 3, 1, 1);
-        firewall.AddDamagePart(2, 3, 5, 0, 0);
+        Skill firewall = new Skill("Firewall", TargettingType.All, 4, 7, 1, 3, 1, 1);
+        firewall.AddDamagePart(TargettingType.Enemy, 3, 5, 0, 0);
         firewall.AddDependency(1);
         testSkillTree.Add(2, firewall);
 
-        Skill conflagration = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
-        conflagration.AddDamagePart(2, 10, 0, 0, 0);
-        conflagration.AddStatPart(2, "atk", 0, -4, 3);
+        Skill conflagration = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
+        conflagration.AddDamagePart(TargettingType.Enemy, 10, 0, 0, 0);
+        conflagration.AddStatPart(TargettingType.Enemy, "atk", 0, -4, 3);
         conflagration.AddDependency(1);
         testSkillTree.Add(3, conflagration);
 
-        Skill testSkill1 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill1 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill1.AddDependency(3);
         testSkillTree.Add(4, testSkill1);
 
-        Skill testSkill2 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill2 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill2.AddDependency(4);
         testSkill2.AddDependency(1);
         testSkillTree.Add(5, testSkill2);
 
-        Skill testSkill3 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill3 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill3.AddDependency(4);
         testSkillTree.Add(6, testSkill3);
 
-        Skill testSkill4 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill4 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill4.AddDependency(5);
         testSkillTree.Add(7, testSkill4);
 
-        Skill testSkill5 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill5 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill5.AddDependency(5);
         testSkillTree.Add(8, testSkill5);
 
-        Skill testSkill6 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill6 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill6.AddDependency(7);
         testSkillTree.Add(9, testSkill6);
 
-        Skill testSkill7 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill7 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill7.AddDependency(7);
         testSkill7.AddDependency(2);
         testSkillTree.Add(10, testSkill7);
 
-        Skill testSkill8 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill8 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill8.AddDependency(7);
         testSkillTree.Add(11, testSkill8);
 
-        Skill testSkill9 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill9 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill9.AddDependency(10);
         testSkillTree.Add(12, testSkill9);
 
@@ -274,46 +275,46 @@ public class GameStorage : MonoBehaviour {
         testSkillTree4.Add(1, holyHandGrenade);
         testSkillTree4.Add(2, firewall);
         testSkillTree4.Add(3, conflagration);
-        Skill testSkill21 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill21 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill21.AddDependency(1);
         testSkillTree4.Add(4, testSkill21);
 
-        Skill testSkill22 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill22 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill22.AddDependency(2);
         testSkillTree4.Add(5, testSkill22);
-        Skill testSkill23 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill23 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill23.AddDependency(2);
         testSkillTree4.Add(6, testSkill23);
-        Skill testSkill24 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill24 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill24.AddDependency(2);
         testSkillTree4.Add(7, testSkill24);
-        Skill testSkill25 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill25 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill25.AddDependency(2);
         testSkillTree4.Add(8, testSkill25);
 
-        Skill testSkill26 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill26 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill26.AddDependency(3);
         testSkillTree4.Add(9, testSkill26);
-        Skill testSkill27 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill27 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill27.AddDependency(3);
         testSkillTree4.Add(10, testSkill27);
-        Skill testSkill28 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill28 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill28.AddDependency(3);
         testSkillTree4.Add(11, testSkill28);
-        Skill testSkill29 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill29 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill29.AddDependency(3);
         testSkillTree4.Add(12, testSkill29);
 
-        Skill testSkill210 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill210 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill210.AddDependency(4);
         testSkillTree4.Add(13, testSkill210);
-        Skill testSkill211 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill211 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill211.AddDependency(4);
         testSkillTree4.Add(14, testSkill211);
-        Skill testSkill212 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill212 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill212.AddDependency(4);
         testSkillTree4.Add(15, testSkill212);
-        Skill testSkill213 = new Skill("Conflagration", 3, 2, 7, 4, 4, 1, 1);
+        Skill testSkill213 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         testSkill213.AddDependency(4);
         testSkillTree4.Add(16, testSkill213);
 
@@ -349,6 +350,82 @@ public class GameStorage : MonoBehaviour {
         return playerSkillTrees;
     }
 
+    /// <summary>
+    /// Allows saving from the map instance of this class
+    /// Is a workaround to allow a button press to call this function
+    /// </summary>
+    public void Save()
+    {
+        SaveAll();
+    }
+
+    /// <summary>
+    /// Saves all of the important data across the game
+    /// </summary>
+    private static void SaveAll()
+    {
+        //Saves each pawn's stats and gear
+        foreach(Player p in playerMasterList)
+        {
+            p.SavePlayer();
+        }
+        Inventory.SaveInventory();
+        //Saves any data not specifically in any other file
+        Stream outStream = File.OpenWrite("Assets/Resources/Storage/Player.data");
+        BinaryWriter file = new BinaryWriter(outStream);
+        Transform player = GameObject.FindGameObjectWithTag("Player").transform;
+        //Saves the player's position and rotation
+        file.Write(player.position.x);
+        file.Write(player.position.y);
+        file.Write(player.position.z);
+        file.Write(player.rotation.eulerAngles.x);
+        file.Write(player.rotation.eulerAngles.y);
+        file.Write(player.rotation.eulerAngles.z);
+        //Saves the player's camera position, rotation and FoV
+        Transform camera = player.GetChild(0);
+        file.Write(camera.localPosition.x);
+        file.Write(camera.localPosition.y);
+        file.Write(camera.localPosition.z);
+        file.Write(camera.rotation.eulerAngles.x);
+        file.Write(camera.rotation.eulerAngles.y);
+        file.Write(camera.rotation.eulerAngles.z);
+        file.Write(camera.GetComponent<Camera>().fieldOfView);
+        file.Write(playerCurrency);
+        //Saves the current active player list (The ID's of the players set up to be used in battle)
+        file.Write(activePlayerList.Count);
+        foreach(int i in activePlayerList)
+        {
+            file.Write(i);
+        }
+        file.Close();
+    }
+
+    /// <summary>
+    /// Loads all globally relevant data
+    /// Should be the last thing loaded
+    /// </summary>
+    public static void Load()
+    {
+        if (File.Exists("Assets/Resources/Storage/Player.data"))
+        {
+            Stream inStream = File.OpenRead("Assets/Resources/Storage/Player.data");
+            BinaryReader file = new BinaryReader(inStream);
+            Transform player = GameObject.FindGameObjectWithTag("Player").transform;
+            player.SetPositionAndRotation(new Vector3(file.ReadSingle(), file.ReadSingle(), file.ReadSingle()), Quaternion.Euler(file.ReadSingle(), file.ReadSingle(), file.ReadSingle()));
+            Transform camera = player.GetChild(0);
+            camera.localPosition = new Vector3(file.ReadSingle(), file.ReadSingle(), file.ReadSingle());
+            camera.rotation = Quaternion.Euler(file.ReadSingle(), file.ReadSingle(), file.ReadSingle());
+            camera.GetComponent<Camera>().fieldOfView = file.ReadSingle();
+            playerCurrency = file.ReadInt32();
+            int activeAmount = file.ReadInt32();
+            activePlayerList.Clear();
+            for(int i = 0; i < activeAmount; i++)
+            {
+                activePlayerList.Add(file.ReadInt32());
+            }
+            file.Close();
+        }
+    }
 
     /*
      * 

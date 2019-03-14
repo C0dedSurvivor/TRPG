@@ -4,9 +4,8 @@ using System.Collections.Generic;
 
 public class Skill {
     public string name;
-
-    //1 = self, 2 = enemy, 3 = ally, 4 = passive, 5 = anywhere
-    public int targetType;
+    
+    public TargettingType targetType;
 
     public int aEtherCost;
 
@@ -26,7 +25,7 @@ public class Skill {
     
     public string flavorText;
 
-    public Skill(string name, int target, int cost, int targetRange, int xAOE, int yAOE, int unlockCost, int unlockLvl, string flavorText = "")
+    public Skill(string name, TargettingType target, int cost, int targetRange, int xAOE, int yAOE, int unlockCost, int unlockLvl, string flavorText = "")
     {
         this.name = name;
         targetType = target;
@@ -45,22 +44,22 @@ public class Skill {
         dependencies.Add(id);
     }
 
-    public void AddDamagePart(int target, int damage, int flatDamage, int percentMaxHealth, int percentCurrentHealth)
+    public void AddDamagePart(TargettingType target, int damage, int flatDamage, int percentMaxHealth, int percentCurrentHealth)
     {
         partList.Add(new DamagePart(target, damage, flatDamage, percentMaxHealth, percentCurrentHealth));
     }
 
-    public void AddHealPart(int target, int healing, int flatHealing, int percentMaxHealth, int percentCurrentHealth)
+    public void AddHealPart(TargettingType target, int healing, int flatHealing, int percentMaxHealth, int percentCurrentHealth)
     {
         partList.Add(new HealingPart(target, healing, flatHealing, percentMaxHealth, percentCurrentHealth));
     }
 
-    public void AddStatPart(int target, string affectedStat, int flat, int multiplier, int duration, int chance = 100)
+    public void AddStatPart(TargettingType target, string affectedStat, int flat, int multiplier, int duration, int chance = 100)
     {
         partList.Add(new StatChangePart(target, affectedStat, flat, multiplier, duration, chance));
     }
 
-    public void AddStatusPart(int target, string status, bool remove, int chance = 100)
+    public void AddStatusPart(TargettingType target, string status, bool remove, int chance = 100)
     {
         partList.Add(new StatusEffectPart(target, status, remove, chance));
     }

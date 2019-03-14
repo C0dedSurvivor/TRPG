@@ -46,7 +46,7 @@ public class ItemBase
 }
 
 /// <summary>
-/// An item that ca be equipped to a pawn
+/// An item that can be equipped to a pawn
 /// </summary>
 public class EquippableBase : ItemBase
 {
@@ -67,6 +67,9 @@ public class EquippableBase : ItemBase
     //0 = physical, 1 = magical
     public int statType;
 
+    //List of special effects granted by the equipment that can be triggered while in battle
+    public List<TriggeredEffect> effects = new List<TriggeredEffect>();
+
     public EquippableBase(int slot, int subtype, int stattype, int healthChange, int strengthChange, int defenseChange, int critChange, int sellPrice, string flavor = "") : base(1, sellPrice, flavor)
     {
         equipSlot = slot;
@@ -76,6 +79,11 @@ public class EquippableBase : ItemBase
         strength = strengthChange;
         defense = defenseChange;
         critChanceMod = critChange;
+    }
+
+    public void AddEffect(TriggeredEffect effect)
+    {
+        effects.Add(effect);
     }
 }
 

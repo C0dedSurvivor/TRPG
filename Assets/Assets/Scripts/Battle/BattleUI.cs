@@ -101,7 +101,7 @@ public class BattleUI : MonoBehaviour {
                 {
                     //If it is actually an enemy
                     if (BattleScript.selectedEnemy < BattleScript.enemyList.Length){
-                        float ed = (BattleScript.enemyList[BattleScript.selectedEnemy].cHealth - BattleScript.GetDamageValues(GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]], BattleScript.enemyList[BattleScript.selectedEnemy])) / (BattleScript.enemyList[BattleScript.selectedEnemy].mHealth * 1.0f);
+                        float ed = (BattleScript.enemyList[BattleScript.selectedEnemy].cHealth - BattleScript.GetDamageValues(GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]], BattleScript.enemyList[BattleScript.selectedEnemy]).First) / (BattleScript.enemyList[BattleScript.selectedEnemy].mHealth * 1.0f);
                         if (ed >= 0.75)
                         {
                             damageNote1.text = "Enemy will probably just tank my hit.";
@@ -118,7 +118,7 @@ public class BattleUI : MonoBehaviour {
                         {
                             damageNote1.text = "This enemy will not live for much longer.";
                         }
-                        float pd = (GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]].cHealth - BattleScript.GetDamageValues(BattleScript.enemyList[BattleScript.selectedEnemy], GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]])) / (GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]].mHealth * 1.0f);
+                        float pd = (GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]].cHealth - BattleScript.GetDamageValues(BattleScript.enemyList[BattleScript.selectedEnemy], GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]]).First) / (GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]].mHealth * 1.0f);
                         if (Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]].equippedWeapon.Name]).subType].ranged != Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[BattleScript.enemyList[BattleScript.selectedEnemy].equippedWeapon.Name]).subType].ranged)
                         {
                             damageNote2.text = "And they shouldn't be able to counterattack me from this range.";

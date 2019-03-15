@@ -63,14 +63,13 @@ public class EquippableBase : ItemBase
     /// Armor: Heavy, medium, light
     /// </summary>
     public int subType;
-
-    //0 = physical, 1 = magical
-    public int statType;
+    
+    public DamageType statType;
 
     //List of special effects granted by the equipment that can be triggered while in battle
     public List<TriggeredEffect> effects = new List<TriggeredEffect>();
 
-    public EquippableBase(int slot, int subtype, int stattype, int healthChange, int strengthChange, int defenseChange, int critChange, int sellPrice, string flavor = "") : base(1, sellPrice, flavor)
+    public EquippableBase(int slot, int subtype, DamageType stattype, int healthChange, int strengthChange, int defenseChange, int critChange, int sellPrice, string flavor = "") : base(1, sellPrice, flavor)
     {
         equipSlot = slot;
         subType = subtype;

@@ -207,19 +207,19 @@ public class GameStorage : MonoBehaviour {
         //Adds all of the skills to the trees
 
         //test skill to test damage, healing and stat changes
-        Skill holyHandGrenade = new Skill("Holy Hand Grenade", TargettingType.All, 1, 7, 5, 5, 0, 0);
-        holyHandGrenade.AddDamagePart(TargettingType.Enemy, 3, 3, 0, 0);
+        Skill holyHandGrenade = new Skill("Holy Hand Grenade", TargettingType.AllInRange, 1, 7, 5, 5, 0, 0);
+        holyHandGrenade.AddDamagePart(TargettingType.Enemy, DamageType.Magical, 3, 3, 0, 0);
         holyHandGrenade.AddHealPart(TargettingType.Ally, 3, 3, 0, 0);
         holyHandGrenade.AddStatPart(TargettingType.Ally, "atk", 5, 0, 3);
         testSkillTree.Add(1, holyHandGrenade);
 
-        Skill firewall = new Skill("Firewall", TargettingType.All, 4, 7, 1, 3, 1, 1);
-        firewall.AddDamagePart(TargettingType.Enemy, 3, 5, 0, 0);
+        Skill firewall = new Skill("Firewall", TargettingType.AllInRange, 4, 7, 1, 3, 1, 1);
+        firewall.AddDamagePart(TargettingType.Enemy, DamageType.Magical, 3, 5, 0, 0);
         firewall.AddDependency(1);
         testSkillTree.Add(2, firewall);
 
         Skill conflagration = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        conflagration.AddDamagePart(TargettingType.Enemy, 10, 0, 0, 0);
+        conflagration.AddDamagePart(TargettingType.Enemy, DamageType.Magical, 10, 0, 0, 0);
         conflagration.AddStatPart(TargettingType.Enemy, "atk", 0, -4, 3);
         conflagration.AddDependency(1);
         testSkillTree.Add(3, conflagration);

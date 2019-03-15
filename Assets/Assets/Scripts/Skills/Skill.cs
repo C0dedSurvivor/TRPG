@@ -44,9 +44,9 @@ public class Skill {
         dependencies.Add(id);
     }
 
-    public void AddDamagePart(TargettingType target, int damage, int flatDamage, int percentMaxHealth, int percentCurrentHealth)
+    public void AddDamagePart(TargettingType target, DamageType damageType, int damage, int flatDamage, int percentMaxHealth, int percentCurrentHealth)
     {
-        partList.Add(new DamagePart(target, damage, flatDamage, percentMaxHealth, percentCurrentHealth));
+        partList.Add(new DamagePart(target, damageType, damage, flatDamage, percentMaxHealth, percentCurrentHealth));
     }
 
     public void AddHealPart(TargettingType target, int healing, int flatHealing, int percentMaxHealth, int percentCurrentHealth)

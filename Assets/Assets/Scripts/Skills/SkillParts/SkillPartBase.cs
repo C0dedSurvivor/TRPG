@@ -5,9 +5,14 @@ using UnityEngine;
 public enum TargettingType
 {
     Self,
+    //Care about effect range
     Ally,
     Enemy,
-    All
+    AllInRange,
+    //Don't care about effect range
+    AllAllies,
+    AllAlliesNotSelf,
+    AllEnemies
 }
 
 public class SkillPartBase {

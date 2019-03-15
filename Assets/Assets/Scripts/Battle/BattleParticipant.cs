@@ -261,7 +261,7 @@ public class BattleParticipant
         {
             if (i != null)
             {
-                if (((EquippableBase)Registry.ItemRegistry[i.Name]).statType == 0)
+                if (((EquippableBase)Registry.ItemRegistry[i.Name]).statType == DamageType.Physical)
                     value += ((EquippableBase)Registry.ItemRegistry[i.Name]).strength;
             }
         }
@@ -283,7 +283,7 @@ public class BattleParticipant
         {
             if (i != null)
             {
-                if (((EquippableBase)Registry.ItemRegistry[i.Name]).statType == 0)
+                if (((EquippableBase)Registry.ItemRegistry[i.Name]).statType == DamageType.Physical)
                     value += ((EquippableBase)Registry.ItemRegistry[i.Name]).defense;
             }
         }
@@ -304,7 +304,7 @@ public class BattleParticipant
         {
             if (i != null)
             {
-                if (((EquippableBase)Registry.ItemRegistry[i.Name]).statType == 1)
+                if (((EquippableBase)Registry.ItemRegistry[i.Name]).statType == DamageType.Magical)
                     value += ((EquippableBase)Registry.ItemRegistry[i.Name]).strength;
             }
         }
@@ -326,7 +326,7 @@ public class BattleParticipant
         {
             if (i != null)
             {
-                if (((EquippableBase)Registry.ItemRegistry[i.Name]).statType == 1)
+                if (((EquippableBase)Registry.ItemRegistry[i.Name]).statType == DamageType.Magical)
                     value += ((EquippableBase)Registry.ItemRegistry[i.Name]).defense;
             }
         }
@@ -383,9 +383,11 @@ public class BattleParticipant
     /// Heals the pawn, making sure it isn't healed past its max health
     /// </summary>
     /// <param name="healAmount">Max amount of health to gain</param>
-    public void Heal(int healAmount)
+    public int Heal(int healAmount)
     {
+        int previous = cHealth;
         cHealth = Mathf.Clamp(cHealth + healAmount, 0, GetEffectiveMaxHealth());
+        return cHealth - previous;
     }
 
     //
@@ -394,11 +396,13 @@ public class BattleParticipant
     /// Also dispells effects that are removed by dealing damage
     /// </summary>
     /// <param name="damage">Amount of damage to deal</param>
-    public void Damage(int damage)
+    public int Damage(int damage)
     {
-        cHealth = Mathf.Clamp(cHealth - damage, 0, GetEffectiveMaxHealth());
         if (damage > 0 && statusList.Contains("sleep"))
             statusList.Remove("sleep");
+        int previous = cHealth;
+        cHealth = Mathf.Clamp(cHealth - damage, 0, GetEffectiveMaxHealth());
+        return previous - cHealth;
     }
 
     public void StartOfMatch()

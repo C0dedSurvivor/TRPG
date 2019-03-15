@@ -36,5 +36,4 @@ Enter/Leave/Navigate pause menu - Escape <br />
 Zoom camera in or out in map - Control + scroll wheel
 
 ## Known bugs:
-* Clicking on two players consecutively on your turn in a battle counts the second one as an enemy instead of switching control
 * Leaving the window then coming back to it makes some UI textures no longer display

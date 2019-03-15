@@ -15,12 +15,15 @@ public enum EffectTriggers
     TakeDamage,
     DealDamage,
     TakePhysicalDamage,
-    LeavePhysicalDamage,
+    DealPhysicalDamage,
     TakeMagicDamage,
-    LeaveMagicDamage,
+    DealMagicDamage,
     BasicAttack,
     SpellCast,
+    DealSpellDamage,
+    HealWithSpell,
     KillAnEnemy,
+    Die,
     GettingHealed,
     Healing,
     StartOfMatch,
@@ -348,7 +351,7 @@ public class Battle : MonoBehaviour
                             //Attacks if enemy can
                             if (chosenMove.attackPosition.x != -1)
                             {
-                                PerformEnemyAttack(movingEnemy, chosenMove.attackPosition.x, chosenMove.attackPosition.y);
+                                PerformAttack(enemyList[movingEnemy], GameStorage.playerMasterList[GameStorage.activePlayerList[PlayerAtPos(chosenMove.attackPosition.x, chosenMove.attackPosition.y)]]);
                             }
                             if (battleState != BattleState.ReturnCamera)
                             {
@@ -411,19 +414,26 @@ public class Battle : MonoBehaviour
         //resets to allow players to move and starts player's turn
         foreach (int pID in GameStorage.activePlayerList)
         {
-            if (GameStorage.playerMasterList[pID].cHealth > 0 && !GameStorage.playerMasterList[pID].statusList.Contains("sleep"))
-                GameStorage.playerMasterList[pID].moved = false;
-            GameStorage.playerMasterList[pID].EndOfTurn();
-            GameStorage.playerMasterList[pID].StartOfTurn();
-            CheckEventTriggers(GameStorage.playerMasterList[pID], EffectTriggers.StartOfTurn);
+            if (GameStorage.playerMasterList[pID].cHealth > 0) {
+                GameStorage.playerMasterList[pID].EndOfTurn();
+                if(!GameStorage.playerMasterList[pID].statusList.Contains("sleep"))
+                    GameStorage.playerMasterList[pID].moved = false;
+                GameStorage.playerMasterList[pID].StartOfTurn();
+                CheckEventTriggers(GameStorage.playerMasterList[pID], EffectTriggers.EndOfTurn);
+                CheckEventTriggers(GameStorage.playerMasterList[pID], EffectTriggers.StartOfTurn);
+            }
         }
         movingEnemy = 0;
         turn++;
         foreach (Enemy e in enemyList)
         {
-            e.EndOfTurn();
-            e.StartOfTurn();
-            CheckEventTriggers(e, EffectTriggers.StartOfTurn);
+            if (e.cHealth > 0)
+            {
+                e.EndOfTurn();
+                e.StartOfTurn();
+                CheckEventTriggers(e, EffectTriggers.EndOfTurn);
+                CheckEventTriggers(e, EffectTriggers.StartOfTurn);
+            }
         }
         if (battleState != BattleState.ReturnCamera)
             battleState = BattleState.Player;
@@ -520,9 +530,11 @@ public class Battle : MonoBehaviour
         {
             foreach (int p in GameStorage.activePlayerList)
             {
+                CheckEventTriggers(GameStorage.playerMasterList[p], EffectTriggers.EndOfMatch);
                 GameStorage.playerMasterList[p].GainExp(200);
             }
             Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
             mapPlayer.SetActive(true);
             cameraFinalPos = mapPlayer.GetComponentInChildren<Camera>().transform.position;
             cameraFinalRot = mapPlayer.GetComponentInChildren<Camera>().transform.rotation;
@@ -620,14 +632,14 @@ public class Battle : MonoBehaviour
                     }
                     break;
                 case BattleState.Player:
-                    //if player is moving something
+                    //If player is trying to move a pawn
                     if (tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerMoveRange && !GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].moved)
                     {
                         selectedMoveSpot.Set(pos.x, pos.y);
                         moveMarker.transform.position = new Vector3(pos.x + topLeft.x, 1, (mapSizeY - 1) - pos.y + topLeft.y);
                         moveMarker.SetActive(true);
 
-                        //update the line renderer
+                        //Update the line renderer
                         moveMarker.GetComponent<LineRenderer>().SetPosition(0, Vector3.zero);
                         moveYFirst = true;
                         Vector2Int p = new Vector2Int(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.x - selectedMoveSpot.x, GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.y - selectedMoveSpot.y);
@@ -693,18 +705,18 @@ public class Battle : MonoBehaviour
             }
             if (!actionTaken && hoveredSpell == -1)
             {
-                //selecting a different player
+                //Selecting a different player
                 if (battleState != BattleState.Attack)
                 {
                     selectedPlayer = PlayerAtPos(pos.x, pos.y);
                     selectedMoveSpot = new Vector2Int(-1, -1);
                     moveMarker.SetActive(false);
-                    //selectedSpell = -1;
+                    selectedSpell = -1;
                 }
 
-                //selecting an enemy
+                //Selecting an enemy
                 selectedEnemy = EnemyAtPos(pos.x, pos.y);
-                if (tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerAttackRange)
+                if (tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerAttackRange && (battleState == BattleState.Attack || selectedSpell != -1))
                 {
                     if (selectedEnemy == -1)
                         selectedEnemy = enemyList.Length + PlayerAtPos(pos.x, pos.y);
@@ -844,26 +856,30 @@ public class Battle : MonoBehaviour
     /// </summary>
     /// <param name="p1">The pawn doing the attacking</param>
     /// <param name="p2">The pawn getting attacked</param>
-    /// <returns></returns>
-    public int GetDamageValues(BattleParticipant p1, BattleParticipant p2)
+    /// <returns>The first value is the amount of damage, the second is the damage type and whether or not the weapon is ranged</returns>
+    public Pair<int, Pair<DamageType, bool>> GetDamageValues(BattleParticipant p1, BattleParticipant p2)
     {
         //gets the distance between the player and enemy
         int dist = Mathf.Abs(p2.position.x - p1.position.x);
         if (Mathf.Abs(p2.position.y - p1.position.y) > dist)
             dist = Mathf.Abs(p2.position.y - p1.position.y);
 
-        int type = ((EquippableBase)Registry.ItemRegistry[p1.equippedWeapon.Name]).statType;
+        DamageType type = ((EquippableBase)Registry.ItemRegistry[p1.equippedWeapon.Name]).statType;
+        float mod = 1.0f;
+        bool ranged = Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[p1.equippedWeapon.Name]).subType].ranged;
         foreach (RangeDependentAttack r in Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[p1.equippedWeapon.Name]).subType].specialRanges)
         {
             if (r.atDistance == dist)
             {
                 type = r.damageType;
+                mod = r.damageMult;
+                ranged = r.ranged;
             }
         }
-        if (type == 0)
-            return Mathf.RoundToInt((p1.GetEffectiveAtk(dist) * 3.0f) / p2.GetEffectiveDef(dist));
+        if (type == DamageType.Physical)
+            return new Pair<int, Pair<DamageType, bool>>(Mathf.RoundToInt((p1.GetEffectiveAtk(dist) * mod * 3.0f) / p2.GetEffectiveDef(dist)), new Pair<DamageType, bool>(type, ranged));
         else
-            return Mathf.RoundToInt((p1.GetEffectiveMAtk(dist) * 3.0f) / p2.GetEffectiveMDef(dist));
+            return new Pair<int, Pair<DamageType, bool>>(Mathf.RoundToInt((p1.GetEffectiveMAtk(dist) * mod * 3.0f) / p2.GetEffectiveMDef(dist)), new Pair<DamageType, bool>(type, ranged));
     }
 
     /// <summary>
@@ -871,82 +887,104 @@ public class Battle : MonoBehaviour
     /// </summary>
     public void PerformPlayerAttack()
     {
-        WeaponType pweapon;
-        if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon.Name]).subType, out pweapon))
-            Debug.Log("Weapon Type does not exist in the Registry.");
-        //if healing a player
+        //If healing a player
         if (selectedEnemy >= enemyList.Length)
         {
-            GameStorage.playerMasterList[GameStorage.activePlayerList[selectedEnemy - enemyList.Length]].Heal(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].GetEffectiveAtk() / 2);
+            int healing = GameStorage.playerMasterList[GameStorage.activePlayerList[selectedEnemy - enemyList.Length]].Heal(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].GetEffectiveMAtk() / 2);
+            CheckEventTriggers(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]], EffectTriggers.Healing, GameStorage.playerMasterList[GameStorage.activePlayerList[selectedEnemy - enemyList.Length]], healing);
+            CheckEventTriggers(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedEnemy - enemyList.Length]], EffectTriggers.GettingHealed, GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]], healing);
         }
-        //if attacking an enemy
+        //If attacking an enemy
         else
-        {
-            float mod = 1.0f;
-            if (Random.Range(0.0f, 100.0f) < GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].critChance + ((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].equippedWeapon.Name]).critChanceMod) { mod = 1.5f; }
-            enemyList[selectedEnemy].Damage(Mathf.RoundToInt(GetDamageValues(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]], enemyList[selectedEnemy]) * mod));
-            if (enemyList[selectedEnemy].cHealth <= 0)
-            {
-                CheckForDeath();
-            }
-            else
-            {
-                WeaponType eweapon;
-                if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[selectedEnemy].equippedWeapon.Name]).subType, out eweapon))
-                    Debug.Log("Weapon Type does not exist in the Registry.");
-                if (pweapon.ranged == eweapon.ranged)
-                {
-                    mod = 1.0f;
-                    if (Random.Range(0.0f, 100.0f) < enemyList[selectedEnemy].critChance + ((EquippableBase)Registry.ItemRegistry[enemyList[selectedEnemy].equippedWeapon.Name]).critChanceMod) { mod = 1.5f; }
-                    GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].Damage(Mathf.RoundToInt(GetDamageValues(enemyList[selectedEnemy], GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]]) * mod));
-                    if (GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].cHealth <= 0)
-                    {
-                        playerModels[selectedPlayer].SetActive(false);
-                        GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]].position.Set(-200, -200);
-                        CheckForDeath();
-                    }
-                }
-            }
-        }
+            PerformAttack(GameStorage.playerMasterList[GameStorage.activePlayerList[selectedPlayer]], enemyList[selectedEnemy]);
         EndPlayerAttack();
     }
 
     /// <summary>
     /// Performs attack, then checks for an executes possible counterattack if both pawns are still alive
     /// </summary>
-    /// <param name="enemy">The ID of the attacking enemy</param>
-    /// <param name="pX">X coordinate of the tile Where the player being attacked is</param>
-    /// <param name="pY">Y coordinate of the tile where the player being attacked is</param>
-    public void PerformEnemyAttack(int enemy, int pX, int pY)
+    /// <param name="attacker">The pawn that is initially attacking</param>
+    /// <param name="defender">The pawn that is initially defending</param>
+    public void PerformAttack(BattleParticipant attacker, BattleParticipant defender)
     {
-        int player = PlayerAtPos(pX, pY);
-
+        int previousHealth = defender.cHealth;
         float mod = 1.0f;
-        if (Random.Range(0.0f, 100.0f) < enemyList[enemy].critChance + ((EquippableBase)Registry.ItemRegistry[enemyList[enemy].equippedWeapon.Name]).critChanceMod) { mod = 1.5f; }
-        GameStorage.playerMasterList[GameStorage.activePlayerList[player]].Damage(Mathf.RoundToInt(GetDamageValues(enemyList[enemy], GameStorage.playerMasterList[GameStorage.activePlayerList[player]]) * mod));
-        if (GameStorage.playerMasterList[GameStorage.activePlayerList[player]].cHealth <= 0)
+        if (Random.Range(0.0f, 100.0f) < attacker.critChance + ((EquippableBase)Registry.ItemRegistry[attacker.equippedWeapon.Name]).critChanceMod) { mod = 1.5f; }
+
+        Pair<int, Pair<DamageType, bool>> attackData = GetDamageValues(attacker, defender);
+        int damage = defender.Damage(Mathf.RoundToInt(attackData.First * mod));
+
+        CheckEventTriggers(attacker, EffectTriggers.BasicAttack, defender, damage);
+        CheckEventTriggers(attacker, EffectTriggers.DealDamage, defender, damage);
+        CheckEventTriggers(defender, EffectTriggers.TakeDamage, attacker, damage);
+        if(attackData.Second.First == DamageType.Physical)
         {
-            playerModels[player].SetActive(false);
-            GameStorage.playerMasterList[GameStorage.activePlayerList[player]].position.Set(-200, -200);
-            CheckForDeath();
+            CheckEventTriggers(attacker, EffectTriggers.DealPhysicalDamage, defender, damage);
+            CheckEventTriggers(defender, EffectTriggers.TakePhysicalDamage, attacker, damage);
         }
         else
         {
-            WeaponType pweapon;
-            WeaponType eweapon;
-            if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[enemyList[enemy].equippedWeapon.Name]).subType, out eweapon))
-                Debug.Log("Weapon Type does not exist in the Registry.");
-            if (!Registry.WeaponTypeRegistry.TryGetValue(((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[player]].equippedWeapon.Name]).subType, out pweapon))
-                Debug.Log("Weapon Type does not exist in the Registry.");
-            if (pweapon.ranged == eweapon.ranged)
+            CheckEventTriggers(attacker, EffectTriggers.DealMagicDamage, defender, damage);
+            CheckEventTriggers(defender, EffectTriggers.TakeMagicDamage, attacker, damage);
+        }
+
+        //If this causes them to fall below 50% health
+        if (previousHealth >= defender.mHealth / 2.0 && defender.cHealth < defender.mHealth / 2.0)
+            CheckEventTriggers(defender, EffectTriggers.FallBelow50Percent, attacker);
+        //If this causes them to fall below 50% health
+        if (previousHealth >= defender.mHealth / 4.0 && defender.cHealth < defender.mHealth / 4.0)
+            CheckEventTriggers(defender, EffectTriggers.FallBelow25Percent, attacker);
+        //Check if the defender dies
+        if (defender.cHealth <= 0)
+        {
+            CheckEventTriggers(defender, EffectTriggers.Die);
+            if (enemyList[selectedEnemy].cHealth <= 0)
             {
+                CheckEventTriggers(attacker, EffectTriggers.KillAnEnemy);
+                CheckForDeath();
+            }
+        }
+        //If the defender lives
+        if (defender.cHealth > 0)
+        {
+            Pair<int, Pair<DamageType, bool>> counterattackData = GetDamageValues(defender, attacker);
+            //If the two weapons are both melee or both ranged there can be a counterattack
+            if (attackData.Second.Second == counterattackData.Second.Second)
+            {
+                previousHealth = attacker.cHealth;
                 mod = 1.0f;
-                if (Random.Range(0.0f, 100.0f) < GameStorage.playerMasterList[GameStorage.activePlayerList[player]].critChance + ((EquippableBase)Registry.ItemRegistry[GameStorage.playerMasterList[GameStorage.activePlayerList[player]].equippedWeapon.Name]).critChanceMod) { mod = 1.5f; }
-                enemyList[enemy].Damage(Mathf.RoundToInt(GetDamageValues(GameStorage.playerMasterList[GameStorage.activePlayerList[player]], enemyList[enemy]) * mod));
-                if (enemyList[enemy].cHealth <= 0)
+                if (Random.Range(0.0f, 100.0f) < defender.critChance + ((EquippableBase)Registry.ItemRegistry[defender.equippedWeapon.Name]).critChanceMod) { mod = 1.5f; }
+
+                damage = attacker.Damage(Mathf.RoundToInt(counterattackData.First * mod));
+                CheckEventTriggers(defender, EffectTriggers.BasicAttack, attacker, damage);
+                CheckEventTriggers(defender, EffectTriggers.DealDamage, attacker, damage);
+                CheckEventTriggers(attacker, EffectTriggers.TakeDamage, defender, damage);
+                if (counterattackData.Second.First == DamageType.Physical)
                 {
-                    CheckForDeath();
-                    Debug.Log(battleState);
+                    CheckEventTriggers(defender, EffectTriggers.DealPhysicalDamage, attacker, damage);
+                    CheckEventTriggers(attacker, EffectTriggers.TakePhysicalDamage, defender, damage);
+                }
+                else
+                {
+                    CheckEventTriggers(defender, EffectTriggers.DealMagicDamage, attacker, damage);
+                    CheckEventTriggers(attacker, EffectTriggers.TakeMagicDamage, defender, damage);
+                }
+
+                //If this causes them to fall below 50% health
+                if (previousHealth >= attacker.mHealth / 2.0 && attacker.cHealth < attacker.mHealth / 2.0)
+                    CheckEventTriggers(attacker, EffectTriggers.FallBelow50Percent, defender);
+                //If this causes them to fall below 50% health
+                if (previousHealth >= attacker.mHealth / 4.0 && attacker.cHealth < attacker.mHealth / 4.0)
+                    CheckEventTriggers(attacker, EffectTriggers.FallBelow25Percent, defender);
+                if (attacker.cHealth <= 0)
+                {
+                    CheckEventTriggers(attacker, EffectTriggers.Die);
+                    //If the defender is still dead
+                    if (attacker.cHealth <= 0)
+                    {
+                        CheckEventTriggers(defender, EffectTriggers.KillAnEnemy);
+                        CheckForDeath();
+                    }
                 }
             }
         }
@@ -1065,7 +1103,7 @@ public class Battle : MonoBehaviour
                     {
                         if (Mathf.Abs(x) + Mathf.Abs(y) <= displaySkill.targettingRange && x + skillPos.x >= 0 && x + skillPos.x < mapSizeX && y + skillPos.y >= 0 && y + skillPos.y < mapSizeY)
                         {
-                            if (displaySkill.targetType == TargettingType.All)
+                            if (displaySkill.targetType == TargettingType.AllInRange)
                             {
                                 tileList[x + skillPos.x, (mapSizeY - 1) - (y + skillPos.y)].GetComponent<BattleTile>().skillTargettable = true;
                             }
@@ -1361,13 +1399,51 @@ public class Battle : MonoBehaviour
     {
         List<SkillPartBase> list = triggered.GetTriggeredEffects(trigger);
         Debug.Log(list.Count);
-        foreach(SkillPartBase effect in list)
+        foreach (SkillPartBase effect in list)
         {
-            if (effect.targetType == TargettingType.Self)
+            if (effect.targetType == TargettingType.Self || effect.targetType == TargettingType.AllAllies)
             {
                 CastSkillEffect(effect, triggered, triggered);
             }
-            else
+            if (effect.targetType == TargettingType.AllAlliesNotSelf || effect.targetType == TargettingType.AllAllies)
+            {
+                if (triggered is Player)
+                {
+                    foreach (int id in GameStorage.activePlayerList)
+                    {
+                        if (GameStorage.playerMasterList[id] != triggered && GameStorage.playerMasterList[id].cHealth > 0)
+                            CastSkillEffect(effect, triggered, GameStorage.playerMasterList[id]);
+                    }
+                }
+                else
+                {
+                    foreach (Enemy enemy in enemyList)
+                    {
+                        if (enemy != triggered && enemy.cHealth > 0)
+                            CastSkillEffect(effect, triggered, enemy);
+                    }
+                }
+            }
+            else if (effect.targetType == TargettingType.AllEnemies)
+            {
+                if (triggered is Player)
+                {
+                    foreach (Enemy enemy in enemyList)
+                    {
+                        if (enemy.cHealth > 0)
+                            CastSkillEffect(effect, triggered, enemy);
+                    }
+                }
+                else
+                {
+                    foreach (int id in GameStorage.activePlayerList)
+                    {
+                        if (GameStorage.playerMasterList[id].cHealth > 0)
+                            CastSkillEffect(effect, triggered, GameStorage.playerMasterList[id]);
+                    }
+                }
+            }
+            else if (effect.targetType != TargettingType.Self)
             {
                 CastSkillEffect(effect, triggered, other);
             }
@@ -1417,46 +1493,85 @@ public class Battle : MonoBehaviour
     public void CastSkill(Skill castedSpell, int castedX, int castedY, BattleParticipant caster)
     {
         Debug.Log(castedX + " " + castedY);
+        
+        CheckEventTriggers(caster, EffectTriggers.SpellCast);
+
         foreach (SkillPartBase effect in castedSpell.partList)
         {
-            if (effect.targetType == TargettingType.Self)
+            if (effect.targetType == TargettingType.Self || effect.targetType == TargettingType.AllAllies)
             {
-                CastSkillEffect(effect, caster, caster);
+                CastSkillEffect(effect, caster, caster, true);
             }
-            else
+            if (effect.targetType == TargettingType.AllAlliesNotSelf || effect.targetType == TargettingType.AllAllies)
+            {
+                if (caster is Player)
+                {
+                    foreach(int id in GameStorage.activePlayerList)
+                    {
+                        if(GameStorage.playerMasterList[id] != caster && GameStorage.playerMasterList[id].cHealth > 0)
+                            CastSkillEffect(effect, caster, GameStorage.playerMasterList[id], true);
+                    }
+                }
+                else
+                {
+                    foreach(Enemy enemy in enemyList)
+                    {
+                        if (enemy != caster && enemy.cHealth > 0)
+                            CastSkillEffect(effect, caster, enemy, true);
+                    }
+                }
+            }
+            else if (effect.targetType == TargettingType.AllEnemies)
+            {
+                if (caster is Player)
+                {
+                    foreach (Enemy enemy in enemyList)
+                    {
+                        if (enemy.cHealth > 0)
+                            CastSkillEffect(effect, caster, enemy, true);
+                    }
+                }
+                else
+                {
+                    foreach (int id in GameStorage.activePlayerList)
+                    {
+                        if (GameStorage.playerMasterList[id].cHealth > 0)
+                            CastSkillEffect(effect, caster, GameStorage.playerMasterList[id], true);
+                    }
+                }
+            }
+            else if(effect.targetType != TargettingType.Self)
             {
                 bool castedByPlayer = caster is Player;
                 for (int x = -Mathf.FloorToInt((castedSpell.xRange - 1) / 2.0f); x <= Mathf.CeilToInt((castedSpell.xRange - 1) / 2.0f); x++)
                 {
                     for (int y = -Mathf.FloorToInt((castedSpell.yRange - 1) / 2.0f); y <= Mathf.CeilToInt((castedSpell.yRange - 1) / 2.0f); y++)
                     {
-                        if (effect.targetType == TargettingType.Ally || effect.targetType == TargettingType.All)
+                        if (effect.targetType == TargettingType.Ally || effect.targetType == TargettingType.AllInRange)
                         {
                             //If there is someone from the same team at the position
                             if (castedByPlayer)
                             {
                                 if (PlayerAtPos(x + castedX, y + castedY) != -1)
                                 {
-                                    Debug.Log("Trying to make it to casting the effect1:" + x + "|" + y);
-                                    CastSkillEffect(effect, caster, GameStorage.playerMasterList[GameStorage.activePlayerList[PlayerAtPos(x + castedX, y + castedY)]]);
+                                    CastSkillEffect(effect, caster, GameStorage.playerMasterList[GameStorage.activePlayerList[PlayerAtPos(x + castedX, y + castedY)]], true);
                                 }
                             }
                             else if (EnemyAtPos(x + castedX, y + castedY) != -1)
-                                CastSkillEffect(effect, caster, enemyList[EnemyAtPos(x + castedX, y + castedY)]);
+                                CastSkillEffect(effect, caster, enemyList[EnemyAtPos(x + castedX, y + castedY)], true);
                         }
-                        if(effect.targetType == TargettingType.Enemy || effect.targetType == TargettingType.All)
+                        if(effect.targetType == TargettingType.Enemy || effect.targetType == TargettingType.AllInRange)
                         {
                             //If there is someone from the opposing team at the position
                             if (castedByPlayer)
                             {
                                 if (EnemyAtPos(x + castedX, y + castedY) != -1)
                                 {
-                                    Debug.Log("Trying to make it to casting the effect2:" + x + "|" + y + " " + EnemyAtPos(x + castedX, y + castedY));
-                                    CastSkillEffect(effect, caster, enemyList[EnemyAtPos(x + castedX, y + castedY)]);
+                                    CastSkillEffect(effect, caster, enemyList[EnemyAtPos(x + castedX, y + castedY)], true);
                                 }
                             }
                             else if (PlayerAtPos(x + castedX, y + castedY) != -1)
-                                CastSkillEffect(effect, caster, GameStorage.playerMasterList[GameStorage.activePlayerList[PlayerAtPos(x + castedX, y + castedY)]]);
+                                CastSkillEffect(effect, caster, GameStorage.playerMasterList[GameStorage.activePlayerList[PlayerAtPos(x + castedX, y + castedY)]], true);
                         }
                     }
                 }
@@ -1470,27 +1585,63 @@ public class Battle : MonoBehaviour
     /// <param name="effect">The skill part to execute</param>
     /// <param name="caster">The caster of the skill</param>
     /// <param name="target">The target for the skill</param>
-    public void CastSkillEffect(SkillPartBase effect, BattleParticipant caster, BattleParticipant target)
+    public void CastSkillEffect(SkillPartBase effect, BattleParticipant caster, BattleParticipant target, bool fromSpell = false)
     {
-        Debug.Log("Made it to casting the effect");
-
         //Flat damage, then calculated damage, then remaining hp, then max hp
         if (effect is DamagePart)
         {
             DamagePart trueEffect = effect as DamagePart;
-            target.Damage(trueEffect.flatDamage);
-            target.Damage(Mathf.RoundToInt((trueEffect.damage * caster.mAttack * 3.0f) / target.GetEffectiveDef()));
-            target.Damage((int)(target.cHealth * trueEffect.remainingHpPercent / 100.0f));
-            target.Damage((int)(target.mHealth * trueEffect.maxHpPercent / 100.0f));
+            int previousHealth = target.cHealth;
+            int damage = target.Damage(trueEffect.flatDamage);
+            damage += target.Damage(Mathf.RoundToInt((trueEffect.damage * caster.mAttack * 3.0f) / target.GetEffectiveMDef()));
+            damage += target.Damage((int)(target.cHealth * trueEffect.remainingHpPercent / 100.0f));
+            damage += target.Damage((int)(target.mHealth * trueEffect.maxHpPercent / 100.0f));
+            CheckEventTriggers(caster, EffectTriggers.DealDamage, target, damage);
+            CheckEventTriggers(target, EffectTriggers.TakeDamage, caster, damage);
+            if(fromSpell)
+                CheckEventTriggers(caster, EffectTriggers.DealSpellDamage, target, damage);
+
+            if (trueEffect.damageType == DamageType.Physical)
+            {
+                CheckEventTriggers(caster, EffectTriggers.DealPhysicalDamage, target, damage);
+                CheckEventTriggers(target, EffectTriggers.TakePhysicalDamage, caster, damage);
+            }
+            else
+            {
+                CheckEventTriggers(caster, EffectTriggers.DealMagicDamage, target, damage);
+                CheckEventTriggers(target, EffectTriggers.TakeMagicDamage, caster, damage);
+            }
+
+            //If this causes them to fall below 50% health
+            if (previousHealth >= target.mHealth / 2.0 && target.cHealth < target.mHealth / 2.0)
+                CheckEventTriggers(target, EffectTriggers.FallBelow50Percent, caster);
+            //If this causes them to fall below 50% health
+            if (previousHealth >= target.mHealth / 4.0 && target.cHealth < target.mHealth / 4.0)
+                CheckEventTriggers(target, EffectTriggers.FallBelow25Percent, caster);
+            //If the target dies
+            if (target.cHealth <= 0)
+            {
+                CheckEventTriggers(target, EffectTriggers.Die);
+                //If the target is still dead
+                if (caster.cHealth <= 0)
+                {
+                    CheckEventTriggers(target, EffectTriggers.KillAnEnemy);
+                    CheckForDeath();
+                }
+            }
         }
 
         //Flat healing, then calculated healing, then max hp
         else if (effect is HealingPart)
         {
             HealingPart trueEffect = effect as HealingPart;
-            target.Heal(trueEffect.flatHealing);
-            target.Heal(Mathf.RoundToInt((trueEffect.healing * caster.mAttack * 3.0f) / target.GetEffectiveDef()));
-            target.Heal((int)(target.mHealth * trueEffect.maxHpPercent / 100.0f));
+            int healing = target.Heal(trueEffect.flatHealing);
+            healing += target.Heal(Mathf.RoundToInt((trueEffect.healing * caster.mAttack * 3.0f) / target.GetEffectiveDef()));
+            healing += target.Heal((int)(target.mHealth * trueEffect.maxHpPercent / 100.0f));
+            CheckEventTriggers(caster, EffectTriggers.Healing, target, healing);
+            CheckEventTriggers(target, EffectTriggers.GettingHealed, caster, healing);
+            if (fromSpell)
+                CheckEventTriggers(caster, EffectTriggers.HealWithSpell, target, healing);
         }
 
         //Stat changes, self explanitory

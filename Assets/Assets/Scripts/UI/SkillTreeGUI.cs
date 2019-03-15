@@ -351,7 +351,13 @@ public class SkillTreeGUI : MonoBehaviour {
             skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: Ally";
         else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.Enemy)
             skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: Enemy";
-        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.All)
+        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.AllAllies)
+            skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: All Allies";
+        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.AllEnemies)
+            skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: All Enemies";
+        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.AllAlliesNotSelf)
+            skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: All Allies not including Caster";
+        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.AllInRange)
             skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: Anywhere";
         skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nAOE: " + GameStorage.skillTreeList[currentSkillTree][skill].xRange + "x" + GameStorage.skillTreeList[currentSkillTree][skill].yRange;
         if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].unlocked)

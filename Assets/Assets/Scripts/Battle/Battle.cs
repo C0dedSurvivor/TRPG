@@ -193,6 +193,8 @@ public class Battle : MonoBehaviour
 
     private Vector2Int spellCastPosition = new Vector2Int(-1, -1);
 
+    System.Random rand = new System.Random();
+
     // Use this for initialization
     void Awake()
     {
@@ -416,8 +418,7 @@ public class Battle : MonoBehaviour
         {
             if (GameStorage.playerMasterList[pID].cHealth > 0) {
                 GameStorage.playerMasterList[pID].EndOfTurn();
-                if(!GameStorage.playerMasterList[pID].statusList.Contains("sleep"))
-                    GameStorage.playerMasterList[pID].moved = false;
+                GameStorage.playerMasterList[pID].moved = !GameStorage.playerMasterList[pID].CanMove();
                 GameStorage.playerMasterList[pID].StartOfTurn();
                 CheckEventTriggers(GameStorage.playerMasterList[pID], EffectTriggers.EndOfTurn);
                 CheckEventTriggers(GameStorage.playerMasterList[pID], EffectTriggers.StartOfTurn);
@@ -531,6 +532,7 @@ public class Battle : MonoBehaviour
             foreach (int p in GameStorage.activePlayerList)
             {
                 CheckEventTriggers(GameStorage.playerMasterList[p], EffectTriggers.EndOfMatch);
+                GameStorage.playerMasterList[p].EndOfMatch();
                 GameStorage.playerMasterList[p].GainExp(200);
             }
             Cursor.lockState = CursorLockMode.Locked;
@@ -857,7 +859,7 @@ public class Battle : MonoBehaviour
     /// <param name="p1">The pawn doing the attacking</param>
     /// <param name="p2">The pawn getting attacked</param>
     /// <returns>The first value is the amount of damage, the second is the damage type and whether or not the weapon is ranged</returns>
-    public Pair<int, Pair<DamageType, bool>> GetDamageValues(BattleParticipant p1, BattleParticipant p2)
+    public Triple<int, DamageType, bool> GetDamageValues(BattleParticipant p1, BattleParticipant p2)
     {
         //gets the distance between the player and enemy
         int dist = Mathf.Abs(p2.position.x - p1.position.x);
@@ -877,9 +879,9 @@ public class Battle : MonoBehaviour
             }
         }
         if (type == DamageType.Physical)
-            return new Pair<int, Pair<DamageType, bool>>(Mathf.RoundToInt((p1.GetEffectiveAtk(dist) * mod * 3.0f) / p2.GetEffectiveDef(dist)), new Pair<DamageType, bool>(type, ranged));
+            return new Triple<int, DamageType, bool>(Mathf.RoundToInt((p1.GetEffectiveAtk(dist) * mod * 3.0f) / p2.GetEffectiveDef(dist)), type, ranged);
         else
-            return new Pair<int, Pair<DamageType, bool>>(Mathf.RoundToInt((p1.GetEffectiveMAtk(dist) * mod * 3.0f) / p2.GetEffectiveMDef(dist)), new Pair<DamageType, bool>(type, ranged));
+            return new Triple<int, DamageType, bool>(Mathf.RoundToInt((p1.GetEffectiveMAtk(dist) * mod * 3.0f) / p2.GetEffectiveMDef(dist)), type, ranged);
     }
 
     /// <summary>
@@ -911,13 +913,13 @@ public class Battle : MonoBehaviour
         float mod = 1.0f;
         if (Random.Range(0.0f, 100.0f) < attacker.critChance + ((EquippableBase)Registry.ItemRegistry[attacker.equippedWeapon.Name]).critChanceMod) { mod = 1.5f; }
 
-        Pair<int, Pair<DamageType, bool>> attackData = GetDamageValues(attacker, defender);
+        Triple<int, DamageType, bool> attackData = GetDamageValues(attacker, defender);
         int damage = defender.Damage(Mathf.RoundToInt(attackData.First * mod));
 
         CheckEventTriggers(attacker, EffectTriggers.BasicAttack, defender, damage);
         CheckEventTriggers(attacker, EffectTriggers.DealDamage, defender, damage);
         CheckEventTriggers(defender, EffectTriggers.TakeDamage, attacker, damage);
-        if(attackData.Second.First == DamageType.Physical)
+        if(attackData.Second == DamageType.Physical)
         {
             CheckEventTriggers(attacker, EffectTriggers.DealPhysicalDamage, defender, damage);
             CheckEventTriggers(defender, EffectTriggers.TakePhysicalDamage, attacker, damage);
@@ -947,9 +949,9 @@ public class Battle : MonoBehaviour
         //If the defender lives
         if (defender.cHealth > 0)
         {
-            Pair<int, Pair<DamageType, bool>> counterattackData = GetDamageValues(defender, attacker);
+            Triple<int, DamageType, bool> counterattackData = GetDamageValues(defender, attacker);
             //If the two weapons are both melee or both ranged there can be a counterattack
-            if (attackData.Second.Second == counterattackData.Second.Second)
+            if (attackData.Third == counterattackData.Third)
             {
                 previousHealth = attacker.cHealth;
                 mod = 1.0f;
@@ -959,7 +961,7 @@ public class Battle : MonoBehaviour
                 CheckEventTriggers(defender, EffectTriggers.BasicAttack, attacker, damage);
                 CheckEventTriggers(defender, EffectTriggers.DealDamage, attacker, damage);
                 CheckEventTriggers(attacker, EffectTriggers.TakeDamage, defender, damage);
-                if (counterattackData.Second.First == DamageType.Physical)
+                if (counterattackData.Second == DamageType.Physical)
                 {
                     CheckEventTriggers(defender, EffectTriggers.DealPhysicalDamage, attacker, damage);
                     CheckEventTriggers(attacker, EffectTriggers.TakePhysicalDamage, defender, damage);
@@ -1027,8 +1029,7 @@ public class Battle : MonoBehaviour
                 //resets to start enemy moves
                 for (int j = 0; j < enemyList.Length; j++)
                 {
-                    if (enemyList[j].cHealth > 0)
-                        enemyList[j].moved = false;
+                    enemyList[j].moved = !enemyList[j].CanMove();
                 }
                 battleState = BattleState.Enemy;
             }
@@ -1585,80 +1586,116 @@ public class Battle : MonoBehaviour
     /// <param name="effect">The skill part to execute</param>
     /// <param name="caster">The caster of the skill</param>
     /// <param name="target">The target for the skill</param>
-    public void CastSkillEffect(SkillPartBase effect, BattleParticipant caster, BattleParticipant target, bool fromSpell = false)
+    /// <param name="fromSpell">Whether this effect is part of a spell or not</param>
+    /// <param name="valueFromPrevious">If this effect depends on the value from a previous event, this is the value. -1 if it doesn't depend on anything.</param>
+    public void CastSkillEffect(SkillPartBase effect, BattleParticipant caster, BattleParticipant target, bool fromSpell = false, int valueFromPrevious = -1)
     {
-        //Flat damage, then calculated damage, then remaining hp, then max hp
-        if (effect is DamagePart)
+        //It it passes its chance to proc
+        if (rand.Next(1, 101) <= effect.chanceToProc)
         {
-            DamagePart trueEffect = effect as DamagePart;
-            int previousHealth = target.cHealth;
-            int damage = target.Damage(trueEffect.flatDamage);
-            damage += target.Damage(Mathf.RoundToInt((trueEffect.damage * caster.mAttack * 3.0f) / target.GetEffectiveMDef()));
-            damage += target.Damage((int)(target.cHealth * trueEffect.remainingHpPercent / 100.0f));
-            damage += target.Damage((int)(target.mHealth * trueEffect.maxHpPercent / 100.0f));
-            CheckEventTriggers(caster, EffectTriggers.DealDamage, target, damage);
-            CheckEventTriggers(target, EffectTriggers.TakeDamage, caster, damage);
-            if(fromSpell)
-                CheckEventTriggers(caster, EffectTriggers.DealSpellDamage, target, damage);
-
-            if (trueEffect.damageType == DamageType.Physical)
+            //Flat damage, then calculated damage, then remaining hp, then max hp
+            if (effect is DamagePart)
             {
-                CheckEventTriggers(caster, EffectTriggers.DealPhysicalDamage, target, damage);
-                CheckEventTriggers(target, EffectTriggers.TakePhysicalDamage, caster, damage);
-            }
-            else
-            {
-                CheckEventTriggers(caster, EffectTriggers.DealMagicDamage, target, damage);
-                CheckEventTriggers(target, EffectTriggers.TakeMagicDamage, caster, damage);
-            }
-
-            //If this causes them to fall below 50% health
-            if (previousHealth >= target.mHealth / 2.0 && target.cHealth < target.mHealth / 2.0)
-                CheckEventTriggers(target, EffectTriggers.FallBelow50Percent, caster);
-            //If this causes them to fall below 50% health
-            if (previousHealth >= target.mHealth / 4.0 && target.cHealth < target.mHealth / 4.0)
-                CheckEventTriggers(target, EffectTriggers.FallBelow25Percent, caster);
-            //If the target dies
-            if (target.cHealth <= 0)
-            {
-                CheckEventTriggers(target, EffectTriggers.Die);
-                //If the target is still dead
-                if (caster.cHealth <= 0)
+                DamagePart trueEffect = effect as DamagePart;
+                int previousHealth = target.cHealth;
+                //If this is supposed to be modified by a previous value, do so. Otherwise, don't
+                float previousValueMod = trueEffect.modifiedByValue != 0 ? trueEffect.modifiedByValue * valueFromPrevious : 1;
+                int damage = target.Damage(Mathf.RoundToInt(trueEffect.flatDamage * previousValueMod));
+                damage += target.Damage(Mathf.RoundToInt((trueEffect.damage * previousValueMod * caster.mAttack * 3.0f) / target.GetEffectiveMDef()));
+                damage += target.Damage((int)(target.cHealth * trueEffect.remainingHpPercent * previousValueMod / 100.0f));
+                damage += target.Damage((int)(target.mHealth * trueEffect.maxHpPercent * previousValueMod / 100.0f));
+                //Keeps effects from stacking on top of each other by a looped damage call
+                if (trueEffect.modifiedByValue == 0)
                 {
-                    CheckEventTriggers(target, EffectTriggers.KillAnEnemy);
-                    CheckForDeath();
+                    CheckEventTriggers(caster, EffectTriggers.DealDamage, target, damage);
+                    CheckEventTriggers(target, EffectTriggers.TakeDamage, caster, damage);
+                    if (fromSpell)
+                        CheckEventTriggers(caster, EffectTriggers.DealSpellDamage, target, damage);
+
+                    if (trueEffect.damageType == DamageType.Physical)
+                    {
+                        CheckEventTriggers(caster, EffectTriggers.DealPhysicalDamage, target, damage);
+                        CheckEventTriggers(target, EffectTriggers.TakePhysicalDamage, caster, damage);
+                    }
+                    else
+                    {
+                        CheckEventTriggers(caster, EffectTriggers.DealMagicDamage, target, damage);
+                        CheckEventTriggers(target, EffectTriggers.TakeMagicDamage, caster, damage);
+                    }
+                }
+
+                //If this causes them to fall below 50% health
+                if (previousHealth >= target.mHealth / 2.0 && target.cHealth < target.mHealth / 2.0)
+                    CheckEventTriggers(target, EffectTriggers.FallBelow50Percent, caster);
+                //If this causes them to fall below 50% health
+                if (previousHealth >= target.mHealth / 4.0 && target.cHealth < target.mHealth / 4.0)
+                    CheckEventTriggers(target, EffectTriggers.FallBelow25Percent, caster);
+                //If the target dies
+                if (target.cHealth <= 0)
+                {
+                    CheckEventTriggers(target, EffectTriggers.Die);
+                    //If the target is still dead
+                    if (caster.cHealth <= 0)
+                    {
+                        CheckEventTriggers(target, EffectTriggers.KillAnEnemy);
+                        CheckForDeath();
+                    }
                 }
             }
-        }
 
-        //Flat healing, then calculated healing, then max hp
-        else if (effect is HealingPart)
-        {
-            HealingPart trueEffect = effect as HealingPart;
-            int healing = target.Heal(trueEffect.flatHealing);
-            healing += target.Heal(Mathf.RoundToInt((trueEffect.healing * caster.mAttack * 3.0f) / target.GetEffectiveDef()));
-            healing += target.Heal((int)(target.mHealth * trueEffect.maxHpPercent / 100.0f));
-            CheckEventTriggers(caster, EffectTriggers.Healing, target, healing);
-            CheckEventTriggers(target, EffectTriggers.GettingHealed, caster, healing);
-            if (fromSpell)
-                CheckEventTriggers(caster, EffectTriggers.HealWithSpell, target, healing);
-        }
+            //Flat healing, then calculated healing, then max hp
+            else if (effect is HealingPart)
+            {
+                HealingPart trueEffect = effect as HealingPart;
+                //If this is supposed to be modified by a previous value, do so. Otherwise, don't
+                float previousValueMod = trueEffect.modifiedByValue != 0 ? trueEffect.modifiedByValue * valueFromPrevious : 1;
+                int healing = target.Heal(Mathf.RoundToInt(trueEffect.flatHealing * previousValueMod));
+                healing += target.Heal(Mathf.RoundToInt((trueEffect.healing * previousValueMod * caster.mAttack * 3.0f) / target.GetEffectiveDef()));
+                healing += target.Heal((int)(target.mHealth * trueEffect.maxHpPercent * previousValueMod / 100.0f));
+                //Keeps effects from stacking on top of each other by a looped healing call
+                if (trueEffect.modifiedByValue == 0)
+                {
+                    CheckEventTriggers(caster, EffectTriggers.Healing, target, healing);
+                    CheckEventTriggers(target, EffectTriggers.GettingHealed, caster, healing);
+                    if (fromSpell)
+                        CheckEventTriggers(caster, EffectTriggers.HealWithSpell, target, healing);
+                }
+            }
 
-        //Stat changes, self explanitory
-        else if (effect is StatChangePart)
-        {
-            StatChangePart trueEffect = effect as StatChangePart;
-            target.AddMod(trueEffect.StatMod);
-        }
+            //Stat changes, self explanitory
+            else if (effect is StatChangePart)
+            {
+                StatChangePart trueEffect = effect as StatChangePart;
+                target.AddMod(trueEffect.StatMod);
+            }
 
-        //Adds or removes status effects
-        else if (effect is StatusEffectPart)
-        {
-            StatusEffectPart trueEffect = effect as StatusEffectPart;
-            if (trueEffect.remove)
-                target.RemoveStatusEffect(trueEffect.status);
-            else
-                target.AddStatusEffect(trueEffect.status);
+            //Adds or removes status effects
+            else if (effect is StatusEffectPart)
+            {
+                StatusEffectPart trueEffect = effect as StatusEffectPart;
+                if (trueEffect.remove)
+                    target.RemoveStatusEffect(trueEffect.status);
+                else
+                    target.AddStatusEffect(trueEffect.status);
+            }
+
+            //Adds a temporary trigger to the target
+            else if (effect is AddTriggerPart)
+            {
+                AddTriggerPart trueEffect = effect as AddTriggerPart;
+                target.AddTemporaryTrigger(trueEffect.effect, trueEffect.turnLimit);
+            }
+
+            else if (effect is UniqueEffectPart)
+            {
+                switch((effect as UniqueEffectPart).effect)
+                {
+                    //Makes that pawn able to move again if it can move at all
+                    case UniqueEffects.MoveAgain:
+                        target.moved = !target.CanMove();
+                        break;
+                }
+            }
         }
     }
 

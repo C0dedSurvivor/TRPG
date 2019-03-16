@@ -9,17 +9,22 @@ public class DamagePart : SkillPartBase{
     public int maxHpPercent;
     //Remaining health percent damage
     public int remainingHpPercent;
+    //How much these values should be changed by an extraneous value, 0 if not at all
+    public float modifiedByValue;
 
     public DamageType damageType;
 
-    public DamagePart(TargettingType target, DamageType damageType, int damage, int flatDamage, int maxHpDamage, int remainingHpDamage, int chance = 100)
+    /// <summary>
+    /// Creates a new damage part with the corresponding damage values
+    /// </summary>
+    /// <param name="modifiedByValue">If this is affected by a numerical value (EX. dealing damage based on damage taken), how much is it affectd</param>
+    public DamagePart(TargettingType target, DamageType damageType, int damage, int flatDamage, int maxHpDamage, int remainingHpDamage, int chance = 100, float modifiedByValue = 0) : base(target, chance)
     {
-        targetType = target;
         this.damageType = damageType;
         this.damage = damage;
         this.flatDamage = flatDamage;
         maxHpPercent = maxHpDamage;
         remainingHpPercent = remainingHpDamage;
-        chanceToProc = chance;
+        this.modifiedByValue = modifiedByValue;
     }
 }

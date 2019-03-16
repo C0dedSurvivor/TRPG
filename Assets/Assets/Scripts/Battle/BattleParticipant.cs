@@ -75,6 +75,15 @@ public class BattleParticipant
         }
     }
 
+    /// <summary>
+    /// A list of all temporary triggered effects put on a pawn for a battle
+    /// The pair keeps track of the battle-mutable effect limiters for each triggerable effect
+    /// First number is the times this was activated this battle
+    /// Second number is the amount of turns since this was last used
+    /// Third is the number of turns this is valid for and how long it has been since it was added
+    /// </summary>
+    public List<Pair<TriggeredEffect, Triple<int, int, Pair<int, int>>>> temporaryEffectList;
+
     public Vector2Int position;
 
     public bool moved;
@@ -230,6 +239,33 @@ public class BattleParticipant
         {
             if(equipped != null)
                 list.AddRange(equipped.GetTriggeredEffects(trigger));
+        }
+
+        for (int i = 0; i < temporaryEffectList.Count; i++)
+        {
+            if (temporaryEffectList[i].First.trigger == trigger)
+            {
+                //If it has not reached its limit of activations per battle
+                if (temporaryEffectList[i].First.maxTimesPerBattle <= 0 || temporaryEffectList[i].Second.First < temporaryEffectList[i].First.maxTimesPerBattle)
+                {
+                    //If it is not on cooldown
+                    if (temporaryEffectList[i].First.delayBetweenUses <= temporaryEffectList[i].Second.Second)
+                    {
+                        temporaryEffectList[i].Second.First++;
+                        temporaryEffectList[i].Second.Second = 0;
+                        foreach (SkillPartBase effect in temporaryEffectList[i].First.effects)
+                        {
+                            list.Add(effect);
+                        }
+                        //If it has reached its limit of activations per battle, remove it
+                        if (temporaryEffectList[i].First.maxTimesPerBattle > 0 && temporaryEffectList[i].Second.First >= temporaryEffectList[i].First.maxTimesPerBattle)
+                        {
+                            temporaryEffectList.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                }
+            }
         }
         return list;
     }
@@ -405,6 +441,11 @@ public class BattleParticipant
         return previous - cHealth;
     }
 
+    public void AddTemporaryTrigger(TriggeredEffect effect, int turnLimit)
+    {
+        temporaryEffectList.Add(new Pair<TriggeredEffect, Triple<int, int, Pair<int, int>>>(effect, new Triple<int, int, Pair<int, int>>(0, int.MaxValue, new Pair<int, int>(turnLimit, 0))));
+    }
+
     public void StartOfMatch()
     {
         foreach (Equippable i in equipment)
@@ -425,10 +466,17 @@ public class BattleParticipant
                 i.StartOfTurn();
             }
         }
+
+        for(int i = 0; i < temporaryEffectList.Count; i++)
+        {
+            if (temporaryEffectList[i].Second.Second < int.MaxValue)
+                temporaryEffectList[i].Second.Second++;
+        }
     }
 
     /// <summary>
     /// Iterates through all stat changes and removes any that expire and deals with end of turn status effects
+    /// Also deals with voiding any effects that have run their course
     /// </summary>
     public void EndOfTurn()
     {
@@ -442,8 +490,28 @@ public class BattleParticipant
             }
         }
 
-        //waking up randomly
+        for (int i = 0; i < temporaryEffectList.Count; i++)
+        {
+            if (temporaryEffectList[i].Second.Third.First < int.MaxValue)
+                temporaryEffectList[i].Second.Third.First++;
+            //If the effect has a turn limit and has reached that turn limit, remove it
+            if(temporaryEffectList[i].Second.Third.Second > 0 && temporaryEffectList[i].Second.Third.Second <= temporaryEffectList[i].Second.Third.First)
+            {
+                temporaryEffectList.RemoveAt(i);
+                i--;
+            }
+        }
+
+        //Waking up randomly
         if (statusList.Contains("sleep") && Random.Range(1, 4) < 2)
             statusList.Remove("sleep");
+    }
+
+    /// <summary>
+    /// Can the pawn move this turn
+    /// </summary>
+    public bool CanMove()
+    {
+        return !statusList.Contains("sleep") && cHealth > 0;
     }
 }

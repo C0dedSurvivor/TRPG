@@ -8,17 +8,16 @@ public class TriggeredEffect
     public EffectTriggers trigger;
     //The effects
     public List<SkillPartBase> effects = new List<SkillPartBase>();
-    //0 = none, 1 = restricted amount of uses per battle, 2 = turn delay before reactivation
-    public int restrictionType;
-    //If restrictionType = 1, amount of times it's allowed to be used per battle
-    //If restrictionType = 2, minimum delay between uses in turns, inclusive of the turn it can be used on
-    public int restriction;
+    //The maximum amount of times this effect can be used per battle, 0 if there is no limit
+    public int maxTimesPerBattle;
+    //Minimum delay between uses in turns, inclusive of the turn it can be used on. 0 if no limit
+    public int delayBetweenUses;
 
-    public TriggeredEffect(EffectTriggers trigger, int restrictionType = 0, int restriction = 0, SkillPartBase effect = null)
+    public TriggeredEffect(EffectTriggers trigger, int maxTimesPerBattle = 0, int delayBetweenUses = 0, SkillPartBase effect = null)
     {
         this.trigger = trigger;
-        this.restrictionType = restrictionType;
-        this.restriction = restriction;
+        this.maxTimesPerBattle = maxTimesPerBattle;
+        this.delayBetweenUses = delayBetweenUses;
         if (effect != null)
             AddEffect(effect);
     }
@@ -28,13 +27,13 @@ public class TriggeredEffect
         effects.Add(effect);
     }
 
-    public bool Activatable(int count)
+    public bool Activatable(int usesThisBattle, int turnsSinceLastUse)
     {
         //If it has reached its limit of activations per battle
-        if (restrictionType == 1 && restriction <= count)
+        if (maxTimesPerBattle > 0 && usesThisBattle >= maxTimesPerBattle)
             return false;
         //If it is still on cooldown
-        if (restrictionType == 2 && restriction > count)
+        if (delayBetweenUses > turnsSinceLastUse)
             return false;
         return true;
     }

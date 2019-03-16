@@ -6,10 +6,10 @@ public class Equippable : StoredItem
 {
     /// <summary>
     /// Keeps track of the battle-mutable effect limiters for each triggerable effect
-    /// If restrictionType = 1, amount of times it's been used this battle
-    /// If restrictionType = 2, amount of turns since this was last used
+    /// First number is the times this was activated this battle
+    /// Second number is the amount of turns since this was last used
     /// </summary>
-    List<int> effectCounts = new List<int>();
+    List<Pair<int, int>> effectCounts = new List<Pair<int, int>>();
 
     public Equippable(string name) : base(name, 1)
     {
@@ -17,7 +17,7 @@ public class Equippable : StoredItem
         //Creates a count info for each effect
         foreach (TriggeredEffect effect in itemBase.effects)
         {
-            effectCounts.Add(0);
+            effectCounts.Add(new Pair<int, int>(0, int.MaxValue));
         }
     }
 
@@ -26,13 +26,10 @@ public class Equippable : StoredItem
     /// </summary>
     public void StartOfMatch()
     {
-        EquippableBase itemBase = Registry.ItemRegistry[name] as EquippableBase;
         for (int i = 0; i < effectCounts.Count; i++)
         {
-            if (itemBase.effects[i].restrictionType == 1)
-                effectCounts[i] = 0;
-            if (itemBase.effects[i].restrictionType == 2)
-                effectCounts[i] = int.MaxValue;
+            effectCounts[i].First = 0;
+            effectCounts[i].Second = int.MaxValue;
         }
     }
 
@@ -41,11 +38,10 @@ public class Equippable : StoredItem
     /// </summary>
     public void StartOfTurn()
     {
-        EquippableBase itemBase = Registry.ItemRegistry[name] as EquippableBase;
         for (int i = 0; i < effectCounts.Count; i++)
         {
-            if (itemBase.effects[i].restrictionType == 2)
-                effectCounts[i]++;
+            if(effectCounts[i].Second < int.MaxValue)
+                effectCounts[i].Second++;
         }
     }
 
@@ -55,11 +51,8 @@ public class Equippable : StoredItem
     /// <param name="index">The index of the effect that wasa activated</param>
     public void Activated(int index)
     {
-        EquippableBase itemBase = Registry.ItemRegistry[name] as EquippableBase;
-        if (itemBase.effects[index].restrictionType == 1)
-            effectCounts[index]++;
-        if (itemBase.effects[index].restrictionType == 2)
-            effectCounts[index] = 0;
+        effectCounts[index].First++;
+        effectCounts[index].Second = 0;
     }
 
     public List<SkillPartBase> GetTriggeredEffects(EffectTriggers trigger)
@@ -68,7 +61,7 @@ public class Equippable : StoredItem
         List<SkillPartBase> list = new List<SkillPartBase>();
         for (int i = 0; i < effectCounts.Count; i++)
         {
-            if(itemBase.effects[i].trigger == trigger && itemBase.effects[i].Activatable(effectCounts[i]))
+            if(itemBase.effects[i].trigger == trigger && itemBase.effects[i].Activatable(effectCounts[i].First, effectCounts[i].Second))
             {
                 foreach (SkillPartBase effect in itemBase.effects[i].effects)
                 {

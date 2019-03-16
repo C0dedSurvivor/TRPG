@@ -321,6 +321,12 @@ public class Player : BattleParticipant
 	private int GetExpPerLevel(){
 		return -20 + level * 50;
     }
+
+    public void EndOfMatch()
+    {
+        temporaryEffectList = new List<Pair<TriggeredEffect, Triple<int, int, Pair<int, int>>>>();
+        modifierList.Clear();
+    }
     
     /// <summary>
     /// Unlocks a skill and subtracts the corresponding cost from the skill points total

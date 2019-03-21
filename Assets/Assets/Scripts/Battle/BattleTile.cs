@@ -99,20 +99,4 @@ public class BattleTile : MonoBehaviour {
         skillTargetting = false;
         myMat.color = none;
     }
-
-    /// <summary>
-    /// Updates the tile data by reference
-    /// </summary>
-    /// <param name="tileValue">What to update</param>
-    public void ChangeValueByKey(string tileValue)
-    {
-        if (tileValue == "danger area")
-        {
-            enemyDanger = true;
-        }
-        if (tileValue == "attack area")
-        {
-            playerAttackRange = true;
-        }
-    }
 }

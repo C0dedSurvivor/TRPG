@@ -100,7 +100,7 @@ public class BattleUI : MonoBehaviour {
                 if (BattleScript.selectedEnemy != -1)
                 {
                     //If it is actually an enemy
-                    if (BattleScript.selectedEnemy < BattleScript.enemyList.Length){
+                    if (BattleScript.selectedEnemy < BattleScript.enemyList.Count){
                         float ed = (BattleScript.enemyList[BattleScript.selectedEnemy].cHealth - BattleScript.GetDamageValues(GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedPlayer]], BattleScript.enemyList[BattleScript.selectedEnemy]).First) / (BattleScript.enemyList[BattleScript.selectedEnemy].mHealth * 1.0f);
                         if (ed >= 0.75)
                         {
@@ -165,7 +165,7 @@ public class BattleUI : MonoBehaviour {
                 enemyStats.SetActive(true);
                 Text[] stats = enemyStats.GetComponentsInChildren<Text>();
                 //If it is actually an enemy
-                if (BattleScript.selectedEnemy < BattleScript.enemyList.Length)
+                if (BattleScript.selectedEnemy < BattleScript.enemyList.Count)
                 {
                     stats[1].text = "Atk: " + BattleScript.enemyList[BattleScript.selectedEnemy].GetEffectiveAtk();
                     stats[2].text = "Def: " + BattleScript.enemyList[BattleScript.selectedEnemy].GetEffectiveDef();
@@ -178,13 +178,13 @@ public class BattleUI : MonoBehaviour {
                 //If it is actually a second player
                 else
                 {
-                    stats[1].text = "Atk: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Length]].GetEffectiveAtk();
-                    stats[2].text = "Def: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Length]].GetEffectiveDef();
-                    stats[3].text = "mAtk: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Length]].GetEffectiveMAtk();
-                    stats[4].text = "mDef: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Length]].GetEffectiveMDef();
-                    stats[5].text = "Speed: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Length]].GetMoveSpeed();
-                    stats[6].text = "Crit: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Length]].GetEffectiveCrit() + "%";
-                    stats[7].text = "Health: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Length]].cHealth + "/" + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Length]].mHealth;
+                    stats[1].text = "Atk: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Count]].GetEffectiveAtk();
+                    stats[2].text = "Def: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Count]].GetEffectiveDef();
+                    stats[3].text = "mAtk: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Count]].GetEffectiveMAtk();
+                    stats[4].text = "mDef: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Count]].GetEffectiveMDef();
+                    stats[5].text = "Speed: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Count]].GetMoveSpeed();
+                    stats[6].text = "Crit: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Count]].GetEffectiveCrit() + "%";
+                    stats[7].text = "Health: " + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Count]].cHealth + "/" + GameStorage.playerMasterList[GameStorage.activePlayerList[BattleScript.selectedEnemy - BattleScript.enemyList.Count]].mHealth;
                 }
             }
             else
@@ -236,6 +236,7 @@ public class BattleUI : MonoBehaviour {
             confirmMove.gameObject.SetActive(false);
             toggleDanger.gameObject.SetActive(false);
             toggleaEther.gameObject.SetActive(false);
+            endPlayerTurn.gameObject.SetActive(false);
         }
     }
 }

@@ -6371,7 +6371,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1970206861}
-        m_MethodName: EndPlayerAttack
+        m_MethodName: FinishedMovingPawn
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -17373,31 +17373,18 @@ MonoBehaviour:
     type: 3}
   CameraPrefab: {fileID: 1501565722295194, guid: a5b05d43bfa9f8b479d366a0b76ce541,
     type: 3}
-  skillCastConfirmMenu: {fileID: 1591088126}
   battleTile: {fileID: 1989779521470732, guid: 83099bdfb30a5394db45568605854775, type: 3}
+  skillCastConfirmMenu: {fileID: 1591088126}
   topLeft: {x: 0, y: 0}
   showDanger: 0
   showaEther: 0
   canSwap: 0
-  playerModels:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  enemyModels:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   mapPlayer: {fileID: 1990799077}
   selectedPlayer: -1
   selectedEnemy: -1
   hoveredSpell: -1
   selectedSpell: -1
-  selectedMoveSpot: {x: -1, y: -1}
   moveMarker: {fileID: 0}
-  animSpeed: 0.1
-  movingEnemy: 0
 --- !u!4 &1970206862
 Transform:
   m_ObjectHideFlags: 0

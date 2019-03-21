@@ -42,6 +42,14 @@ public class SkillInfo
     }
 }
 
+public enum FacingDirection
+{
+    North,
+    East,
+    South,
+    West
+}
+
 public class BattleParticipant
 {
     public string name;
@@ -82,7 +90,7 @@ public class BattleParticipant
     /// Second number is the amount of turns since this was last used
     /// Third is the number of turns this is valid for and how long it has been since it was added
     /// </summary>
-    public List<Pair<TriggeredEffect, Triple<int, int, Pair<int, int>>>> temporaryEffectList;
+    public List<Pair<TriggeredEffect, Triple<int, int, Pair<int, int>>>> temporaryEffectList = new List<Pair<TriggeredEffect, Triple<int, int, Pair<int, int>>>>();
 
     public Vector2Int position;
 
@@ -90,6 +98,8 @@ public class BattleParticipant
 
     //x = skill tree id, y = spell id
     public Dictionary<int, Dictionary<int, SkillInfo>> skillTreeList = new Dictionary<int, Dictionary<int, SkillInfo>>();
+
+    public FacingDirection facing = FacingDirection.North;
 
     public BattleParticipant(string name)
     {
@@ -448,6 +458,7 @@ public class BattleParticipant
 
     public void StartOfMatch()
     {
+        moved = false;
         foreach (Equippable i in equipment)
         {
             if (i != null)

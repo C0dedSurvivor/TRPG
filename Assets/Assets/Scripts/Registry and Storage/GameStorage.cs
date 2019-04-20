@@ -3,7 +3,25 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 
-//later this will be used to store players, inventories, quests etc. in between fights
+public enum BattleTiles
+{
+    Impassable,
+    Normal,
+    //Limits movement of some units
+    Forest,
+    //Only some movement types can pass over this
+    Water,
+    //Damage pawns that pass over and end their turn on this tile
+    Burning,
+    //Impassable normally, but can be broken to make it passable
+    Breakable,
+    //Moves any pawns that end their turns on these in a set direction
+    MoveUp,
+    MoveLeft,
+    MoveDown,
+    MoveRight,
+    MoveRandom
+}
 
 public class GameStorage : MonoBehaviour {
 
@@ -31,15 +49,6 @@ public class GameStorage : MonoBehaviour {
     public static int trueBX;
     public static int trueBY;
 
-    /// <summary>
-    /// 1 is normally traversable land. 
-    /// 2 is forest, limits movement. 
-    /// 3 is water, only traversable by flying units. 
-    /// 4 is rotating land, normally traversable but moves in a predefined pattern at the end of each turn carrying any units on them with it. 
-    /// 5 is burning land, damages units on them after each turn. 
-    /// 6 is impassable land. 
-    /// 7 is breakable walls. 
-    /// </summary>
     static int[,] map = new int[mapXsize, mapYsize];
     //Space 0 is for base value, space 1 is for max value. Both can be between 0-100.
     static int[,,] baseaEtherMap = new int[mapXsize, mapYsize, 2];
@@ -70,20 +79,20 @@ public class GameStorage : MonoBehaviour {
         {
             for (int y = 0; y < mapYsize; y++)
             {
-                map[x, y] = 1;
+                map[x, y] = (int)BattleTiles.Normal;
                 baseaEtherMap[x, y, 0] = x + y;
                 baseaEtherMap[x, y, 1] = x + y + 1;
             }
         }
-        map[5, 190] = 2;
-        map[6, 189] = 2;
-        map[4, 195] = 2;
-        map[5, 194] = 2;
+        map[5, 190] = (int)BattleTiles.Impassable;
+        map[6, 189] = (int)BattleTiles.Impassable;
+        map[4, 195] = (int)BattleTiles.Impassable;
+        map[5, 194] = (int)BattleTiles.Impassable;
         for (int x = 0; x < mapXsize; x++)
         {
             for (int y = 0; y < mapYsize; y++)
             {
-                if (map[x, y] == 2)
+                if (map[x, y] == (int)BattleTiles.Impassable)
                     Instantiate(testWall, new Vector3(x, 1, mapYsize - y - 1), Quaternion.Euler(0, 0, 0));
             }
         }
@@ -123,7 +132,7 @@ public class GameStorage : MonoBehaviour {
                 //Debug.Log((x - ((int)Mathf.Ceil(xSize / 2.0f) - 1) + centerX) + " | " + (mapYsize - trueBY - (ySize - y)));
                 //Debug.Log(x + " - (" + (int)Mathf.Ceil(xSize / 2.0f) + " - 1) + " + centerX + " | " + mapYsize + " - (" + ySize + " - (" + trueBY + " - " + y + "))");
                 bMap[x, y] = map[x - ((int)Mathf.Ceil(xSize / 2.0f) - 1) + centerX, mapYsize - trueBY - (ySize - y)];
-                if (bMap[x, y] == 1 || bMap[x, y] == 2 || bMap[x, y] == 4 || bMap[x, y] == 5)
+                if (IsGenericPassableTile(bMap[x, y]))
                     tileCount++;
             }
         }
@@ -137,22 +146,22 @@ public class GameStorage : MonoBehaviour {
             int right = 0;
             for (int i = 0; i < xSize; i++)
             {
-                if (bMap[i, 0] == 1 || bMap[i, 0] == 2 || bMap[i, 0] == 4 || bMap[i, 0] == 5)
+                if (IsGenericPassableTile(bMap[i, 0]))
                 {
                     up++;
                 }
-                if (bMap[i, ySize - 1] == 1 || bMap[i, ySize - 1] == 2 || bMap[i, ySize - 1] == 4 || bMap[i, ySize - 1] == 5)
+                if (IsGenericPassableTile(bMap[i, ySize - 1]))
                 {
                     down++;
                 }
             }
             for (int i = 0; i < ySize; i++)
             {
-                if (bMap[0, i] == 1 || bMap[0, i] == 2 || bMap[0, i] == 4 || bMap[0, i] == 5)
+                if (IsGenericPassableTile(bMap[0, i]))
                 {
                     left++;
                 }
-                if (bMap[xSize - 1, i] == 1 || bMap[xSize - 1, i] == 2 || bMap[xSize - 1, i] == 4 || bMap[xSize - 1, i] == 5)
+                if (IsGenericPassableTile(bMap[xSize - 1, i]))
                 {
                     right++;
                 }
@@ -177,7 +186,18 @@ public class GameStorage : MonoBehaviour {
         return bMap;
     }
 
-    //Passes the correct aEther level information to the battlemap
+    /// <summary>
+    /// Checks if the given int represents a tile passable by the basic movement type
+    /// </summary>
+    /// <param name="tile">The int to check</param>
+    public static bool IsGenericPassableTile(int tile)
+    {
+        return Registry.MovementRegistry[2].passableTiles.Contains((BattleTiles)tile);
+    }
+    
+    /// <summary>
+    /// Passes the correct aEther level information to the battlemap
+    /// </summary>
     public static int[,,] GrabaEtherMap(int topLeftX, int topLeftY, int xSize, int ySize)
     {
         int[,,] aMap = new int[xSize, ySize, 2];
@@ -210,7 +230,7 @@ public class GameStorage : MonoBehaviour {
         Skill holyHandGrenade = new Skill("Holy Hand Grenade", TargettingType.AllInRange, 1, 7, 5, 5, 0, 0);
         holyHandGrenade.AddDamagePart(TargettingType.Enemy, DamageType.Magical, 3, 3, 0, 0);
         holyHandGrenade.AddHealPart(TargettingType.Ally, 3, 3, 0, 0);
-        holyHandGrenade.AddStatPart(TargettingType.Ally, "atk", 5, 0, 3);
+        holyHandGrenade.AddStatPart(TargettingType.Ally, Stats.Attack, 5, 0, 3);
         testSkillTree.Add(1, holyHandGrenade);
 
         Skill firewall = new Skill("Firewall", TargettingType.AllInRange, 4, 7, 1, 3, 1, 1);
@@ -220,7 +240,7 @@ public class GameStorage : MonoBehaviour {
 
         Skill conflagration = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         conflagration.AddDamagePart(TargettingType.Enemy, DamageType.Magical, 10, 0, 0, 0);
-        conflagration.AddStatPart(TargettingType.Enemy, "atk", 0, -4, 3);
+        conflagration.AddStatPart(TargettingType.Enemy, Stats.Attack, 0, -4, 3);
         conflagration.AddDependency(1);
         testSkillTree.Add(3, conflagration);
 
@@ -438,7 +458,7 @@ public class GameStorage : MonoBehaviour {
     /// </summary>
     public static bool Approximately(float f1, float f2)
     {
-        return f1 < f2 + (Mathf.Pow(1, -25)) && f1 > f2 - (Mathf.Pow(1, -25));
+        return f1 < f2 + Mathf.Pow(10, -3) && f1 > f2 - Mathf.Pow(10, -3);
     }
 
     public static bool Approximately(Vector3 v1, Vector3 v2)
@@ -449,6 +469,6 @@ public class GameStorage : MonoBehaviour {
     public static bool Approximately(Quaternion v1, Quaternion v2)
     {
         //Debug.Log(v1.eulerAngles.x + " = " + v2.eulerAngles.x + " | " + v1.eulerAngles.y + " = " + v2.eulerAngles.y + " | " + v1.eulerAngles.z + " = " + v2.eulerAngles.z);
-        return Approximately(v1.eulerAngles.x, v2.eulerAngles.x) && Approximately(v1.eulerAngles.y, v2.eulerAngles.y) && Approximately(v1.eulerAngles.z, v2.eulerAngles.z);
+        return Approximately(v1.eulerAngles, v2.eulerAngles);
     }
 }

@@ -2,10 +2,10 @@
 public class StatChangePart : SkillPartBase{
 
     //Stat modifier
-    public statMod StatMod;
+    public StatMod StatMod;
 
-    public StatChangePart(TargettingType target, string affectedStat, int flatChange, int multiplier, int duration, int chance = 100) : base(target, chance)
+    public StatChangePart(TargettingType target, Stats affectedStat, int flatChange, int multiplier, int duration, int chance = 100) : base(target, chance)
     {
-        StatMod = new statMod(affectedStat, flatChange, multiplier, duration);
+        StatMod = new StatMod(affectedStat, flatChange, multiplier, duration);
     }
 }

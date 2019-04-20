@@ -13,6 +13,7 @@ public class MapPlayerScript : MonoBehaviour {
     const int MIN_CAMERA_DISTANCE = 4;
 
     public GameObject mapCamera;
+    public Battle battleController;
 
 	// Use this for initialization
 	void Start () {
@@ -22,7 +23,7 @@ public class MapPlayerScript : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        if (!PauseGUI.paused && Battle.battleState == BattleState.None)
+        if (!PauseGUI.paused && !battleController.IsBattling)
         {
             //Interacts with any objects directly in front of the player that have a PlayerInteraction method
             if (Input.GetKeyDown("r"))

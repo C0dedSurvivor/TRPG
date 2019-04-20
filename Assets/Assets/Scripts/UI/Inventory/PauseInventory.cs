@@ -149,29 +149,29 @@ public class PauseInventory : GearInventoryGUI {
                     itemInfo.transform.GetChild(1).GetComponent<Text>().text += "Accessory";
                     break;
             }
-            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).health != 0)
+            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MaxHealth] != 0)
             {
-                itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nHealth: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).health;
+                itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nHealth: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MaxHealth];
             }
-            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).strength != 0)
+            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Attack] != 0)
             {
-                if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).statType == 0)
-                    itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nPhysical";
-                else
-                    itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nAEtheric";
-                itemInfo.transform.GetChild(1).GetComponent<Text>().text += " Strength: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).strength;
+                itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nPhysical Strength: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Attack];
             }
-            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).defense != 0)
+            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicAttack] != 0)
             {
-                if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).statType == 0)
-                    itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nPhysical";
-                else
-                    itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nAEtheric";
-                itemInfo.transform.GetChild(1).GetComponent<Text>().text += " Defense: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).defense;
+                itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nAEtheric Strength: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicAttack];
             }
-            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).critChanceMod != 0)
+            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Defense] != 0)
             {
-                itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nCrit Chance: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).critChanceMod + "%";
+                itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nDefense: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Defense];
+            }
+            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicDefense] != 0)
+            {
+                itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nAEtheric Defense: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicDefense];
+            }
+            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.CritChance] != 0)
+            {
+                itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nCrit Chance: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.CritChance] + "%";
             }
             itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\n" + Registry.ItemRegistry[itemList[item].Name].FlavorText;
             itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nSells for: " + Registry.ItemRegistry[itemList[item].Name].SellAmount;

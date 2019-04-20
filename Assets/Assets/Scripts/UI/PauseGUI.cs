@@ -134,13 +134,13 @@ public class PauseGUI : MonoBehaviour
     public void UpdatePlayerStatDisplay()
     {
         playerInfoScreen.transform.GetChild(1).GetChild(0).GetComponent<Text>().text = GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].name;
-        playerInfoScreen.transform.GetChild(1).GetChild(1).GetComponent<Text>().text = "Atk: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEffectiveAtk();
-        playerInfoScreen.transform.GetChild(1).GetChild(2).GetComponent<Text>().text = "Def: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEffectiveDef();
-        playerInfoScreen.transform.GetChild(1).GetChild(3).GetComponent<Text>().text = "mAtk: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEffectiveMAtk();
-        playerInfoScreen.transform.GetChild(1).GetChild(4).GetComponent<Text>().text = "mDef: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEffectiveMDef();
-        playerInfoScreen.transform.GetChild(1).GetChild(5).GetComponent<Text>().text = "Speed: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetMoveSpeed();
-        playerInfoScreen.transform.GetChild(1).GetChild(6).GetComponent<Text>().text = "Crit: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEffectiveCrit() + "%";
-        playerInfoScreen.transform.GetChild(1).GetChild(7).GetComponent<Text>().text = "Health: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].cHealth + "/" + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEffectiveMaxHealth();
+        playerInfoScreen.transform.GetChild(1).GetChild(1).GetComponent<Text>().text = "Atk: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEffectiveStat(Stats.Attack);
+        playerInfoScreen.transform.GetChild(1).GetChild(2).GetComponent<Text>().text = "Def: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEffectiveStat(Stats.Defense);
+        playerInfoScreen.transform.GetChild(1).GetChild(3).GetComponent<Text>().text = "mAtk: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEffectiveStat(Stats.MagicAttack);
+        playerInfoScreen.transform.GetChild(1).GetChild(4).GetComponent<Text>().text = "mDef: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEffectiveStat(Stats.MagicDefense);
+        playerInfoScreen.transform.GetChild(1).GetChild(5).GetComponent<Text>().text = "Speed: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEffectiveStat(Stats.MaxMove);
+        playerInfoScreen.transform.GetChild(1).GetChild(6).GetComponent<Text>().text = "Crit: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEffectiveStat(Stats.CritChance) + "%";
+        playerInfoScreen.transform.GetChild(1).GetChild(7).GetComponent<Text>().text = "Health: " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].cHealth + "/" + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].GetEffectiveStat(Stats.MaxHealth);
         playerInfoScreen.transform.GetChild(1).GetChild(8).GetComponent<Text>().text = "Equipped Skills: \n1) " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillQuickList[0] + "\n2) " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillQuickList[1] + "\n3) " + GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillQuickList[2];
     }
 

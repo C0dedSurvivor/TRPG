@@ -50,10 +50,7 @@ public class ItemBase
 /// </summary>
 public class EquippableBase : ItemBase
 {
-    public int health;
-    public int strength;
-    public int defense;
-    public int critChanceMod;
+    public Dictionary<Stats, int> stats = new Dictionary<Stats, int>();
 
     //0 = weapon, 1 = helmet, 2 = chestplate, 3 = legs, 4 = boots, 5 = gloves, 6 = accessory
     public int equipSlot;
@@ -63,26 +60,39 @@ public class EquippableBase : ItemBase
     /// Armor: Heavy, medium, light
     /// </summary>
     public int subType;
-    
-    public DamageType statType;
 
-    //List of special effects granted by the equipment that can be triggered while in battle
-    public List<TriggeredEffect> effects = new List<TriggeredEffect>();
+    /// <summary>
+    /// Keeps track of the battle-mutable effect limiters for each triggerable effect
+    /// The TemporaryEffectData here should never be modified
+    /// </summary>
+    public List<Pair<TriggeredEffect, TemporaryEffectData>> effects = new List<Pair<TriggeredEffect, TemporaryEffectData>>();
 
-    public EquippableBase(int slot, int subtype, DamageType stattype, int healthChange, int strengthChange, int defenseChange, int critChange, int sellPrice, string flavor = "") : base(1, sellPrice, flavor)
+    public EquippableBase(int slot, int subtype, int sellPrice, string flavor = "", int health = 0, int pAtk = 0, int pDef = 0, int mAtk = 0, int mDef = 0, int critChance = 0, 
+        int speed = 0, int basicAttackLifesteal = 0, int spellLifesteal = 0, int basicAttackEffectivenessMod = 0, int spellDamageEffectivenessMod = 0, int basicAttackReceptivenessMod = 0, 
+        int spellDamageReceptivenessMod = 0, int healingEffectivenessMod = 0, int healingReceptivenessMod = 0) : base(1, sellPrice, flavor)
     {
         equipSlot = slot;
         subType = subtype;
-        statType = stattype;
-        health = healthChange;
-        strength = strengthChange;
-        defense = defenseChange;
-        critChanceMod = critChange;
+        stats.Add(Stats.MaxHealth, health);
+        stats.Add(Stats.Attack, pAtk);
+        stats.Add(Stats.Defense, pDef);
+        stats.Add(Stats.MagicAttack, mAtk);
+        stats.Add(Stats.MagicDefense, mDef);
+        stats.Add(Stats.CritChance, critChance);
+        stats.Add(Stats.MaxMove, speed);
+        stats.Add(Stats.BasicAttackLifesteal, basicAttackLifesteal);
+        stats.Add(Stats.SpellLifesteal, spellLifesteal);
+        stats.Add(Stats.BasicAttackEffectiveness, basicAttackEffectivenessMod);
+        stats.Add(Stats.BasicAttackReceptiveness, basicAttackReceptivenessMod);
+        stats.Add(Stats.SpellDamageEffectiveness, spellDamageEffectivenessMod);
+        stats.Add(Stats.SpellDamageReceptiveness, spellDamageReceptivenessMod);
+        stats.Add(Stats.HealingEffectiveness, healingEffectivenessMod);
+        stats.Add(Stats.HealingReceptiveness, healingReceptivenessMod);
     }
 
-    public void AddEffect(TriggeredEffect effect)
+    public void AddEffect(TriggeredEffect effect, int maxTimesThisBattle = -1, int turnCooldown = -1, int maxActiveTurns = -1)
     {
-        effects.Add(effect);
+        effects.Add(new Pair<TriggeredEffect, TemporaryEffectData>(effect, new TemporaryEffectData(maxTimesThisBattle, turnCooldown, maxActiveTurns)));
     }
 }
 

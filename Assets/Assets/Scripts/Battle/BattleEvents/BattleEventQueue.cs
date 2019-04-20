@@ -28,4 +28,14 @@ public class BattleEventQueue
         insertionIndex = 0;
         return eventToReturn;
     }
+
+    public bool StillMoving(GameObject movedObject)
+    {
+        return events.Count != 0 && events[0] is MovementEvent && (events[0] as MovementEvent).mover == movedObject;
+    }
+
+    public bool NextIsConcurrent()
+    {
+        return events.Count != 0 && events[0] is MovementEvent && (events[0] as MovementEvent).animation.concurrent;
+    }
 }

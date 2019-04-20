@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public struct ExecuteEffectEvent : BattleEventBase
+public class ExecuteEffectEvent : BattleEventBase
 {
     public SkillPartBase effect;
     public BattleParticipant caster;

@@ -63,11 +63,11 @@ public class StoredItem
                     {
                         return -1;
                     }
-                    if (item1.health + item1.strength + item1.defense + item1.critChanceMod > item2.health + item2.strength + item2.defense + item2.critChanceMod)
+                    if (item1.stats[Stats.MaxHealth] + item1.stats[Stats.Attack] + item1.stats[Stats.Defense] + item1.stats[Stats.MagicAttack] + item1.stats[Stats.MagicDefense] + item1.stats[Stats.CritChance] > item2.stats[Stats.MaxHealth] + item2.stats[Stats.Attack] + item2.stats[Stats.Defense] + item2.stats[Stats.MagicAttack] + item2.stats[Stats.MagicDefense] + item2.stats[Stats.CritChance])
                     {
                         return -1;
                     }
-                    else if (item1.health + item1.strength + item1.defense + item1.critChanceMod < item2.health + item2.strength + item2.defense + item2.critChanceMod)
+                    else if (item1.stats[Stats.MaxHealth] + item1.stats[Stats.Attack] + item1.stats[Stats.Defense] + item1.stats[Stats.MagicAttack] + item1.stats[Stats.MagicDefense] + item1.stats[Stats.CritChance] < item2.stats[Stats.MaxHealth] + item2.stats[Stats.Attack] + item2.stats[Stats.Defense] + item2.stats[Stats.MagicAttack] + item2.stats[Stats.MagicDefense] + item2.stats[Stats.CritChance])
                     {
                         return 1;
                     }
@@ -173,11 +173,9 @@ public class Inventory
             Debug.Log(AddItem("Copper Ore", 24));
             Debug.Log(AddItem(new Equippable("Crossbow")));
             Debug.Log(AddItem(new Equippable("Dagger")));
-            Debug.Log(AddItem(new Equippable("Demonic Sword")));
             Debug.Log(AddItem("Egg", 42));
             Debug.Log(AddItem("Empty Bottle (Large)", 2));
             Debug.Log(AddItem("Feather", 42));
-            Debug.Log(AddItem(new Equippable("Helmet")));
             Debug.Log(AddItem("Magic Dust", 127));
             Debug.Log(AddItem("Mana Potion (Large)", 5));
             Debug.Log(AddItem("Potion of Healing (Large)", 2));
@@ -199,6 +197,13 @@ public class Inventory
             AddItem(new Equippable("Xarok"));
 
             AddItem(new Equippable("Staff of Healing"));
+            Debug.Log(AddItem(new Equippable("Helmet of Healing")));
+            Debug.Log(AddItem(new Equippable("Demonic Sword")));
+            Debug.Log(AddItem(new Equippable("Crescent Rose")));
+            Debug.Log(AddItem(new Equippable("Chestplate of the Last Stand")));
+            Debug.Log(AddItem(new Equippable("Amulet of Rejuvenation")));
+            Debug.Log(AddItem(new Equippable("Thorny Leggings")));
+            Debug.Log(AddItem(new Equippable("Priest Necklace")));
         }
 
         SortInventory((int)sortingType);

@@ -4,61 +4,96 @@ using UnityEngine;
 
 public class StatusEffectList
 {
-    public List<StatusEffect> effectList;
+    private List<Pair<Statuses, int>> effectList;
 
     public StatusEffectList()
     {
-        effectList = new List<StatusEffect>();
+        effectList = new List<Pair<Statuses, int>>();
     }
 
     /// <summary>
     /// Returns if the list contains a certain status condition
     /// </summary>
     /// <param name="status">The status effect to check for</param>
-    public bool Contains(string status)
+    public bool Contains(Statuses status)
     {
-        foreach (StatusEffect se in effectList)
+        foreach (Pair<Statuses, int> se in effectList)
         {
-            if (se.effect.IndexOf(status) != -1)
+            if (se.First == status)
                 return true;
         }
         return false;
     }
 
     /// <summary>
-    /// Updates an existing status effect to a new duration
-    /// </summary>
-    /// <param name="status"></param>
-    /// <param name="duration"></param>
-    public void Refresh(string status, int duration)
-    {
-        for(int i = 0; i < effectList.Count; i++)
-        {
-            if (effectList[i].effect.CompareTo(status) == 0)
-                effectList[i].duration = duration;
-        }
-    }
-
-    /// <summary>
-    /// Adds a new status effect to the list
+    /// Adds a new status effect to the list if it isn't there already, or changes the limiter on the status if there is one
     /// </summary>
     /// <param name="status">The status to add</param>
-    /// <param name="duration">The duration of the status, -1 if not removed by time</param>
-    public void Add(string status, int duration = -1)
+    /// <param name="limit">The limit of the status, -1 if there is not a limit</param>
+    public void Add(Statuses status, int limit)
     {
-        effectList.Add(new StatusEffect(status, duration));
+        Pair<Statuses, int> inList = null;
+        foreach (Pair<Statuses, int> se in effectList)
+        {
+            if (se.First == status)
+                inList = se;
+        }
+
+        if (inList == null)
+        {
+            effectList.Add(new Pair<Statuses, int>(status, limit));
+        }
+        else if (!(Registry.StatusEffectRegistry[status].limit != CountdownType.None))
+        {
+            inList.Second = Mathf.Max(inList.Second, limit);
+        }
+        
     }
 
     /// <summary>
     /// Removes a given status from the list
     /// </summary>
     /// <param name="status">Status effect to remove</param>
-    public void Remove(string status)
+    public void Remove(Statuses status)
     {
         for(int i = 0; i < effectList.Count; i++)
         {
-            if (effectList[i].effect.IndexOf(status) != -1)
+            if (effectList[i].First == status)
                 effectList.RemoveAt(i);
+        }
+    }
+
+    public void EndOfTurn()
+    {
+        for(int i = 0; i < effectList.Count; i++)
+        {
+            if (Registry.StatusEffectRegistry[effectList[i].First].limit == CountdownType.Turns)
+            {
+                effectList[i].Second--;
+                if(effectList[i].Second == 0)
+                {
+                    effectList.RemoveAt(i);
+                    i--;
+                }
+            }
+            //If the effect has a chance to be removed at the end of the turn
+            if(Random.value < Registry.StatusEffectRegistry[effectList[i].First].endOfTurnRemoveChance)
+            {
+                effectList.RemoveAt(i);
+                i--;
+            }
+        }
+    }
+
+    public void EndOfMatch()
+    {
+        for (int i = 0; i < effectList.Count; i++)
+        {
+            if (!Registry.StatusEffectRegistry[effectList[i].First].persists)
+            {
+                effectList.RemoveAt(i);
+                i--;
+            }
         }
     }
 }

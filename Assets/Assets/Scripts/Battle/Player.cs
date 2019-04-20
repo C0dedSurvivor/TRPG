@@ -41,14 +41,24 @@ public class Player : BattleParticipant
         //Generates default player data if that player's file doesn't exist
         if (!File.Exists("Assets/Resources/Storage/Players/" + name + ".data")) {
             moveType = mT;
-            attack = 15 + mT;
-            defense = 15 + mT;
-            mAttack = 15 + mT;
-            mDefense = 15 + mT;
-            critChance = 15 + mT;
-            mHealth = 150 + mT;
+            stats.Add(Stats.MaxHealth, 150 + mT);
+            stats.Add(Stats.Attack, 15 + mT);
+            stats.Add(Stats.Defense, 15 + mT);
+            stats.Add(Stats.MagicAttack, 15 + mT);
+            stats.Add(Stats.MagicDefense, 15 + mT);
+            stats.Add(Stats.CritChance, 15 + mT);
+            stats.Add(Stats.MaxMove, Registry.MovementRegistry[moveType].moveSpeed);
+            stats.Add(Stats.BasicAttackLifesteal, 0);
+            stats.Add(Stats.SpellLifesteal, 0);
+            stats.Add(Stats.BasicAttackEffectiveness, 100);
+            stats.Add(Stats.SpellDamageEffectiveness, 100);
+            stats.Add(Stats.BasicAttackReceptiveness, 100);
+            stats.Add(Stats.SpellDamageReceptiveness, 100);
+            stats.Add(Stats.HealingEffectiveness, 100);
+            stats.Add(Stats.HealingReceptiveness, 100);
+            cHealth = GetEffectiveStat(Stats.MaxHealth);
             //Divides by two to test healing
-            cHealth = mHealth / 2;
+            cHealth = GetEffectiveStat(Stats.MaxHealth) / 2;
             equippedWeapon = new Equippable("Dagger");
             skillQuickList.Add(new Vector2Int(1, 1));
             skillQuickList.Add(new Vector2Int(1, 2));
@@ -84,21 +94,21 @@ public class Player : BattleParticipant
         file.Write(exp);
         file.Write(skillPoints);
         file.Write(moveType);
-        file.Write(attack);
+        file.Write(stats[Stats.Attack]);
         file.Write(attackGrowthType);
-        file.Write(defense);
+        file.Write(stats[Stats.Defense]);
         file.Write(defenseGrowthType);
-        file.Write(mAttack);
+        file.Write(stats[Stats.MagicAttack]);
         file.Write(mAttackGrowthType);
-        file.Write(mDefense);
+        file.Write(stats[Stats.MagicDefense]);
         file.Write(mDefenseGrowthType);
-        file.Write(critChance);
+        file.Write(stats[Stats.CritChance]);
         file.Write(cHealth);
-        file.Write(mHealth);
+        file.Write(stats[Stats.MaxHealth]);
         file.Write(healthGrowthType);
         foreach (Equippable equipped in equipment)
         {
-            file.Write(equipped.Name);
+            file.Write(equipped == null ? "null" : equipped.Name);
         }
         file.Write(skillQuickList[0].x);
         file.Write(skillQuickList[0].y);
@@ -132,17 +142,27 @@ public class Player : BattleParticipant
         exp = file.ReadInt32();
         skillPoints = file.ReadInt32();
         moveType = file.ReadInt32();
-        attack = file.ReadInt32();
+        stats.Add(Stats.Attack, file.ReadInt32());
         attackGrowthType = file.ReadString();
-        defense = file.ReadInt32();
+        stats.Add(Stats.Defense, file.ReadInt32());
         defenseGrowthType = file.ReadString();
-        mAttack = file.ReadInt32();
+        stats.Add(Stats.MagicAttack, file.ReadInt32());
         mAttackGrowthType = file.ReadString();
-        mDefense = file.ReadInt32();
+        stats.Add(Stats.MagicDefense, file.ReadInt32());
         mDefenseGrowthType = file.ReadString();
-        critChance = file.ReadInt32();
+        stats.Add(Stats.CritChance, file.ReadInt32());
         cHealth = file.ReadInt32();
-        mHealth = file.ReadInt32();
+        stats.Add(Stats.MaxHealth, file.ReadInt32());
+        stats.Add(Stats.MaxMove, Registry.MovementRegistry[moveType].moveSpeed);
+        stats.Add(Stats.BasicAttackLifesteal, 0);
+        stats.Add(Stats.SpellLifesteal, 0);
+        stats.Add(Stats.BasicAttackEffectiveness, 100);
+        stats.Add(Stats.SpellDamageEffectiveness, 100);
+        stats.Add(Stats.BasicAttackReceptiveness, 100);
+        stats.Add(Stats.SpellDamageReceptiveness, 100);
+        stats.Add(Stats.HealingEffectiveness, 100);
+        stats.Add(Stats.HealingReceptiveness, 100);
+        cHealth = GetEffectiveStat(Stats.MaxHealth);
         healthGrowthType = file.ReadString();
         for(int i = 0; i < equipment.Length; i++)
         {
@@ -185,10 +205,10 @@ public class Player : BattleParticipant
     /// <param name="prevMax">The previous max hp</param>
     public void CheckHealthChange(int prevMax)
     {
-        if (cHealth > GetEffectiveMaxHealth())
-            cHealth = GetEffectiveMaxHealth();
+        if (cHealth > GetEffectiveStat(Stats.MaxHealth))
+            cHealth = GetEffectiveStat(Stats.MaxHealth);
         if(cHealth == prevMax)
-            cHealth = GetEffectiveMaxHealth();
+            cHealth = GetEffectiveStat(Stats.MaxHealth);
     }
 
     /// <summary>
@@ -236,7 +256,7 @@ public class Player : BattleParticipant
 			}
 			for(int i = 0; i < 3; i++)
 				if (Random.Range (0.0f, 100.0f) < equation * mod)
-					attack++;
+					stats[Stats.Attack]++;
 
 			//defense
 			if (defenseGrowthType.Contains ("low"))
@@ -260,7 +280,7 @@ public class Player : BattleParticipant
 			}
 			for(int i = 0; i < 3; i++)
 				if (Random.Range (0.0f, 100.0f) < equation * mod)
-					defense++;
+                    stats[Stats.Defense]++;
 
 			//magic attack
 			if (mAttackGrowthType.Contains ("low"))
@@ -284,7 +304,7 @@ public class Player : BattleParticipant
 			}
 			for(int i = 0; i < 3; i++)
 				if (Random.Range (0.0f, 100.0f) < equation * mod)
-					mAttack++;
+                    stats[Stats.MagicAttack]++;
 
 			//magic defense
 			if (mDefenseGrowthType.Contains ("low"))
@@ -308,7 +328,7 @@ public class Player : BattleParticipant
 			}
 			for(int i = 0; i < 3; i++)
 				if (Random.Range (0.0f, 100.0f) < equation * mod)
-					mDefense++;
+                    stats[Stats.MagicDefense]++;
 
 			CheckForLevel();
 		}
@@ -324,8 +344,9 @@ public class Player : BattleParticipant
 
     public void EndOfMatch()
     {
-        temporaryEffectList = new List<Pair<TriggeredEffect, Triple<int, int, Pair<int, int>>>>();
+        temporaryEffectList = new List<Pair<TriggeredEffect, TemporaryEffectData>>();
         modifierList.Clear();
+        statusList.EndOfMatch();
     }
     
     /// <summary>

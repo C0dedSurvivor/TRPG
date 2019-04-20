@@ -45,63 +45,6 @@ public enum EffectTriggers
     EndOfMatch
 }
 
-/// <summary>
-/// Stores a possible enemy move
-/// </summary>
-public struct EnemyMove
-{
-    public Vector2Int movePosition;
-    public Vector2Int attackPosition;
-    public int priority;
-    public int reasonPriority;
-
-    public EnemyMove(int x, int y, int priority, int reasonPriority)
-    {
-        movePosition = new Vector2Int(x, y);
-        attackPosition = new Vector2Int(-1, -1);
-        this.priority = priority;
-        this.reasonPriority = reasonPriority;
-    }
-    public EnemyMove(int x, int y, int attackX, int attackY, int priority, int reasonPriority)
-    {
-        movePosition = new Vector2Int(x, y);
-        attackPosition = new Vector2Int(attackX, attackY);
-        this.priority = priority;
-        this.reasonPriority = reasonPriority;
-    }
-
-    /// <summary>
-    /// Determines which move has a higher priority
-    /// </summary>
-    /// <param name="m">The move to check this one against</param>
-    public int CompareTo(EnemyMove m)
-    {
-        if (priority > m.priority)
-        {
-            return -1;
-        }
-        else if (priority < m.priority)
-        {
-            return 1;
-        }
-        else
-        {
-            if (reasonPriority > m.reasonPriority)
-            {
-                return -1;
-            }
-            else if (reasonPriority < m.reasonPriority)
-            {
-                return 1;
-            }
-            else
-            {
-                return 0;
-            }
-        }
-    }
-}
-
 public class Battle : MonoBehaviour
 {
     #region Data
@@ -115,7 +58,7 @@ public class Battle : MonoBehaviour
 
     public GameObject skillCastConfirmMenu;
 
-    public Vector2Int topLeft;
+    private Vector2Int topLeft;
 
     public bool showDanger = false;
     public bool showaEther = false;
@@ -140,7 +83,7 @@ public class Battle : MonoBehaviour
     //Stores the players used in this battle
     public List<Player> players;
     //Stores the enemy data
-    public List<Enemy> enemyList;
+    public List<Enemy> enemies;
     //Stores the visual representation of the participants
     public Dictionary<BattleParticipant, GameObject> participantModels = new Dictionary<BattleParticipant, GameObject>();
     //This is a camera
@@ -158,8 +101,8 @@ public class Battle : MonoBehaviour
     //This displays how the pawn would move when a move is selected
     public GameObject moveMarker;
 
-    //What movement animation is currently running
-    private MovementEvent currentAnimation;
+    //What movement animation(s) is currently running
+    private List<AnimBase> currentAnimations = new List<AnimBase>();
 
     //A queue of all of the events that need to be run
     private BattleEventQueue eventQueue = new BattleEventQueue();
@@ -170,6 +113,15 @@ public class Battle : MonoBehaviour
     //Whether a change has been made that would affect the states of one or more tiles
     //Keeps updateTiles from being called every frame
     private bool updateTilesThisFrame = false;
+
+    //A list of all the temporary tile effects, the tiles they affect, and the limiters on the effect
+    private TemporaryTileEffectList temporaryTileEffects = new TemporaryTileEffectList();
+
+    public BattleUI ui;
+    
+    public TextAnimator littleInfoSys;
+
+    public bool IsBattling { get { return battleState != BattleState.None || eventQueue.Count > 0 || currentAnimations.Count > 0 || !littleInfoSys.Done; } }
 
     #endregion
 
@@ -196,7 +148,6 @@ public class Battle : MonoBehaviour
         //Sets the map size, unused currently but functioning
         //mapSizeX = xSize;
         //mapSizeY = ySize;
-        //Generates enemies
         //Grabs the map layout
         battleMap = GameStorage.GrabBattleMap(centerX, centerY, xSize, ySize);
         //Finds the top left corner of the current map
@@ -212,9 +163,11 @@ public class Battle : MonoBehaviour
         battleCamera = Instantiate(CameraPrefab);
         skillCastConfirmMenu.SetActive(false);
         Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
         canSwap = true;
         //Sets up the opening camera animation
-        eventQueue.Insert(new MovementEvent(battleCamera, 4f, battleCamera.transform.position, new Vector3(topLeft.x + (xSize / 2), 19, topLeft.y + (ySize / 2)), battleCamera.transform.rotation, battleCamera.transform.rotation, false));
+        eventQueue.Insert(new MovementEvent(battleCamera, 4f, new Vector3(topLeft.x + (xSize / 2) - 0.5f, 25, topLeft.y + (ySize / 2) - 1.5f), true));
+        eventQueue.Insert(new MovementEvent(battleCamera, 4f, battleCamera.transform.rotation, true));
         battleCamera.transform.SetPositionAndRotation(mainCamera.position, mainCamera.rotation);
         eventQueue.Insert(new FunctionEvent(ToMatch));
         players = new List<Player>();
@@ -229,13 +182,13 @@ public class Battle : MonoBehaviour
             participantModels.Add(players[i], Instantiate(PlayerBattleModelPrefab));
             participantModels[players[i]].transform.position = new Vector3(players[i].position.x + topLeft.x, 1, (mapSizeY - 1) - players[i].position.y + topLeft.y);
         }
-
-        enemyList = new List<Enemy>();
-        enemyList.Add(new Enemy(5, 5, 3, 5, 5));
-        enemyList.Add(new Enemy(10, 5, 2, 5, 5));
-        enemyList.Add(new Enemy(12, 5, 2, 5, 5));
-        enemyList.Add(new Enemy(14, 5, 5, 5, 5));
-        foreach (Enemy e in enemyList)
+        //Generates enemies
+        enemies = new List<Enemy>();
+        enemies.Add(new Enemy("Enemy1", 5, 5, 3, 5, 5));
+        enemies.Add(new Enemy("Enemy2", 10, 5, 2, 5, 5));
+        enemies.Add(new Enemy("Enemy3", 12, 5, 2, 5, 5));
+        enemies.Add(new Enemy("Enemy4", 14, 5, 5, 5, 5));
+        foreach (Enemy e in enemies)
         {
             e.StartOfMatch();
             CheckEventTriggers(e, EffectTriggers.StartOfMatch);
@@ -243,6 +196,7 @@ public class Battle : MonoBehaviour
             participantModels.Add(e, Instantiate(EnemyBattleModelPrefab));
             participantModels[e].transform.position = new Vector3(e.position.x + topLeft.x, 1, (mapSizeY - 1) - e.position.y + topLeft.y);
         }
+        eventQueue.Insert(new FunctionEvent(ui.StartBattle));
     }
 
     /// <summary>
@@ -269,27 +223,44 @@ public class Battle : MonoBehaviour
     /// </summary>
     void Update()
     {
-        if (skillCastConfirmMenu.activeSelf == false)
+        if (skillCastConfirmMenu.activeSelf == false && littleInfoSys.Done)
         {
-            if (!currentAnimation.Equals(default(MovementEvent)))
+            if (currentAnimations.Count > 0)
             {
-                if (currentAnimation.flatSpeed)
+                for (int i = 0; i < currentAnimations.Count; i++)
                 {
-                    currentAnimation.mover.transform.position += (currentAnimation.finalPosition - currentAnimation.initialPosition) * currentAnimation.speed * Time.deltaTime;
-                    currentAnimation.mover.transform.rotation = Quaternion.Euler((currentAnimation.finalRotation.eulerAngles - currentAnimation.initialRotation.eulerAngles) * currentAnimation.speed * Time.deltaTime + currentAnimation.mover.transform.rotation.eulerAngles);//Vector3.Lerp(currentAnimation.initialRotation.eulerAngles, currentAnimation.finalRotation.eulerAngles, currentAnimation.speed) + currentAnimation.mover.transform.rotation.eulerAngles - currentAnimation.initialRotation.eulerAngles);
-                }
-                else
-                {
-                    currentAnimation.mover.transform.position = Vector3.Lerp(currentAnimation.mover.transform.position, currentAnimation.finalPosition, currentAnimation.speed * Time.deltaTime);
-                    currentAnimation.mover.transform.rotation = Quaternion.Lerp(currentAnimation.mover.transform.rotation, currentAnimation.finalRotation, currentAnimation.speed * Time.deltaTime);
-                }
-                if (GameStorage.Approximately(currentAnimation.mover.transform.position, currentAnimation.finalPosition) && GameStorage.Approximately(currentAnimation.mover.transform.rotation, currentAnimation.finalRotation))
-                {
-                    currentAnimation.mover.transform.position = currentAnimation.finalPosition;
-                    currentAnimation.mover.transform.rotation = currentAnimation.finalRotation;
-                    currentAnimation = default(MovementEvent);
-                    if (battleState != BattleState.None)
-                        updateTilesThisFrame = true;
+                    currentAnimations[i].StepAnimation();
+
+                    //Debug.Log(currentAnimations[i].mover.transform.position + "|" + currentAnimations[i].finalPosition + "|" + currentAnimations[i].mover.transform.rotation.eulerAngles + "|" + currentAnimations[i].finalRotation.eulerAngles);
+                    if (currentAnimations[i].IsDone())
+                    {
+                        //Debug.Log(GameStorage.Approximately(currentAnimations[i].mover.transform.position, currentAnimations[i].finalPosition) + " | " + currentAnimations[i].mover.transform.position + "|" + currentAnimations[i].finalPosition + "|" + eventQueue.Count);
+                        if (battleState != BattleState.None)
+                            updateTilesThisFrame = true;
+                        //If it is a pawn being moved, execute the tile effects on them
+                        if (participantModels.ContainsValue(currentAnimations[i].mover))
+                        {
+                            BattleParticipant pawn = null;
+                            foreach (Player p in players)
+                            {
+                                if (participantModels[p] == currentAnimations[i].mover)
+                                    pawn = p;
+                            }
+                            foreach (Enemy e in enemies)
+                            {
+                                if (participantModels[e] == currentAnimations[i].mover)
+                                    pawn = e;
+                            }
+                            Vector3 diff = ((FlatSpeedMovementAnim)currentAnimations[i]).Difference;
+                            pawn.position -= new Vector2Int(Mathf.RoundToInt(diff.x), -Mathf.RoundToInt(diff.z));
+                            
+                            //Triggers the tile effects that should activate from this movement
+                            TriggerTileEffects(pawn, eventQueue.StillMoving(currentAnimations[i].mover) ? MoveTriggers.PassOver : MoveTriggers.StopOnTile);
+                        }
+                        currentAnimations[i].FinalizeAnim();
+                        currentAnimations.RemoveAt(i);
+                        i--;
+                    }
                 }
             }
             else if (eventQueue.Count != 0)
@@ -297,25 +268,50 @@ public class Battle : MonoBehaviour
                 BattleEventBase currentEvent = eventQueue.GetNext();
                 if (currentEvent is ExecuteEffectEvent)
                 {
+                    Debug.Log("EXECUTING AN EFFECT EVENT");
                     ExecuteEffectEvent trueEvent = (ExecuteEffectEvent)currentEvent;
                     if (trueEvent.caster.cHealth > 0 || trueEvent.valueFromPrevious > -1)
                         ExecuteEffect(trueEvent.effect, trueEvent.caster, trueEvent.target, trueEvent.fromSpell, trueEvent.valueFromPrevious);
                 }
                 if (currentEvent is MovementEvent)
-                    currentAnimation = (MovementEvent)currentEvent;
+                {
+                    Debug.Log("EXECUTING A MOVEMENT EVENT");
+                    currentAnimations.Add(((MovementEvent)currentEvent).animation);
+                    if (((MovementEvent)currentEvent).animation.concurrent)
+                    {
+                        while (eventQueue.NextIsConcurrent())
+                        {
+                            currentAnimations.Add(((MovementEvent)eventQueue.GetNext()).animation);
+                        }
+                    }
+                }
                 if (currentEvent is TextEvent)
-                    Debug.Log(((TextEvent)currentEvent).text);
+                {
+                    Debug.Log("EXECUTING A TEXT EVENT");
+                    littleInfoSys.Enqueue(currentEvent as TextEvent);
+                }
                 if (currentEvent is TurnEvent)
                 {
                     TurnEvent trueEvent = (TurnEvent)currentEvent;
                     if (trueEvent.turner.cHealth > 0)
                     {
+                        Debug.Log("EXECUTING A TURN EVENT");
                         trueEvent.turner.facing = trueEvent.direction;
                         participantModels[trueEvent.turner].transform.rotation = Quaternion.Euler(0, 90 * (int)trueEvent.direction, 0);
+                        Debug.Log("Turned to face: " + 90 * (int)trueEvent.direction);
                     }
                 }
                 if (currentEvent is FunctionEvent)
+                {
+                    Debug.Log("EXECUTING A FUNCTION EVENT");
                     ((FunctionEvent)currentEvent).function();
+                }
+                if (currentEvent is FunctionEvent<BattleParticipant, BattleParticipant>)
+                {
+                    Debug.Log("EXECUTING A FUNCTION EVENT<T1, T2>");
+                    FunctionEvent<BattleParticipant, BattleParticipant> trueEvent = (FunctionEvent<BattleParticipant, BattleParticipant>)currentEvent;
+                    trueEvent.function(trueEvent.first, trueEvent.second);
+                }
             }
             else
             {
@@ -325,11 +321,11 @@ public class Battle : MonoBehaviour
                         break;
                     //Moves all the enemies one at a time until there are no more left to move
                     case BattleState.Enemy:
-                        if (movingEnemy >= enemyList.Count)
+                        if (movingEnemy >= enemies.Count)
                             eventQueue.Insert(new FunctionEvent(delegate { EndEnemyTurn(); }));
                         else
                         {
-                            if (enemyList[movingEnemy].CanMove())
+                            if (enemies[movingEnemy].CanMove())
                                 MoveEnemy(movingEnemy);
                             movingEnemy++;
                         }
@@ -365,7 +361,6 @@ public class Battle : MonoBehaviour
         if (updateTilesThisFrame)
         {
             UpdateTileMap();
-            updateTilesThisFrame = false;
         }
     }
 
@@ -449,11 +444,13 @@ public class Battle : MonoBehaviour
                     selectedSpell = -1;
                 }
 
-                //Selecting an enemy
-                selectedEnemy = EnemyAtPos(pos.x, pos.y);
-                //If actually targetting another player for a healing attack
-                if (selectedEnemy == -1 && tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerAttackRange && battleState == BattleState.Attack && selectedSpell == -1)
-                    selectedEnemy = enemyList.Count + PlayerAtPos(pos.x, pos.y);
+                if (battleState != BattleState.Attack || tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerAttackRange) {
+                    //Selecting an enemy
+                    selectedEnemy = EnemyAtPos(pos.x, pos.y);
+                    //If actually targetting another player for a healing attack
+                    if (selectedEnemy == -1 && tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerAttackRange && battleState == BattleState.Attack && selectedSpell == -1)
+                        selectedEnemy = enemies.Count + PlayerAtPos(pos.x, pos.y);
+                }
             }
         }
     }
@@ -503,7 +500,8 @@ public class Battle : MonoBehaviour
             Cursor.visible = false;
             mapPlayer.SetActive(true);
             updateTilesThisFrame = false;
-            eventQueue.Insert(new MovementEvent(mapPlayer.GetComponentInChildren<Camera>().gameObject, 4f, battleCamera.transform.position, mapPlayer.GetComponentInChildren<Camera>().transform.position, battleCamera.transform.rotation, mapPlayer.GetComponentInChildren<Camera>().transform.rotation, false));
+            eventQueue.Insert(new MovementEvent(mapPlayer.GetComponentInChildren<Camera>().gameObject, 4f, mapPlayer.GetComponentInChildren<Camera>().transform.position, true));
+            eventQueue.Insert(new MovementEvent(mapPlayer.GetComponentInChildren<Camera>().gameObject, 4f, mapPlayer.GetComponentInChildren<Camera>().transform.rotation, true));
             mapPlayer.GetComponentInChildren<Camera>().transform.SetPositionAndRotation(battleCamera.transform.position, battleCamera.transform.rotation);
             ExpungeAll();
         }
@@ -512,6 +510,7 @@ public class Battle : MonoBehaviour
             battleState = BattleState.None;
             ExpungeAll();
         }
+        ui.EndOfBattle();
     }
 
     /// <summary>
@@ -531,7 +530,7 @@ public class Battle : MonoBehaviour
 
     /// <summary>
     /// Toggles whether enemy ranges are shown or not
-    /// </summary>
+    /// </summary>/
     public void ToggleDangerArea()
     {
         showDanger = !showDanger;
@@ -555,6 +554,7 @@ public class Battle : MonoBehaviour
     private void ToAttack()
     {
         battleState = BattleState.Attack;
+        updateTilesThisFrame = true;
     }
 
     #region PlayerTurn
@@ -567,33 +567,52 @@ public class Battle : MonoBehaviour
         if (selectedMoveSpot.x != -1)
         {
             Vector2Int diff = new Vector2Int(selectedMoveSpot.x - players[selectedPlayer].position.x, -(selectedMoveSpot.y - players[selectedPlayer].position.y));
+            Debug.Log(diff);
             if (CanMoveYFirst(players[selectedPlayer], diff))
             {
-                eventQueue.Insert(new TurnEvent(players[selectedPlayer], diff.y > 0 ? FacingDirection.North : FacingDirection.South));
-                for (int y = 0; y < Mathf.Abs(diff.y); y++)
+                if (diff.y != 0)
                 {
-                    eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 0.1f, participantModels[players[selectedPlayer]].transform.position + new Vector3(0, 0, y * Mathf.Sign(diff.y)), participantModels[players[selectedPlayer]].transform.position + new Vector3(0, 0, (y + 1) * Mathf.Sign(diff.y)), participantModels[players[selectedPlayer]].transform.rotation, participantModels[players[selectedPlayer]].transform.rotation, false));
+                    FacingDirection direction = diff.y > 0 ? FacingDirection.North : FacingDirection.South;
+                    eventQueue.Insert(new TurnEvent(players[selectedPlayer], direction));
+                    for (int y = 0; y < Mathf.Abs(diff.y); y++)
+                    {
+                        Debug.Log("Adding y");
+                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, participantModels[players[selectedPlayer]].transform.position + new Vector3(0, 0, y * Mathf.Sign(diff.y)), participantModels[players[selectedPlayer]].transform.position + new Vector3(0, 0, (y + 1) * Mathf.Sign(diff.y))));
+                    }
                 }
-                eventQueue.Insert(new TurnEvent(players[selectedPlayer], diff.x > 0 ? FacingDirection.East : FacingDirection.West));
-                for (int x = 0; x < Mathf.Abs(diff.x); x++)
+
+                if (diff.x != 0)
                 {
-                    eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 0.1f, participantModels[players[selectedPlayer]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0, diff.y), participantModels[players[selectedPlayer]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0, diff.y), participantModels[players[selectedPlayer]].transform.rotation, participantModels[players[selectedPlayer]].transform.rotation, false));
+                    FacingDirection direction2 = diff.x > 0 ? FacingDirection.East : FacingDirection.West;
+                    eventQueue.Insert(new TurnEvent(players[selectedPlayer], direction2));
+                    for (int x = 0; x < Mathf.Abs(diff.x); x++)
+                    {
+                        Debug.Log("Adding x");
+                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, participantModels[players[selectedPlayer]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0, diff.y), participantModels[players[selectedPlayer]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0, diff.y)));
+                    }
                 }
             }
             else
             {
-                eventQueue.Insert(new TurnEvent(players[selectedPlayer], diff.x > 0 ? FacingDirection.East : FacingDirection.West));
-                for (int x = 0; x < Mathf.Abs(diff.x); x++)
+                if (diff.x != 0)
                 {
-                    eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 0.1f, participantModels[players[selectedPlayer]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0), participantModels[players[selectedPlayer]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0), participantModels[players[selectedPlayer]].transform.rotation, participantModels[players[selectedPlayer]].transform.rotation, false));
+                    FacingDirection direction = diff.x > 0 ? FacingDirection.East : FacingDirection.West;
+                    eventQueue.Insert(new TurnEvent(players[selectedPlayer], direction));
+                    for (int x = 0; x < Mathf.Abs(diff.x); x++)
+                    {
+                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, participantModels[players[selectedPlayer]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0), participantModels[players[selectedPlayer]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0)));
+                    }
                 }
-                eventQueue.Insert(new TurnEvent(players[selectedPlayer], diff.y > 0 ? FacingDirection.North : FacingDirection.South));
-                for (int y = 0; y < Mathf.Abs(diff.y); y++)
+                if (diff.y != 0)
                 {
-                    eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 0.1f, participantModels[players[selectedPlayer]].transform.position + new Vector3(diff.x, 0, y * Mathf.Sign(diff.y)), participantModels[players[selectedPlayer]].transform.position + new Vector3(diff.x, 0, (y + 1) * Mathf.Sign(diff.y)), participantModels[players[selectedPlayer]].transform.rotation, participantModels[players[selectedPlayer]].transform.rotation, false));
+                    FacingDirection direction2 = diff.y > 0 ? FacingDirection.North : FacingDirection.South;
+                    eventQueue.Insert(new TurnEvent(players[selectedPlayer], direction2));
+                    for (int y = 0; y < Mathf.Abs(diff.y); y++)
+                    {
+                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, participantModels[players[selectedPlayer]].transform.position + new Vector3(diff.x, 0, y * Mathf.Sign(diff.y)), participantModels[players[selectedPlayer]].transform.position + new Vector3(diff.x, 0, (y + 1) * Mathf.Sign(diff.y))));
+                    }
                 }
             }
-            players[selectedPlayer].position += new Vector2Int(diff.x, -diff.y);
             selectedMoveSpot = new Vector2Int(-1, -1);
             moveMarker.SetActive(false);
             canSwap = false;
@@ -607,11 +626,11 @@ public class Battle : MonoBehaviour
     public void PerformPlayerAttack()
     {
         //If healing a player
-        if (selectedEnemy >= enemyList.Count)
-            eventQueue.Insert(new ExecuteEffectEvent(new HealingPart(TargettingType.Ally, players[selectedPlayer].GetEffectiveMAtk() / 2, 0, 0), players[selectedPlayer], players[selectedEnemy - enemyList.Count]));
+        if (selectedEnemy >= enemies.Count)
+            eventQueue.Insert(new ExecuteEffectEvent(new HealingPart(TargettingType.Ally, players[selectedPlayer].GetEffectiveStat(Stats.MagicAttack) / 2, 0, 0), players[selectedPlayer], players[selectedEnemy - enemies.Count]));
         //If attacking an enemy
         else
-            PerformAttack(players[selectedPlayer], enemyList[selectedEnemy]);
+            PerformAttack(players[selectedPlayer], enemies[selectedEnemy]);
         FinishedMovingPawn();
     }
 
@@ -622,12 +641,16 @@ public class Battle : MonoBehaviour
     /// </summary>
     public void FinishedMovingPawn()
     {
-        players[selectedPlayer].moved = true;
-        selectedMoveSpot = new Vector2Int(-1, -1);
+        if (selectedPlayer != -1)
+        {
+            players[selectedPlayer].moved = true;
+            selectedMoveSpot = new Vector2Int(-1, -1);
+        }
         selectedPlayer = -1;
         selectedEnemy = -1;
         selectedSpell = -1;
         updateTilesThisFrame = true;
+        battleState = BattleState.Player;
 
         //Checks if all players are done moving
         bool playersDone = true;
@@ -639,9 +662,9 @@ public class Battle : MonoBehaviour
         if (playersDone)
         {
             //Resets to start enemy moves
-            for (int j = 0; j < enemyList.Count; j++)
+            for (int j = 0; j < enemies.Count; j++)
             {
-                enemyList[j].moved = !enemyList[j].CanMove();
+                enemies[j].moved = !enemies[j].CanMove();
             }
             battleState = BattleState.Enemy;
         }
@@ -652,13 +675,16 @@ public class Battle : MonoBehaviour
     /// </summary>
     public void EndPlayerTurnEarly()
     {
-        moveMarker.SetActive(false);
-        canSwap = false;
-        foreach (Player p in players)
+        if (eventQueue.Count == 0)
         {
-            p.moved = true;
+            moveMarker.SetActive(false);
+            canSwap = false;
+            foreach (Player p in players)
+            {
+                p.moved = true;
+            }
+            FinishedMovingPawn();
         }
-        FinishedMovingPawn();
     }
 
     #endregion
@@ -693,8 +719,8 @@ public class Battle : MonoBehaviour
 
         List<EnemyMove> possibleMoves = new List<EnemyMove>();
         EnemyMove fallbackMove = new EnemyMove(0, 0, 100, 0);
-        List<Vector2Int> moveSpots = GetViableMovements(enemyList[ID]);
-        WeaponType weapon = Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[enemyList[ID].equippedWeapon.Name]).subType];
+        List<Vector2Int> moveSpots = GetViableMovements(enemies[ID]);
+        WeaponType weapon = Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[enemies[ID].equippedWeapon.Name]).subType];
         foreach (Vector2Int pos in moveSpots)
         {
             List<Vector2Int> attackSpots = GetViableAttackSpaces(weapon, new Vector2Int(pos.x, pos.y));
@@ -702,21 +728,21 @@ public class Battle : MonoBehaviour
             {
                 if (PlayerAtPos(aPos.x, aPos.y) != -1)
                 {
-                    possibleMoves.Add(new EnemyMove(pos.x, pos.y, aPos.x, aPos.y, 15 - (Mathf.Abs(pos.x - enemyList[ID].position.x) + Mathf.Abs(pos.y - enemyList[ID].position.y)), 1));
+                    possibleMoves.Add(new EnemyMove(pos.x, pos.y, aPos.x, aPos.y, 15 - (Mathf.Abs(pos.x - enemies[ID].position.x) + Mathf.Abs(pos.y - enemies[ID].position.y)), 1));
                 }
             }
             foreach (Player p in players)
             {
                 //If this move is the closest the enemy can get to a player, make it the move that happens if no attacks are possible
-                if (Mathf.Abs(p.position.x - pos.x) + Mathf.Abs(p.position.y - pos.y) < fallbackMove.priority)
+                if (Vector2Int.Distance(p.position, pos) < fallbackMove.priority)
                 {
-                    fallbackMove = new EnemyMove(pos.x, pos.y, Mathf.Abs(p.position.x - pos.x) + Mathf.Abs(p.position.y - pos.y), 0);
+                    fallbackMove = new EnemyMove(pos.x, pos.y, Vector2Int.Distance(p.position, pos), 0);
                 }
                 //If this move ties with the current fallback move for distance from a player, pick a random one
-                else if (Mathf.Abs(p.position.x - pos.x) + Mathf.Abs(p.position.y - pos.y) == fallbackMove.priority)
+                else if (Vector2Int.Distance(p.position, pos) == fallbackMove.priority)
                 {
                     if (Random.Range(0, 2) == 1)
-                        fallbackMove = new EnemyMove(pos.x, pos.y, Mathf.Abs(p.position.x - pos.x) + Mathf.Abs(p.position.y - pos.y), 0);
+                        fallbackMove = new EnemyMove(pos.x, pos.y, Vector2Int.Distance(p.position, pos), 0);
                 }
             }
         }
@@ -736,38 +762,58 @@ public class Battle : MonoBehaviour
         }
 
         //Sets up the animations for moving the enemy
-        Vector2Int diff = new Vector2Int(possibleMoves[0].movePosition.x - enemyList[ID].position.x, -(possibleMoves[0].movePosition.y - enemyList[ID].position.y));
+        Vector2Int diff = possibleMoves[0].movePosition - enemies[ID].position;
+        diff.y = -diff.y;
 
-        if (CanMoveYFirst(enemyList[ID], diff))
+        if (CanMoveYFirst(enemies[ID], diff))
         {
-            eventQueue.Insert(new TurnEvent(enemyList[ID], diff.y > 0 ? FacingDirection.North : FacingDirection.South));
-            for (int y = 0; y < Mathf.Abs(diff.y); y++)
+            if (diff.y != 0)
             {
-                eventQueue.Insert(new MovementEvent(participantModels[enemyList[ID]], 0.1f, participantModels[enemyList[ID]].transform.position + new Vector3(0, 0, y * Mathf.Sign(diff.y)), participantModels[enemyList[ID]].transform.position + new Vector3(0, 0, (y + 1) * Mathf.Sign(diff.y)), participantModels[enemyList[ID]].transform.rotation, participantModels[enemyList[ID]].transform.rotation, false));
+                FacingDirection direction = diff.y > 0 ? FacingDirection.North : FacingDirection.South;
+                Debug.Log("Inserting turn " + direction);
+                eventQueue.Insert(new TurnEvent(enemies[ID], direction));
+                for (int y = 0; y < Mathf.Abs(diff.y); y++)
+                {
+                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, participantModels[enemies[ID]].transform.position + new Vector3(0, 0, y * Mathf.Sign(diff.y)), participantModels[enemies[ID]].transform.position + new Vector3(0, 0, (y + 1) * Mathf.Sign(diff.y))));
+                }
             }
-            eventQueue.Insert(new TurnEvent(enemyList[ID], diff.x > 0 ? FacingDirection.East : FacingDirection.West));
-            for (int x = 0; x < Mathf.Abs(diff.x); x++)
+            if (diff.x != 0)
             {
-                eventQueue.Insert(new MovementEvent(participantModels[enemyList[ID]], 0.1f, participantModels[enemyList[ID]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0, diff.y), participantModels[enemyList[ID]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0, diff.y), participantModels[enemyList[ID]].transform.rotation, participantModels[enemyList[ID]].transform.rotation, false));
+                FacingDirection direction2 = diff.x > 0 ? FacingDirection.East : FacingDirection.West;
+                Debug.Log("Inserting turn " + direction2);
+                eventQueue.Insert(new TurnEvent(enemies[ID], direction2));
+                for (int x = 0; x < Mathf.Abs(diff.x); x++)
+                {
+                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, participantModels[enemies[ID]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0, diff.y), participantModels[enemies[ID]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0, diff.y)));
+                }
             }
         }
         else
         {
-            eventQueue.Insert(new TurnEvent(enemyList[ID], diff.x > 0 ? FacingDirection.East : FacingDirection.West));
-            for (int x = 0; x < Mathf.Abs(diff.x); x++)
+            if (diff.x != 0)
             {
-                eventQueue.Insert(new MovementEvent(participantModels[enemyList[ID]], 0.1f, participantModels[enemyList[ID]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0), participantModels[enemyList[ID]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0), participantModels[enemyList[ID]].transform.rotation, participantModels[enemyList[ID]].transform.rotation, false));
+                FacingDirection direction = diff.x > 0 ? FacingDirection.East : FacingDirection.West;
+                Debug.Log("OOPS");
+                eventQueue.Insert(new TurnEvent(enemies[ID], direction));
+                for (int x = 0; x < Mathf.Abs(diff.x); x++)
+                {
+                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, participantModels[enemies[ID]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0), participantModels[enemies[ID]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0)));
+                }
             }
-            eventQueue.Insert(new TurnEvent(enemyList[ID], diff.y > 0 ? FacingDirection.North : FacingDirection.South));
-            for (int y = 0; y < Mathf.Abs(diff.y); y++)
+            if (diff.y != 0)
             {
-                eventQueue.Insert(new MovementEvent(participantModels[enemyList[ID]], 0.1f, participantModels[enemyList[ID]].transform.position + new Vector3(diff.x, 0, y * Mathf.Sign(diff.y)), participantModels[enemyList[ID]].transform.position + new Vector3(diff.x, 0, (y + 1) * Mathf.Sign(diff.y)), participantModels[enemyList[ID]].transform.rotation, participantModels[enemyList[ID]].transform.rotation, false));
+                FacingDirection direction2 = diff.y > 0 ? FacingDirection.North : FacingDirection.South;
+                Debug.Log("OOPS");
+                eventQueue.Insert(new TurnEvent(enemies[ID], direction2));
+                for (int y = 0; y < Mathf.Abs(diff.y); y++)
+                {
+                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, participantModels[enemies[ID]].transform.position + new Vector3(diff.x, 0, y * Mathf.Sign(diff.y)), participantModels[enemies[ID]].transform.position + new Vector3(diff.x, 0, (y + 1) * Mathf.Sign(diff.y))));
+                }
             }
         }
-        enemyList[ID].position += new Vector2Int(diff.x, -diff.y);
-        enemyList[ID].moved = true;
+        enemies[ID].moved = true;
         if (possibleMoves[0].attackPosition.x != -1)
-            PerformAttack(enemyList[movingEnemy], players[PlayerAtPos(possibleMoves[0].attackPosition.x, possibleMoves[0].attackPosition.y)]);
+            eventQueue.Insert(new FunctionEvent<BattleParticipant, BattleParticipant>(PerformAttack, enemies[movingEnemy], players[PlayerAtPos(possibleMoves[0].attackPosition.x, possibleMoves[0].attackPosition.y)]));
         updateTilesThisFrame = true;
     }
 
@@ -782,22 +828,52 @@ public class Battle : MonoBehaviour
             if (p.cHealth > 0)
             {
                 p.EndOfTurn();
+
+                //Checks if any tile effects for ending a turn on a tile need to be done
+                TriggerTileEffects(p, MoveTriggers.EndOfTurn);
+
                 CheckEventTriggers(p, EffectTriggers.EndOfTurn);
-                p.StartOfTurn();
-                CheckEventTriggers(p, EffectTriggers.StartOfTurn);
-                p.moved = !p.CanMove();
             }
         }
-        foreach (Enemy e in enemyList)
+        foreach (Enemy e in enemies)
         {
             if (e.cHealth > 0)
             {
                 e.EndOfTurn();
+
+                //Checks if any tile effects for ending a turn on a tile need to be done
+                TriggerTileEffects(e, MoveTriggers.EndOfTurn);
+
                 CheckEventTriggers(e, EffectTriggers.EndOfTurn);
+            }
+        }
+        temporaryTileEffects.EndOfTurn();
+        foreach (Player p in players)
+        {
+            if (p.cHealth > 0)
+            {
+                p.StartOfTurn();
+
+                //Checks if any tile effects for ending a turn on a tile need to be done
+                TriggerTileEffects(p, MoveTriggers.StartOfTurn);
+
+                CheckEventTriggers(p, EffectTriggers.StartOfTurn);
+                p.moved = !p.CanMove();
+            }
+        }
+        foreach (Enemy e in enemies)
+        {
+            if (e.cHealth > 0)
+            {
                 e.StartOfTurn();
+
+                //Checks if any tile effects for ending a turn on a tile need to be done
+                TriggerTileEffects(e, MoveTriggers.StartOfTurn);
+
                 CheckEventTriggers(e, EffectTriggers.StartOfTurn);
             }
         }
+        temporaryTileEffects.StartOfTurn();
         movingEnemy = 0;
         turn++;
         battleState = BattleState.Player;
@@ -823,7 +899,7 @@ public class Battle : MonoBehaviour
         if (deadCount == players.Count)
             OnBattleEnd(false);
         deadCount = 0;
-        foreach (Enemy e in enemyList)
+        foreach (Enemy e in enemies)
         {
             if (e.cHealth <= 0)
             {
@@ -832,7 +908,7 @@ public class Battle : MonoBehaviour
                 e.position.Set(-200, -200);
             }
         }
-        if (deadCount == enemyList.Count)
+        if (deadCount == enemies.Count)
             OnBattleEnd(true);
     }
 
@@ -842,34 +918,21 @@ public class Battle : MonoBehaviour
     /// <param name="attacker">The pawn doing the attacking</param>
     /// <param name="target">The pawn getting attacked</param>
     /// <returns>The first value is the amount of damage, the second is the damage type and whether or not the weapon is ranged</returns>
-    public Triple<int, DamageType, bool> GetDamageValues(BattleParticipant attacker, BattleParticipant target)
+    public Pair<int, DamageType> GetDamageValues(BattleParticipant attacker, BattleParticipant target)
     {
         //Gets the distance between the player and enemy
-        int dist = Mathf.Abs(target.position.x - attacker.position.x);
-        if (Mathf.Abs(target.position.y - attacker.position.y) > dist)
-            dist = Mathf.Abs(target.position.y - attacker.position.y);
+        Vector2Int dist = target.position - attacker.position;
 
-        DamageType type = ((EquippableBase)Registry.ItemRegistry[attacker.equippedWeapon.Name]).statType;
-        float mod = 1.0f;
-        bool ranged = Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[attacker.equippedWeapon.Name]).subType].ranged;
-        foreach (RangeDependentAttack r in Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[attacker.equippedWeapon.Name]).subType].specialRanges)
-        {
-            if (r.atDistance == dist)
-            {
-                type = r.damageType;
-                mod = r.damageMult;
-                ranged = r.ranged;
-                break;
-            }
-        }
+        WeaponStatsAtRange stats = attacker.GetWeaponStatsAtDistance(dist);
 
-        //Checks for a critical hit, which multiplies damage by 1.5
-        mod *= Random.Range(0, 100) < attacker.critChance + ((EquippableBase)Registry.ItemRegistry[attacker.equippedWeapon.Name]).critChanceMod ? 1.5f : 1.0f;
+        //Checks for a critical hit, which multiplies damage by 1.5 and checks the basic attack modifiers on the pawns
+        float mod = stats.damageMult * (Random.Range(0, 100) < attacker.GetEffectiveStat(Stats.CritChance) ? 1.5f : 1.0f) *
+            (attacker.GetEffectiveStat(Stats.BasicAttackEffectiveness) / 100.0f) * (target.GetEffectiveStat(Stats.BasicAttackReceptiveness) / 100.0f);
 
-        if (type == DamageType.Physical)
-            return new Triple<int, DamageType, bool>(Mathf.RoundToInt((attacker.GetEffectiveAtk(dist) * mod * 3.0f) / target.GetEffectiveDef(dist)), type, ranged);
+        if (stats.damageType == DamageType.Physical)
+            return new Pair<int, DamageType>(Mathf.RoundToInt((attacker.GetEffectiveStat(Stats.Attack) * 3.0f * mod) / target.GetEffectiveStat(Stats.Defense)), stats.damageType);
         else
-            return new Triple<int, DamageType, bool>(Mathf.RoundToInt((attacker.GetEffectiveMAtk(dist) * mod * 3.0f) / target.GetEffectiveMDef(dist)), type, ranged);
+            return new Pair<int, DamageType>(Mathf.RoundToInt((attacker.GetEffectiveStat(Stats.MagicAttack) * mod * 3.0f) / target.GetEffectiveStat(Stats.MagicDefense)), stats.damageType);
     }
 
     /// <summary>
@@ -879,25 +942,48 @@ public class Battle : MonoBehaviour
     /// <param name="defender">The pawn that is initially defending</param>
     public void PerformAttack(BattleParticipant attacker, BattleParticipant defender)
     {
-        Triple<int, DamageType, bool> attackData = GetDamageValues(attacker, defender);
-        int damage = defender.Damage(Mathf.RoundToInt(attackData.First));
+        Pair<int, DamageType> attackData = GetDamageValues(attacker, defender);
+
+        eventQueue.Insert(new TextEvent(attacker.name + " attacks " + defender.name + "!"));
+        int damage = defender.GetDamage(attackData.First);
         CheckEventTriggers(attacker, EffectTriggers.BasicAttack, defender, damage);
         CheckEventTriggers(defender, EffectTriggers.HitWithBasicAttack, attacker, damage);
 
         eventQueue.Insert(new ExecuteEffectEvent(new DamagePart(TargettingType.Enemy, attackData.Second, 0, attackData.First, 0, 0), attacker, defender));
 
-        //If the defender lives
-        if (defender.cHealth > 0)
+        //Lifesteal on basic attack hit
+        if (damage > 0 && attacker.GetEffectiveStat(Stats.BasicAttackLifesteal) > 0)
         {
-            Triple<int, DamageType, bool> counterattackData = GetDamageValues(defender, attacker);
-            //If the two weapons are both melee or both ranged there can be a counterattack
-            if (attackData.Third == counterattackData.Third)
-            {
-                damage = attacker.Damage(Mathf.RoundToInt(counterattackData.First));
-                CheckEventTriggers(defender, EffectTriggers.BasicAttack, attacker, damage);
-                CheckEventTriggers(attacker, EffectTriggers.HitWithBasicAttack, defender, damage);
+            eventQueue.Insert(new TextEvent(attacker.name + " lifesteals from the blow."));
+            eventQueue.Insert(new ExecuteEffectEvent(new HealingPart(TargettingType.Self, 0, Mathf.RoundToInt(damage * attacker.GetEffectiveStat(Stats.BasicAttackLifesteal) / 100.0f), 0), attacker, attacker));
+        }
+        
+        eventQueue.Insert(new FunctionEvent<BattleParticipant, BattleParticipant>(PerformCounterattack, defender, attacker));
+    }
 
-                eventQueue.Insert(new ExecuteEffectEvent(new DamagePart(TargettingType.Enemy, counterattackData.Second, 0, counterattackData.First, 0, 0), defender, attacker));
+    /// <summary>
+    /// Performs a counterattack if one can be performed
+    /// </summary>
+    /// <param name="attacker">The counterattacker, aka the one who was hit by the initial attack</param>
+    /// <param name="defender">The former attacker</param>
+    public void PerformCounterattack(BattleParticipant attacker, BattleParticipant defender)
+    {
+        //If the defender lives and can attack back at that range
+        if (attacker.cHealth > 0 && defender.cHealth > 0 && attacker.GetWeaponStatsAtDistance(attacker.position - defender.position) != null)
+        {
+            eventQueue.Insert(new TextEvent(attacker.name + " returns the favor!"));
+            Pair<int, DamageType> attackData = GetDamageValues(attacker, defender);
+            int damage = defender.GetDamage(Mathf.RoundToInt(attackData.First));
+            CheckEventTriggers(attacker, EffectTriggers.BasicAttack, defender, damage);
+            CheckEventTriggers(defender, EffectTriggers.HitWithBasicAttack, attacker, damage);
+
+            eventQueue.Insert(new ExecuteEffectEvent(new DamagePart(TargettingType.Enemy, attackData.Second, 0, attackData.First, 0, 0), attacker, defender));
+
+            //Lifesteal on basic attack hit
+            if (damage > 0 && attacker.GetEffectiveStat(Stats.BasicAttackLifesteal) > 0)
+            {
+                eventQueue.Insert(new TextEvent(attacker.name + " lifesteals from the blow."));
+                eventQueue.Insert(new ExecuteEffectEvent(new HealingPart(TargettingType.Self, 0, Mathf.RoundToInt(damage * attacker.GetEffectiveStat(Stats.BasicAttackLifesteal) / 100.0f), 0), attacker, attacker));
             }
         }
     }
@@ -920,9 +1006,9 @@ public class Battle : MonoBehaviour
     /// </summary>
     private int EnemyAtPos(int x, int y)
     {
-        for (int e = 0; e < enemyList.Count; e++)
+        for (int e = 0; e < enemies.Count; e++)
         {
-            if (enemyList[e].position.x == x && enemyList[e].position.y == y)
+            if (enemies[e].position.x == x && enemies[e].position.y == y)
                 return e;
         }
         return -1;
@@ -1007,6 +1093,7 @@ public class Battle : MonoBehaviour
                 }
             }
         }
+
         //Renders where a valid attack spot would be for a player after they move
         else if (battleState == BattleState.Attack)
         {
@@ -1015,22 +1102,41 @@ public class Battle : MonoBehaviour
             List<Vector2Int> attackSpots = GetViableAttackSpaces(weapon, players[selectedPlayer].position);
             foreach (Vector2Int attackPos in attackSpots)
             {
-                if ((EnemyAtPos(attackPos.x, attackPos.y) == -1 || ((EquippableBase)Registry.ItemRegistry[players[selectedPlayer].equippedWeapon.Name]).strength == 0) && (PlayerAtPos(attackPos.x, attackPos.y) == -1 || !weapon.heals))
+                //If the player can attack an enemy or heal an ally at that position
+                if (EnemyAtPos(attackPos.x, attackPos.y) != -1 || (PlayerAtPos(attackPos.x, attackPos.y) != -1 && weapon.GetStatsAtRange(attackPos - players[selectedPlayer].position).heals))
                     tileList[attackPos.x, (mapSizeY - 1) - attackPos.y].GetComponent<BattleTile>().playerAttackRange = true;
             }
         }
+
         //Renders the possible movements for a given player-controlled pawn
-        else if (battleState == BattleState.Player && selectedPlayer != -1)
+        else if (battleState == BattleState.Player)
         {
-            List<Vector2Int> moveSpots = GetViableMovements(players[selectedPlayer]);
-            WeaponType weapon = Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[players[selectedPlayer].equippedWeapon.Name]).subType];
-            foreach (Vector2Int pos in moveSpots)
+            if (selectedPlayer != -1)
             {
-                tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerMoveRange = true;
-                List<Vector2Int> attackSpots = GetViableAttackSpaces(weapon, pos);
-                foreach (Vector2Int attackPos in attackSpots)
+                List<Vector2Int> moveSpots = GetViableMovements(players[selectedPlayer]);
+                WeaponType weapon = Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[players[selectedPlayer].equippedWeapon.Name]).subType];
+                foreach (Vector2Int pos in moveSpots)
                 {
-                    tileList[attackPos.x, (mapSizeY - 1) - attackPos.y].GetComponent<BattleTile>().playerAttackRange = true;
+                    tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerMoveRange = true;
+                    List<Vector2Int> attackSpots = GetViableAttackSpaces(weapon, pos);
+                    foreach (Vector2Int attackPos in attackSpots)
+                    {
+                        tileList[attackPos.x, (mapSizeY - 1) - attackPos.y].GetComponent<BattleTile>().playerAttackRange = true;
+                    }
+                }
+            }
+            //If there is a selected enemy but no selected player, render the enemy's ranges
+            else if(selectedEnemy != -1)
+            {
+                List<Vector2Int> moveSpots = GetViableMovements(enemies[selectedEnemy]);
+                foreach (Vector2Int pos in moveSpots)
+                {
+                    tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().enemyDanger = true;
+                    List<Vector2Int> attackSpots = GetViableAttackSpaces(Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[enemies[selectedEnemy].equippedWeapon.Name]).subType], pos);
+                    foreach (Vector2Int attackPos in attackSpots)
+                    {
+                        tileList[attackPos.x, (mapSizeY - 1) - attackPos.y].GetComponent<BattleTile>().enemyDanger = true;
+                    }
                 }
             }
         }
@@ -1038,14 +1144,13 @@ public class Battle : MonoBehaviour
         //Renders the movement and attack ranges of enemies if requested
         if (showDanger)
         {
-            foreach (Enemy e in enemyList)
+            foreach (Enemy e in enemies)
             {
                 List<Vector2Int> moveSpots = GetViableMovements(e);
-                WeaponType weapon = Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[e.equippedWeapon.Name]).subType];
                 foreach (Vector2Int pos in moveSpots)
                 {
                     tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().enemyDanger = true;
-                    List<Vector2Int> attackSpots = GetViableAttackSpaces(weapon, pos);
+                    List<Vector2Int> attackSpots = GetViableAttackSpaces(Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[e.equippedWeapon.Name]).subType], pos);
                     foreach (Vector2Int attackPos in attackSpots)
                     {
                         tileList[attackPos.x, (mapSizeY - 1) - attackPos.y].GetComponent<BattleTile>().enemyDanger = true;
@@ -1062,6 +1167,7 @@ public class Battle : MonoBehaviour
                 tileList[x, y].GetComponent<BattleTile>().UpdateColors();
             }
         }
+        updateTilesThisFrame = false;
     }
 
     /// <summary>
@@ -1090,6 +1196,31 @@ public class Battle : MonoBehaviour
     }
 
     /// <summary>
+    /// Returns whether or not the path a pawn can take to a given position can be horizontal first
+    /// </summary>
+    /// <param name="mover">The pawn that is moving</param>
+    /// <param name="relativeMove">The position they want to move to relative to their current position</param>
+    private bool CanMoveXFirst(BattleParticipant mover, Vector2Int relativeMove)
+    {
+        for (int x = 0; x <= Mathf.Abs(relativeMove.x); x++)
+        {
+            if (!mover.ValidMoveTile(battleMap[mover.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.position.y]))
+                return false;
+            if ((mover is Player ? EnemyAtPos(mover.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.position.y) : PlayerAtPos(mover.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.position.y)) != -1)
+                return false;
+        }
+
+        for (int y = 0; y <= Mathf.Abs(relativeMove.y); y++)
+        {
+            if (!mover.ValidMoveTile(battleMap[mover.position.x + relativeMove.x, mover.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y))]))
+                return false;
+            if ((mover is Player ? EnemyAtPos(mover.position.x + relativeMove.x, mover.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y))) : PlayerAtPos(mover.position.x + relativeMove.x, mover.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y)))) != -1)
+                return false;
+        }
+        return true;
+    }
+
+    /// <summary>
     /// Gets all of the places a given pawn can move to
     /// </summary>
     /// <param name="entity">The entity moving</param>
@@ -1098,7 +1229,7 @@ public class Battle : MonoBehaviour
     {
         List<Vector2Int> moveSpots = new List<Vector2Int>();
         bool isPlayer = entity is Player;
-        int maxMove = entity.GetMoveSpeed();
+        int maxMove = entity.GetEffectiveStat(Stats.MaxMove);
         for (int x = -maxMove; x <= maxMove; x++)
         {
             for (int y = -maxMove; y <= maxMove; y++)
@@ -1117,66 +1248,8 @@ public class Battle : MonoBehaviour
                     if (EnemyAtPos(x + entity.position.x, y + entity.position.y) != -1)
                         continue;
 
-                    bool goodTile = true;
-                    //If it passes all of the preliminary tests
-                    if (goodTile)
-                    {
-                        //Check every tile along the path, starting by moving vertically
-                        for (int cY = 1; cY <= Mathf.Abs(y); cY++)
-                        {
-                            if (!entity.ValidMoveTile(battleMap[entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y]))
-                                goodTile = false;
-                            //Checks if a member of the opposing team is in the way
-                            if (isPlayer ? EnemyAtPos(entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y) != -1 : PlayerAtPos(entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y) != -1)
-                                goodTile = false;
-                        }
-                        //If all tiles along the vertical path pass the test, check horizontal from the end of that path
-                        if (goodTile)
-                        {
-                            for (int cX = 1; cX <= Mathf.Abs(x); cX++)
-                            {
-                                if (!entity.ValidMoveTile(battleMap[cX * Mathf.RoundToInt(Mathf.Sign(x)) + entity.position.x, y + entity.position.y]))
-                                    goodTile = false;
-                                //Checks if a member of the opposing team is in the way
-                                if (isPlayer ? EnemyAtPos(cX * Mathf.RoundToInt(Mathf.Sign(x)) + entity.position.x, y + entity.position.y) != -1 : PlayerAtPos(cX * Mathf.RoundToInt(Mathf.Sign(x)) + entity.position.x, y + entity.position.y) != -1)
-                                    goodTile = false;
-                            }
-                            //If it passes the y-first set of tests, mark it as a valid move tile
-                            if (goodTile)
-                            {
-                                moveSpots.Add(new Vector2Int(x + entity.position.x, y + entity.position.y));
-                                continue;
-                            }
-                        }
-                        //if invalid by y, x, check x, y
-                        goodTile = true;
-                        //Check every tile along the path, starting by moving horizontally
-                        for (int cX = 1; cX <= Mathf.Abs(x); cX++)
-                        {
-                            if (!entity.ValidMoveTile(battleMap[cX * Mathf.RoundToInt(Mathf.Sign(x)) + entity.position.x, entity.position.y]))
-                                goodTile = false;
-                            //Checks if a member of the opposing team is in the way
-                            if (isPlayer ? EnemyAtPos(cX * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.x, entity.position.y) != -1 : PlayerAtPos(cX * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.x, entity.position.y) != -1)
-                                goodTile = false;
-                        }
-                        //If all tiles along the horizontal path pass the test, check vertical from the end of that path
-                        if (goodTile)
-                        {
-                            for (int cY = 1; cY <= Mathf.Abs(y); cY++)
-                            {
-                                if (!entity.ValidMoveTile(battleMap[x + entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y]))
-                                    goodTile = false;
-                                //Checks if a member of the opposing team is in the way
-                                if (isPlayer ? EnemyAtPos(x + entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y) != -1 : PlayerAtPos(x + entity.position.x, cY * Mathf.RoundToInt(Mathf.Sign(y)) + entity.position.y) != -1)
-                                    goodTile = false;
-                            }
-                            //If it passes the x-first set of tests, mark it as a valid move tile
-                            if (goodTile)
-                            {
-                                moveSpots.Add(new Vector2Int(x + entity.position.x, y + entity.position.y));
-                            }
-                        }
-                    }
+                    if (CanMoveYFirst(entity, new Vector2Int(x, y)) || CanMoveXFirst(entity, new Vector2Int(x, y)))
+                        moveSpots.Add(new Vector2Int(x + entity.position.x, y + entity.position.y));
                 }
             }
         }
@@ -1189,57 +1262,73 @@ public class Battle : MonoBehaviour
     private List<Vector2Int> GetViableAttackSpaces(WeaponType weapon, Vector2Int center)
     {
         List<Vector2Int> attackSpots = new List<Vector2Int>();
-        for (int i = 1; i <= weapon.range; i++)
+        //Gets all of the straight viable attack position
+        foreach (WeaponStatsAtRange statsAtRange in weapon.ranges)
         {
-            //If the weapon is melee and the space is not directly next to the attacker there needs to be a clear line to it
-            if (!weapon.ranged && i > 1)
+            if (!statsAtRange.ranged && statsAtRange.atDistance > 1)
             {
-                if (center.x + weapon.sRange + i < mapSizeX && battleMap[center.x + weapon.sRange + i, (mapSizeY - 1) - center.y] != 6 && attackSpots.Contains(new Vector2Int(center.x + weapon.sRange + i - 1, center.y)))
-                    attackSpots.Add(new Vector2Int(center.x + weapon.sRange + i, center.y));
+                if (center.x + statsAtRange.atDistance < mapSizeX && battleMap[center.x + statsAtRange.atDistance, (mapSizeY - 1) - center.y] != (int)BattleTiles.Impassable && attackSpots.Contains(new Vector2Int(center.x + statsAtRange.atDistance - 1, center.y)))
+                    attackSpots.Add(new Vector2Int(center.x + statsAtRange.atDistance, center.y));
 
-                if (center.x - weapon.sRange - i >= 0 && battleMap[center.x - weapon.sRange - i, (mapSizeY - 1) - center.y] != 6 && attackSpots.Contains(new Vector2Int(center.x - weapon.sRange - i + 1, center.y)))
-                    attackSpots.Add(new Vector2Int(center.x - weapon.sRange - i, center.y));
+                if (center.x - statsAtRange.atDistance >= 0 && battleMap[center.x - statsAtRange.atDistance, (mapSizeY - 1) - center.y] != (int)BattleTiles.Impassable && attackSpots.Contains(new Vector2Int(center.x - statsAtRange.atDistance + 1, center.y)))
+                    attackSpots.Add(new Vector2Int(center.x - statsAtRange.atDistance, center.y));
 
-                if (center.y + weapon.sRange + i < mapSizeY && battleMap[center.x, (mapSizeY - 1) - (center.y + weapon.sRange + i)] != 6 && attackSpots.Contains(new Vector2Int(center.x, center.y + weapon.sRange + i - 1)))
-                    attackSpots.Add(new Vector2Int(center.x, center.y + weapon.sRange + i));
+                if (center.y + statsAtRange.atDistance < mapSizeY && battleMap[center.x, (mapSizeY - 1) - (center.y + statsAtRange.atDistance)] != (int)BattleTiles.Impassable && attackSpots.Contains(new Vector2Int(center.x, center.y + statsAtRange.atDistance - 1)))
+                    attackSpots.Add(new Vector2Int(center.x, center.y + statsAtRange.atDistance));
 
-                if (center.y - weapon.sRange - i >= 0 && battleMap[center.x, (mapSizeY - 1) - (center.y - weapon.sRange - i)] != 6 && attackSpots.Contains(new Vector2Int(center.x, center.y - weapon.sRange - i + 1)))
-                    attackSpots.Add(new Vector2Int(center.x, center.y - weapon.sRange - i));
+                if (center.y - statsAtRange.atDistance >= 0 && battleMap[center.x, (mapSizeY - 1) - (center.y - statsAtRange.atDistance)] != (int)BattleTiles.Impassable && attackSpots.Contains(new Vector2Int(center.x, center.y - statsAtRange.atDistance + 1)))
+                    attackSpots.Add(new Vector2Int(center.x, center.y - statsAtRange.atDistance));
             }
             //If the weapon is ranged or the space is right against the attacker it just needs to be a place entities can exist
             else
             {
-                if (center.x + weapon.sRange + i < mapSizeX && battleMap[center.x + weapon.sRange + i, (mapSizeY - 1) - center.y] != 6)
-                    attackSpots.Add(new Vector2Int(center.x + weapon.sRange + i, center.y));
-                if (center.x - weapon.sRange - i >= 0 && battleMap[center.x - weapon.sRange - i, (mapSizeY - 1) - center.y] != 6)
-                    attackSpots.Add(new Vector2Int(center.x - weapon.sRange - i, center.y));
-                if (center.y + weapon.sRange + i < mapSizeY && battleMap[center.x, (mapSizeY - 1) - (center.y + weapon.sRange + i)] != 6)
-                    attackSpots.Add(new Vector2Int(center.x, center.y + weapon.sRange + i));
-                if (center.y - weapon.sRange - i >= 0 && battleMap[center.x, (mapSizeY - 1) - (center.y - weapon.sRange - i)] != 6)
-                    attackSpots.Add(new Vector2Int(center.x, center.y - weapon.sRange - i));
+                if (center.x + statsAtRange.atDistance < mapSizeX && battleMap[center.x + statsAtRange.atDistance, (mapSizeY - 1) - center.y] != (int)BattleTiles.Impassable)
+                    attackSpots.Add(new Vector2Int(center.x + statsAtRange.atDistance, center.y));
+                if (center.x - statsAtRange.atDistance >= 0 && battleMap[center.x - statsAtRange.atDistance, (mapSizeY - 1) - center.y] != (int)BattleTiles.Impassable)
+                    attackSpots.Add(new Vector2Int(center.x - statsAtRange.atDistance, center.y));
+                if (center.y + statsAtRange.atDistance < mapSizeY && battleMap[center.x, (mapSizeY - 1) - (center.y + statsAtRange.atDistance)] != (int)BattleTiles.Impassable)
+                    attackSpots.Add(new Vector2Int(center.x, center.y + statsAtRange.atDistance));
+                if (center.y - statsAtRange.atDistance >= 0 && battleMap[center.x, (mapSizeY - 1) - (center.y - statsAtRange.atDistance)] != (int)BattleTiles.Impassable)
+                    attackSpots.Add(new Vector2Int(center.x, center.y - statsAtRange.atDistance));
             }
         }
-        //Checks the diagonal attack spaces if there are any
-        for (int i = 1; i <= weapon.diagCut; i++)
+        //Gets all of the diagonal viable attack position
+        foreach (WeaponStatsAtRange statsAtRange in weapon.diagonalRanges)
         {
-            if (center.y + i < mapSizeY)
+            if (center.y + statsAtRange.atDistance < mapSizeY)
             {
-                if (center.x - i >= 0 && battleMap[center.x - i, (mapSizeY - 1) - (center.y + 1)] != 6)
-                    attackSpots.Add(new Vector2Int(center.x - i, center.y + i));
-
-                if (center.x + i < mapSizeX && battleMap[center.x + i, (mapSizeY - 1) - (center.y + 1)] != 6)
-                    attackSpots.Add(new Vector2Int(center.x + i, center.y + i));
+                if (center.x - statsAtRange.atDistance >= 0 && battleMap[center.x - statsAtRange.atDistance, (mapSizeY - 1) - (center.y + statsAtRange.atDistance)] != (int)BattleTiles.Impassable)
+                    attackSpots.Add(new Vector2Int(center.x - statsAtRange.atDistance, center.y + statsAtRange.atDistance));
+                if (center.x + statsAtRange.atDistance < mapSizeX && battleMap[center.x + statsAtRange.atDistance, (mapSizeY - 1) - (center.y + statsAtRange.atDistance)] != (int)BattleTiles.Impassable)
+                    attackSpots.Add(new Vector2Int(center.x + statsAtRange.atDistance, center.y + statsAtRange.atDistance));
             }
-            if (center.y - i >= 0)
+            if (center.y - statsAtRange.atDistance >= 0)
             {
-                if (center.x - i >= 0 && battleMap[center.x - i, (mapSizeY - 1) - (center.y - 1)] != 6)
-                    attackSpots.Add(new Vector2Int(center.x - i, center.y - i));
-
-                if (center.x + i < mapSizeX && battleMap[center.x + i, (mapSizeY - 1) - (center.y - 1)] != 6)
-                    attackSpots.Add(new Vector2Int(center.x + i, center.y - i));
+                if (center.x - statsAtRange.atDistance >= 0 && battleMap[center.x - statsAtRange.atDistance, (mapSizeY - 1) - (center.y - statsAtRange.atDistance)] != (int)BattleTiles.Impassable)
+                    attackSpots.Add(new Vector2Int(center.x - statsAtRange.atDistance, center.y - statsAtRange.atDistance));
+                if (center.x + statsAtRange.atDistance < mapSizeX && battleMap[center.x + statsAtRange.atDistance, (mapSizeY - 1) - (center.y - statsAtRange.atDistance)] != (int)BattleTiles.Impassable)
+                    attackSpots.Add(new Vector2Int(center.x + statsAtRange.atDistance, center.y - statsAtRange.atDistance));
             }
         }
         return attackSpots;
+    }
+
+    /// <summary>
+    /// Activates all the triggers on a pawn from the tile they're on
+    /// </summary>
+    /// <param name="pawn">What pawn is on this tile</param>
+    /// <param name="trigger">The type of effects to trigger</param>
+    private void TriggerTileEffects(BattleParticipant pawn, MoveTriggers trigger)
+    {
+        List<TileEffects> effects = new List<TileEffects>();
+        if (Registry.DefaultTileEffects.ContainsKey(battleMap[pawn.position.x, pawn.position.y]) && Registry.DefaultTileEffects[battleMap[pawn.position.x, pawn.position.y]].Contains(trigger))
+            effects.Add(Registry.DefaultTileEffects[battleMap[pawn.position.x, pawn.position.y]]);
+        effects.AddRange(temporaryTileEffects.GetTileEffects(pawn.position, trigger));
+        foreach (TileEffects effect in effects)
+        {
+            effect.effects[trigger].target = pawn;
+            eventQueue.Insert(effect.effects[trigger]);
+        }
     }
 
     /// <summary>
@@ -1268,7 +1357,7 @@ public class Battle : MonoBehaviour
             }
             else if (!isPlayer && (effect.targetType == TargettingType.AllAlliesNotSelf || effect.targetType == TargettingType.AllAllies) || isPlayer && effect.targetType == TargettingType.AllEnemies)
             {
-                foreach (Enemy enemy in enemyList)
+                foreach (Enemy enemy in enemies)
                 {
                     if (enemy != triggered && enemy.cHealth > 0)
                         eventQueue.Insert(new ExecuteEffectEvent(effect, triggered, enemy, false, data));
@@ -1292,21 +1381,29 @@ public class Battle : MonoBehaviour
     public void ExecuteEffect(SkillPartBase effect, BattleParticipant caster, BattleParticipant target, bool fromSpell = false, int valueFromPrevious = -1)
     {
         //If it passes its chance to proc
-        if (Random.Range(0, 101) <= effect.chanceToProc)
+        if (target != null && Random.Range(0, 101) <= effect.chanceToProc)
         {
             //Flat damage, then calculated damage, then remaining hp, then max hp
             if (effect is DamagePart)
             {
                 DamagePart trueEffect = effect as DamagePart;
                 int previousHealth = target.cHealth;
-                //If this is supposed to be modified by a previous value, do so. Otherwise, don't
-                float previousValueMod = trueEffect.modifiedByValue != 0 ? trueEffect.modifiedByValue * valueFromPrevious : 1;
-                int damage = target.Damage(Mathf.RoundToInt(trueEffect.flatDamage * previousValueMod));
-                damage += target.Damage(Mathf.RoundToInt((trueEffect.damage * previousValueMod * (trueEffect.damageType == DamageType.Physical ? caster.GetEffectiveAtk() : caster.GetEffectiveMAtk()) * 3.0f) / (trueEffect.damageType == DamageType.Physical ? caster.GetEffectiveDef() : caster.GetEffectiveMDef())));
-                damage += target.Damage((int)(target.cHealth * trueEffect.remainingHpPercent * previousValueMod / 100.0f));
-                damage += target.Damage((int)(target.mHealth * trueEffect.maxHpPercent * previousValueMod / 100.0f));
+                //If this is supposed to be modified by a previous value, do so.
+                float mod = trueEffect.modifiedByValue != 0 ? trueEffect.modifiedByValue * valueFromPrevious : 1;
+                //Takes into account the appropriate player stats
+                if (fromSpell)
+                {
+                    mod *= (caster.GetEffectiveStat(Stats.SpellDamageEffectiveness) / 100.0f) * (target.GetEffectiveStat(Stats.SpellDamageReceptiveness) / 100.0f);
+                }
+                int damage = target.Damage(Mathf.RoundToInt(trueEffect.flatDamage * mod));
+                damage += target.Damage(Mathf.RoundToInt((trueEffect.damage * mod *
+                    (trueEffect.damageType == DamageType.Physical ? caster.GetEffectiveStat(Stats.Attack) : caster.GetEffectiveStat(Stats.MagicAttack)) * 3.0f) /
+                    (trueEffect.damageType == DamageType.Physical ? caster.GetEffectiveStat(Stats.Defense) : caster.GetEffectiveStat(Stats.MagicDefense))));
+                damage += target.Damage((int)(target.cHealth * trueEffect.remainingHpPercent * mod / 100.0f));
+                damage += target.Damage((int)(target.GetEffectiveStat(Stats.MaxHealth) * trueEffect.maxHpPercent * mod / 100.0f));
+                eventQueue.Insert(new TextEvent(target.name + " takes " + damage + " damage!"));
                 //Keeps effects from stacking on top of each other by a looped damage call
-                if (trueEffect.modifiedByValue == 0)
+                if (trueEffect.modifiedByValue == 0 && damage > 0)
                 {
                     CheckEventTriggers(caster, EffectTriggers.DealDamage, target, damage);
                     CheckEventTriggers(target, EffectTriggers.TakeDamage, caster, damage);
@@ -1323,25 +1420,24 @@ public class Battle : MonoBehaviour
                         CheckEventTriggers(caster, EffectTriggers.DealMagicDamage, target, damage);
                         CheckEventTriggers(target, EffectTriggers.TakeMagicDamage, caster, damage);
                     }
+                    if (fromSpell && caster.GetEffectiveStat(Stats.SpellLifesteal) > 0)
+                        eventQueue.Insert(new ExecuteEffectEvent(new HealingPart(TargettingType.Self, 0, Mathf.RoundToInt(damage * caster.GetEffectiveStat(Stats.SpellLifesteal) / 100.0f), 0), caster, caster));
                 }
 
                 //If this causes them to fall below 50% health
-                if (previousHealth >= target.mHealth / 2.0 && target.cHealth < target.mHealth / 2.0)
+                if (previousHealth >= target.GetEffectiveStat(Stats.MaxHealth) / 2.0 && target.cHealth < target.GetEffectiveStat(Stats.MaxHealth) / 2.0)
                     CheckEventTriggers(target, EffectTriggers.FallBelow50Percent, caster);
                 //If this causes them to fall below 50% health
-                if (previousHealth >= target.mHealth / 4.0 && target.cHealth < target.mHealth / 4.0)
+                if (previousHealth >= target.GetEffectiveStat(Stats.MaxHealth) / 4.0 && target.cHealth < target.GetEffectiveStat(Stats.MaxHealth) / 4.0)
                     CheckEventTriggers(target, EffectTriggers.FallBelow25Percent, caster);
-                //If anyone dies
-                if (target.cHealth <= 0 || caster.cHealth <= 0)
+                //If the target dies
+                if (target.cHealth <= 0)
                 {
                     CheckEventTriggers(target, EffectTriggers.Die);
-                    //If anyone is still dead
-                    if (target.cHealth <= 0 || caster.cHealth <= 0)
-                    {
-                        CheckEventTriggers(target, EffectTriggers.KillAnEnemy);
-                        eventQueue.Insert(new FunctionEvent(delegate { CheckForDeath(); }));
-                    }
+                    CheckEventTriggers(caster, EffectTriggers.KillAnEnemy);
                 }
+
+                eventQueue.Insert(new FunctionEvent(delegate { CheckForDeath(); }));
             }
 
             //Flat healing, then calculated healing, then max hp
@@ -1349,12 +1445,15 @@ public class Battle : MonoBehaviour
             {
                 HealingPart trueEffect = effect as HealingPart;
                 //If this is supposed to be modified by a previous value, do so. Otherwise, don't
-                float previousValueMod = trueEffect.modifiedByValue != 0 ? trueEffect.modifiedByValue * valueFromPrevious : 1;
-                int healing = target.Heal(Mathf.RoundToInt(trueEffect.flatHealing * previousValueMod));
-                healing += target.Heal(Mathf.RoundToInt((trueEffect.healing * previousValueMod * caster.GetEffectiveMAtk() * 3.0f) / target.GetEffectiveDef()));
-                healing += target.Heal((int)(target.mHealth * trueEffect.maxHpPercent * previousValueMod / 100.0f));
+                float mod = (trueEffect.modifiedByValue != 0 ? trueEffect.modifiedByValue * valueFromPrevious : 1)
+                    * (caster != null ? (caster.GetEffectiveStat(Stats.HealingEffectiveness) / 100.0f) : 1) * (target.GetEffectiveStat(Stats.HealingReceptiveness) / 100.0f);
+
+                int healing = target.Heal(Mathf.RoundToInt(trueEffect.flatHealing * mod));
+                healing += target.Heal(Mathf.RoundToInt((trueEffect.healing * mod * caster.GetEffectiveStat(Stats.MagicAttack) * 3.0f) / target.GetEffectiveStat(Stats.Defense)));
+                healing += target.Heal((int)(target.GetEffectiveStat(Stats.MaxHealth) * trueEffect.maxHpPercent * mod / 100.0f));
+                eventQueue.Insert(new TextEvent(target.name + " heals for " + healing + " health!"));
                 //Keeps effects from stacking on top of each other by a looped healing call
-                if (trueEffect.modifiedByValue == 0)
+                if (trueEffect.modifiedByValue == 0 && healing > 0)
                 {
                     CheckEventTriggers(caster, EffectTriggers.Healing, target, healing);
                     CheckEventTriggers(target, EffectTriggers.GettingHealed, caster, healing);
@@ -1375,16 +1474,22 @@ public class Battle : MonoBehaviour
             {
                 StatusEffectPart trueEffect = effect as StatusEffectPart;
                 if (trueEffect.remove)
+                {
+                    eventQueue.Insert(new TextEvent(target.name + " is cleansed of " + trueEffect.status + "!"));
                     target.RemoveStatusEffect(trueEffect.status);
+                }
                 else
+                {
+                    eventQueue.Insert(new TextEvent(target.name + " in afflicted with " + trueEffect.status + "!"));
                     target.AddStatusEffect(trueEffect.status);
+                }
             }
 
             //Adds a temporary trigger to the target
             else if (effect is AddTriggerPart)
             {
                 AddTriggerPart trueEffect = effect as AddTriggerPart;
-                target.AddTemporaryTrigger(trueEffect.effect, trueEffect.turnLimit);
+                target.AddTemporaryTrigger(trueEffect.effect, trueEffect.maxTimesThisBattle, trueEffect.turnCooldown, trueEffect.maxActiveTurns);
             }
 
             //Moves the target in a given direction for a maximum of the given spaces
@@ -1422,11 +1527,11 @@ public class Battle : MonoBehaviour
                     for (int i = 1; i <= trueEffect.amount; i++)
                     {
                         if (target.ValidMoveTile(battleMap[target.position.x, target.position.y + i * dir]))
-                            eventQueue.Insert(new MovementEvent(participantModels[target], 0.1f, participantModels[target].transform.position + new Vector3Int(0, 0, i - 1) * dir, participantModels[target].transform.position + new Vector3Int(0, 0, i) * dir, participantModels[target].transform.rotation, participantModels[target].transform.rotation, true));
+                            eventQueue.Insert(new MovementEvent(participantModels[target], 0.1f, participantModels[target].transform.position + new Vector3Int(0, 0, i - 1) * dir, participantModels[target].transform.position + new Vector3Int(0, 0, i) * dir));
                         else
                         {
                             //If the pawn hits a spot where they can't move any further, stun them for a turn
-                            eventQueue.Insert(new ExecuteEffectEvent(new StatusEffectPart(TargettingType.AllInRange, "stun", false), caster, target));
+                            eventQueue.Insert(new ExecuteEffectEvent(new StatusEffectPart(TargettingType.AllInRange, Statuses.Stun, false), caster, target));
                             return;
                         }
                     }
@@ -1438,11 +1543,11 @@ public class Battle : MonoBehaviour
                     for (int i = 1; i <= trueEffect.amount; i++)
                     {
                         if (target.ValidMoveTile(battleMap[target.position.x + i * dir, target.position.y]))
-                            eventQueue.Insert(new MovementEvent(participantModels[target], 0.1f, participantModels[target].transform.position + new Vector3Int(i - 1, 0, 0) * dir, participantModels[target].transform.position + new Vector3Int(i, 0, 0) * dir, participantModels[target].transform.rotation, participantModels[target].transform.rotation, true));
+                            eventQueue.Insert(new MovementEvent(participantModels[target], 0.1f, participantModels[target].transform.position + new Vector3Int(i - 1, 0, 0) * dir, participantModels[target].transform.position + new Vector3Int(i, 0, 0) * dir));
                         else
                         {
                             //If the pawn hits a spot where they can't move any further, stun them for a turn
-                            eventQueue.Insert(new ExecuteEffectEvent(new StatusEffectPart(TargettingType.AllInRange, "stun", false), caster, target));
+                            eventQueue.Insert(new ExecuteEffectEvent(new StatusEffectPart(TargettingType.AllInRange, Statuses.Stun, false), caster, target));
                             return;
                         }
                     }
@@ -1461,10 +1566,14 @@ public class Battle : MonoBehaviour
                             //Check if the target is able to move again
                             bool canMove = target.CanMove();
                             target.moved = !canMove;
-                            //If it is an enemy that can move again, moves back through the enemy list and tries to move them again
-                            if (battleState == BattleState.Enemy && canMove)
+                            if (canMove)
                             {
-                                movingEnemy = 0;
+                                eventQueue.Insert(new TextEvent(target.name + " is reinvigorated and can move again!"));
+                                //If it is an enemy that can move again, moves back through the enemy list and tries to move them again
+                                if (battleState == BattleState.Enemy)
+                                {
+                                    movingEnemy = 0;
+                                }
                             }
                         }
                         break;
@@ -1517,6 +1626,8 @@ public class Battle : MonoBehaviour
     {
         Debug.Log(castedX + " " + castedY);
 
+        eventQueue.Insert(new TextEvent(caster.name + " casts " + castedSpell.name + "."));
+
         CheckEventTriggers(caster, EffectTriggers.SpellCast);
 
         foreach (SkillPartBase effect in castedSpell.partList)
@@ -1541,7 +1652,7 @@ public class Battle : MonoBehaviour
             //If it is a player targetting all enemies or an enemy targetting all allies
             else if (!castedByPlayer && (effect.targetType == TargettingType.AllAlliesNotSelf || effect.targetType == TargettingType.AllAllies) || castedByPlayer && effect.targetType == TargettingType.AllEnemies)
             {
-                foreach (Enemy enemy in enemyList)
+                foreach (Enemy enemy in enemies)
                 {
                     if (enemy != caster && enemy.cHealth > 0)
                         eventQueue.Insert(new ExecuteEffectEvent(effect, caster, enemy, true));
@@ -1558,7 +1669,7 @@ public class Battle : MonoBehaviour
                             eventQueue.Insert(new ExecuteEffectEvent(effect, caster, players[PlayerAtPos(x + castedX, y + castedY)], true));
                         //If an enemy should be targeted and an enemy is at that position
                         if ((effect.targetType == TargettingType.AllInRange || !castedByPlayer && effect.targetType == TargettingType.Ally || castedByPlayer && effect.targetType == TargettingType.Enemy) && EnemyAtPos(x + castedX, y + castedY) != -1)
-                            eventQueue.Insert(new ExecuteEffectEvent(effect, caster, enemyList[EnemyAtPos(x + castedX, y + castedY)], true));
+                            eventQueue.Insert(new ExecuteEffectEvent(effect, caster, enemies[EnemyAtPos(x + castedX, y + castedY)], true));
                     }
                 }
             }

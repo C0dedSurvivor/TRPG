@@ -141,8 +141,6 @@ public class EquipInventory : GridInventoryGUI
     {
         itemInfo.SetActive(true);
         itemInfo.transform.position = Input.mousePosition + new Vector3(2, -2, 0);
-        //if (itemInfo.transform.localPosition.y < 0 && Mathf.Abs(itemInfo.transform.localPosition.y) + itemInfo.GetComponent<VerticalLayoutGroup>().preferredHeight > Screen.height / 2)
-        //    itemInfo.transform.position = new Vector3(itemInfo.transform.position.x, Screen.height / 2 - itemInfo.GetComponent<VerticalLayoutGroup>().preferredHeight / 2, itemInfo.transform.position.z);
 
         //If mousing over an equipped item
         if (item < 0)
@@ -434,36 +432,37 @@ public class EquipInventory : GridInventoryGUI
             //aEtheric Defense
             if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.MagicDefense] > ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicDefense])
             {
-                item1Info.transform.GetChild(5).GetComponent<Text>().color = Color.green;
-                item2Info.transform.GetChild(5).GetComponent<Text>().color = Color.red;
+                item1Info.transform.GetChild(6).GetComponent<Text>().color = Color.green;
+                item2Info.transform.GetChild(6).GetComponent<Text>().color = Color.red;
             }
             else if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.MagicDefense] < ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicDefense])
             {
-                item1Info.transform.GetChild(5).GetComponent<Text>().color = Color.red;
-                item2Info.transform.GetChild(5).GetComponent<Text>().color = Color.green;
+                item1Info.transform.GetChild(6).GetComponent<Text>().color = Color.red;
+                item2Info.transform.GetChild(6).GetComponent<Text>().color = Color.green;
             }
             else
             {
-                item1Info.transform.GetChild(5).GetComponent<Text>().color = Color.blue;
-                item2Info.transform.GetChild(5).GetComponent<Text>().color = Color.blue;
+                item1Info.transform.GetChild(6).GetComponent<Text>().color = Color.blue;
+                item2Info.transform.GetChild(6).GetComponent<Text>().color = Color.blue;
             }
 
             //Crit chance
             if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.CritChance] > ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.CritChance])
             {
-                item1Info.transform.GetChild(5).GetComponent<Text>().color = Color.green;
-                item2Info.transform.GetChild(5).GetComponent<Text>().color = Color.red;
+                item1Info.transform.GetChild(7).GetComponent<Text>().color = Color.green;
+                item2Info.transform.GetChild(7).GetComponent<Text>().color = Color.red;
             }
             else if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.CritChance] < ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.CritChance])
             {
-                item1Info.transform.GetChild(5).GetComponent<Text>().color = Color.red;
-                item2Info.transform.GetChild(5).GetComponent<Text>().color = Color.green;
+                item1Info.transform.GetChild(7).GetComponent<Text>().color = Color.red;
+                item2Info.transform.GetChild(7).GetComponent<Text>().color = Color.green;
             }
             else
             {
-                item1Info.transform.GetChild(5).GetComponent<Text>().color = Color.blue;
-                item2Info.transform.GetChild(5).GetComponent<Text>().color = Color.blue;
+                item1Info.transform.GetChild(7).GetComponent<Text>().color = Color.blue;
+                item2Info.transform.GetChild(7).GetComponent<Text>().color = Color.blue;
             }
         }
+        base.MouseOverItem(item);
     }
 }

@@ -118,8 +118,6 @@ public class PauseInventory : GearInventoryGUI {
     {
         itemInfo.SetActive(true);
         itemInfo.transform.position = Input.mousePosition + new Vector3(2, -2, 0);
-        //if (itemInfo.transform.localPosition.y < 0 && Mathf.Abs(itemInfo.transform.localPosition.y) + itemInfo.GetComponent<VerticalLayoutGroup>().preferredHeight > Screen.height / 2)
-        //    itemInfo.transform.position = new Vector3(itemInfo.transform.position.x, Screen.height / 2 - itemInfo.GetComponent<VerticalLayoutGroup>().preferredHeight / 2, itemInfo.transform.position.z);
         itemInfo.transform.GetChild(0).GetComponent<Text>().text = itemList[item].Name;
         //Has to display extra stat information if the item is an equippable
         if (Registry.ItemRegistry[itemList[item].Name] is EquippableBase)
@@ -182,5 +180,6 @@ public class PauseInventory : GearInventoryGUI {
             itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\n" + Registry.ItemRegistry[itemList[item].Name].FlavorText;
             itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nSells for: " + Registry.ItemRegistry[itemList[item].Name].SellAmount;
         }
+        base.MouseOverItem(item);
     }
 }

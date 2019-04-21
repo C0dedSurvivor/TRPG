@@ -58,8 +58,19 @@ public class VisualInventoryBase : MonoBehaviour {
         }
     }
 
-    //to be overridden with that info needs to be shown
-    public virtual void MouseOverItem(int item){ }
+    //
+    /// <summary>
+    /// Makes sure whatever gets shown stays within the bounds of the screen
+    /// To be overridden with that info needs to be shown then called
+    /// </summary>
+    public virtual void MouseOverItem(int item)
+    {
+        RectTransform infoTransform = itemInfo.GetComponent<RectTransform>();
+        if (infoTransform.position.x + infoTransform.sizeDelta.x * infoTransform.lossyScale.x > Screen.width)
+            itemInfo.transform.position = new Vector3(Screen.width - infoTransform.sizeDelta.x * infoTransform.lossyScale.x, itemInfo.transform.position.y, itemInfo.transform.position.z);
+        if (infoTransform.position.y - infoTransform.sizeDelta.y * infoTransform.lossyScale.y < 0)
+            itemInfo.transform.position = new Vector3(itemInfo.transform.position.x, infoTransform.sizeDelta.y * infoTransform.lossyScale.y, itemInfo.transform.position.z);
+    }
 
     /// <summary>
     /// Hides the skill info when the player is no longer mousing over an item

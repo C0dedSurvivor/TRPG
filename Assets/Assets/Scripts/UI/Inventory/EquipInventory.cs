@@ -147,55 +147,8 @@ public class EquipInventory : GridInventoryGUI
         {
             if (GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(-item - 1) != null)
             {
-                string itemName = GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(-item - 1).Name;
-                item1Info.transform.GetChild(0).GetComponent<Text>().text = itemName;
-                item1Info.transform.GetChild(1).GetComponent<Text>().text = "Equipment type: ";
-                switch (((EquippableBase)Registry.ItemRegistry[itemName]).equipSlot)
-                {
-                    case 0:
-                        item1Info.transform.GetChild(1).GetComponent<Text>().text += "Weapon";
-                        break;
-                    case 1:
-                        item1Info.transform.GetChild(1).GetComponent<Text>().text += "Helmet";
-                        break;
-                    case 2:
-                        item1Info.transform.GetChild(1).GetComponent<Text>().text += "Chestplate";
-                        break;
-                    case 3:
-                        item1Info.transform.GetChild(1).GetComponent<Text>().text += "Legs";
-                        break;
-                    case 4:
-                        item1Info.transform.GetChild(1).GetComponent<Text>().text += "Boots";
-                        break;
-                    case 5:
-                        item1Info.transform.GetChild(1).GetComponent<Text>().text += "Hands";
-                        break;
-                    case 6:
-                        item1Info.transform.GetChild(1).GetComponent<Text>().text += "Accessory";
-                        break;
-                }
 
-                item1Info.transform.GetChild(2).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-                item1Info.transform.GetChild(2).GetComponent<Text>().text = "Health: " + ((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.MaxHealth];
-
-                item1Info.transform.GetChild(3).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-                item1Info.transform.GetChild(3).GetComponent<Text>().text = "Physical Strength: " + ((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.Attack];
-
-                item1Info.transform.GetChild(4).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-                item1Info.transform.GetChild(4).GetComponent<Text>().text = "AEtheric Strength: " + ((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.MagicAttack];
-
-                item1Info.transform.GetChild(5).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-                item1Info.transform.GetChild(5).GetComponent<Text>().text = "Physical Defense: " + ((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.Defense];
-
-                item1Info.transform.GetChild(6).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-                item1Info.transform.GetChild(6).GetComponent<Text>().text = "AEtheric Defense: " + ((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.MagicDefense];
-
-                item1Info.transform.GetChild(7).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-                item1Info.transform.GetChild(7).GetComponent<Text>().text = "Crit Chance: " + ((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.CritChance] + "%";
-
-                item1Info.transform.GetChild(8).GetComponent<Text>().text = Registry.ItemRegistry[itemName].FlavorText;
-                item1Info.transform.GetChild(9).GetComponent<Text>().text = "Sells for: " + Registry.ItemRegistry[itemName].SellAmount;
-
+                UpdateItemInfo(item1Info, GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(-item - 1).Name);
                 item2Info.SetActive(false);
             }
             else
@@ -204,156 +157,15 @@ public class EquipInventory : GridInventoryGUI
         //If the player is mousing over an unequipped item for a slot with nothing equipped
         else if (GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot) == null)
         {
-            item1Info.transform.GetChild(0).GetComponent<Text>().text = itemList[item].Name;
-            item1Info.transform.GetChild(1).GetComponent<Text>().text = "Equipment type: ";
-            switch (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).equipSlot)
-            {
-                case 0:
-                    item1Info.transform.GetChild(1).GetComponent<Text>().text += "Weapon";
-                    break;
-                case 1:
-                    item1Info.transform.GetChild(1).GetComponent<Text>().text += "Helmet";
-                    break;
-                case 2:
-                    item1Info.transform.GetChild(1).GetComponent<Text>().text += "Chestplate";
-                    break;
-                case 3:
-                    item1Info.transform.GetChild(1).GetComponent<Text>().text += "Legs";
-                    break;
-                case 4:
-                    item1Info.transform.GetChild(1).GetComponent<Text>().text += "Boots";
-                    break;
-                case 5:
-                    item1Info.transform.GetChild(1).GetComponent<Text>().text += "Hands";
-                    break;
-                case 6:
-                    item1Info.transform.GetChild(1).GetComponent<Text>().text += "Accessory";
-                    break;
-            }
-
-            item1Info.transform.GetChild(2).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item1Info.transform.GetChild(2).GetComponent<Text>().text = "Health: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MaxHealth];
-
-            item1Info.transform.GetChild(3).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item1Info.transform.GetChild(3).GetComponent<Text>().text = "Physical Strength: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Attack];
-
-            item1Info.transform.GetChild(4).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item1Info.transform.GetChild(4).GetComponent<Text>().text = "AEtheric Strength: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicAttack];
-
-            item1Info.transform.GetChild(5).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item1Info.transform.GetChild(5).GetComponent<Text>().text = "Physical Defense: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Defense];
-
-            item1Info.transform.GetChild(6).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item1Info.transform.GetChild(6).GetComponent<Text>().text = "AEtheric Defense: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicDefense];
-
-            item1Info.transform.GetChild(7).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item1Info.transform.GetChild(7).GetComponent<Text>().text = "Crit Chance: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.CritChance] + "%";
-
-            item1Info.transform.GetChild(8).GetComponent<Text>().text = Registry.ItemRegistry[itemList[item].Name].FlavorText;
-            item1Info.transform.GetChild(9).GetComponent<Text>().text = "Sells for: " + Registry.ItemRegistry[itemList[item].Name].SellAmount;
+            UpdateItemInfo(item1Info, itemList[item].Name);
             item2Info.SetActive(false);
         }
         //If player is mousing over an unequipped item for an inventory slot with an equipped item
         else
         {
             string itemName = GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot).Name;
-            item1Info.transform.GetChild(0).GetComponent<Text>().text = itemName;
-            item1Info.transform.GetChild(1).GetComponent<Text>().text = "Equipment type: ";
-            switch (((EquippableBase)Registry.ItemRegistry[itemName]).equipSlot)
-            {
-                case 0:
-                    item1Info.transform.GetChild(1).GetComponent<Text>().text += "Weapon";
-                    break;
-                case 1:
-                    item1Info.transform.GetChild(1).GetComponent<Text>().text += "Helmet";
-                    break;
-                case 2:
-                    item1Info.transform.GetChild(1).GetComponent<Text>().text += "Chestplate";
-                    break;
-                case 3:
-                    item1Info.transform.GetChild(1).GetComponent<Text>().text += "Legs";
-                    break;
-                case 4:
-                    item1Info.transform.GetChild(1).GetComponent<Text>().text += "Boots";
-                    break;
-                case 5:
-                    item1Info.transform.GetChild(1).GetComponent<Text>().text += "Hands";
-                    break;
-                case 6:
-                    item1Info.transform.GetChild(1).GetComponent<Text>().text += "Accessory";
-                    break;
-            }
-
-            item1Info.transform.GetChild(2).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item1Info.transform.GetChild(2).GetComponent<Text>().text = "Health: " + ((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.MaxHealth];
-
-            item1Info.transform.GetChild(3).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item1Info.transform.GetChild(3).GetComponent<Text>().text = "Physical Strength: " + ((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.Attack];
-
-            item1Info.transform.GetChild(4).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item1Info.transform.GetChild(4).GetComponent<Text>().text = "AEtheric Strength: " + ((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.MagicAttack];
-
-            item1Info.transform.GetChild(5).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item1Info.transform.GetChild(5).GetComponent<Text>().text = "Physical Defense: " + ((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.Defense];
-
-            item1Info.transform.GetChild(6).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item1Info.transform.GetChild(6).GetComponent<Text>().text = "AEtheric Defense: " + ((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.MagicDefense];
-
-            item1Info.transform.GetChild(7).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item1Info.transform.GetChild(7).GetComponent<Text>().text = "Crit Chance: " + ((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.CritChance] + "%";
-
-            item1Info.transform.GetChild(8).GetComponent<Text>().text = Registry.ItemRegistry[itemName].FlavorText;
-            item1Info.transform.GetChild(9).GetComponent<Text>().text = "Sells for: " + Registry.ItemRegistry[itemName].SellAmount;
-
-            item2Info.SetActive(true);
-
-            item2Info.transform.GetChild(0).GetComponent<Text>().text = itemList[item].Name;
-            item2Info.transform.GetChild(1).GetComponent<Text>().text = "Equipment type: ";
-            switch (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).equipSlot)
-            {
-                case 0:
-                    item2Info.transform.GetChild(1).GetComponent<Text>().text += "Weapon";
-                    break;
-                case 1:
-                    item2Info.transform.GetChild(1).GetComponent<Text>().text += "Helmet";
-                    break;
-                case 2:
-                    item2Info.transform.GetChild(1).GetComponent<Text>().text += "Chestplate";
-                    break;
-                case 3:
-                    item2Info.transform.GetChild(1).GetComponent<Text>().text += "Legs";
-                    break;
-                case 4:
-                    item2Info.transform.GetChild(1).GetComponent<Text>().text += "Boots";
-                    break;
-                case 5:
-                    item2Info.transform.GetChild(1).GetComponent<Text>().text += "Hands";
-                    break;
-                case 6:
-                    item2Info.transform.GetChild(1).GetComponent<Text>().text += "Accessory";
-                    break;
-            }
-
-            item2Info.transform.GetChild(2).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item2Info.transform.GetChild(2).GetComponent<Text>().text = "Health: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MaxHealth];
-
-            item2Info.transform.GetChild(3).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item2Info.transform.GetChild(3).GetComponent<Text>().text = "Physical Strength: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Attack];
-
-            item2Info.transform.GetChild(4).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item2Info.transform.GetChild(4).GetComponent<Text>().text = "AEtheric Strength: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicAttack];
-
-            item2Info.transform.GetChild(5).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item2Info.transform.GetChild(5).GetComponent<Text>().text = "Physical Defense: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Defense];
-
-            item2Info.transform.GetChild(6).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item2Info.transform.GetChild(6).GetComponent<Text>().text = "AEtheric Defense: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicDefense];
-
-            item2Info.transform.GetChild(7).GetComponent<Text>().color = new Color(0.195f, 0.195f, 0.195f, 1);
-            item2Info.transform.GetChild(7).GetComponent<Text>().text = "Crit Chance: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.CritChance] + "%";
-
-            item2Info.transform.GetChild(8).GetComponent<Text>().text = Registry.ItemRegistry[itemList[item].Name].FlavorText;
-            item2Info.transform.GetChild(9).GetComponent<Text>().text = "Sells for: " + Registry.ItemRegistry[itemList[item].Name].SellAmount;
+            UpdateItemInfo(item1Info, itemName);
+            UpdateItemInfo(item2Info, itemList[item].Name);
 
             //
             //
@@ -361,108 +173,94 @@ public class EquipInventory : GridInventoryGUI
             //
             //
 
-            //Health
-            if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.MaxHealth] > ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MaxHealth])
-            {
-                item1Info.transform.GetChild(2).GetComponent<Text>().color = Color.green;
-                item2Info.transform.GetChild(2).GetComponent<Text>().color = Color.red;
-            }
-            else if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.MaxHealth] < ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MaxHealth])
-            {
-                item1Info.transform.GetChild(2).GetComponent<Text>().color = Color.red;
-                item2Info.transform.GetChild(2).GetComponent<Text>().color = Color.green;
-            }
-            else
-            {
-                item1Info.transform.GetChild(2).GetComponent<Text>().color = Color.blue;
-                item2Info.transform.GetChild(2).GetComponent<Text>().color = Color.blue;
-            }
-
-            //Strength
-            if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.Attack] > ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Attack])
-            {
-                item1Info.transform.GetChild(3).GetComponent<Text>().color = Color.green;
-                item2Info.transform.GetChild(3).GetComponent<Text>().color = Color.red;
-            }
-            else if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.Attack] < ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Attack])
-            {
-                item1Info.transform.GetChild(3).GetComponent<Text>().color = Color.red;
-                item2Info.transform.GetChild(3).GetComponent<Text>().color = Color.green;
-            }
-            else
-            {
-                item1Info.transform.GetChild(3).GetComponent<Text>().color = Color.blue;
-                item2Info.transform.GetChild(3).GetComponent<Text>().color = Color.blue;
-            }
-
-            //aEtheric Strength
-            if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.MagicAttack] > ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicAttack])
-            {
-                item1Info.transform.GetChild(4).GetComponent<Text>().color = Color.green;
-                item2Info.transform.GetChild(4).GetComponent<Text>().color = Color.red;
-            }
-            else if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.MagicAttack] < ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicAttack])
-            {
-                item1Info.transform.GetChild(4).GetComponent<Text>().color = Color.red;
-                item2Info.transform.GetChild(4).GetComponent<Text>().color = Color.green;
-            }
-            else
-            {
-                item1Info.transform.GetChild(4).GetComponent<Text>().color = Color.blue;
-                item2Info.transform.GetChild(4).GetComponent<Text>().color = Color.blue;
-            }
-
-            //Defense
-            if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.Defense] > ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Defense])
-            {
-                item1Info.transform.GetChild(5).GetComponent<Text>().color = Color.green;
-                item2Info.transform.GetChild(5).GetComponent<Text>().color = Color.red;
-            }
-            else if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.Defense] < ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Defense])
-            {
-                item1Info.transform.GetChild(5).GetComponent<Text>().color = Color.red;
-                item2Info.transform.GetChild(5).GetComponent<Text>().color = Color.green;
-            }
-            else
-            {
-                item1Info.transform.GetChild(5).GetComponent<Text>().color = Color.blue;
-                item2Info.transform.GetChild(5).GetComponent<Text>().color = Color.blue;
-            }
-
-            //aEtheric Defense
-            if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.MagicDefense] > ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicDefense])
-            {
-                item1Info.transform.GetChild(6).GetComponent<Text>().color = Color.green;
-                item2Info.transform.GetChild(6).GetComponent<Text>().color = Color.red;
-            }
-            else if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.MagicDefense] < ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicDefense])
-            {
-                item1Info.transform.GetChild(6).GetComponent<Text>().color = Color.red;
-                item2Info.transform.GetChild(6).GetComponent<Text>().color = Color.green;
-            }
-            else
-            {
-                item1Info.transform.GetChild(6).GetComponent<Text>().color = Color.blue;
-                item2Info.transform.GetChild(6).GetComponent<Text>().color = Color.blue;
-            }
-
-            //Crit chance
-            if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.CritChance] > ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.CritChance])
-            {
-                item1Info.transform.GetChild(7).GetComponent<Text>().color = Color.green;
-                item2Info.transform.GetChild(7).GetComponent<Text>().color = Color.red;
-            }
-            else if (((EquippableBase)Registry.ItemRegistry[itemName]).stats[Stats.CritChance] < ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.CritChance])
-            {
-                item1Info.transform.GetChild(7).GetComponent<Text>().color = Color.red;
-                item2Info.transform.GetChild(7).GetComponent<Text>().color = Color.green;
-            }
-            else
-            {
-                item1Info.transform.GetChild(7).GetComponent<Text>().color = Color.blue;
-                item2Info.transform.GetChild(7).GetComponent<Text>().color = Color.blue;
-            }
+            EquippableBase equipped = ((EquippableBase)Registry.ItemRegistry[itemName]);
+            EquippableBase inInv = ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]);
+            Text[] children1 = item1Info.transform.GetComponentsInChildren<Text>();
+            Text[] children2 = item2Info.transform.GetComponentsInChildren<Text>();
+            
+            UpdateComparison(equipped, inInv, Stats.MaxHealth, children1[2], children2[2]);
+            UpdateComparison(equipped, inInv, Stats.Attack, children1[3], children2[3]);
+            UpdateComparison(equipped, inInv, Stats.MagicAttack, children1[4], children2[4]);
+            UpdateComparison(equipped, inInv, Stats.Defense, children1[5], children2[5]);
+            UpdateComparison(equipped, inInv, Stats.MagicDefense, children1[6], children2[6]);
+            UpdateComparison(equipped, inInv, Stats.CritChance, children1[7], children2[7]);
         }
         base.MouseOverItem(item);
+    }
+
+    private void UpdateItemInfo(GameObject itemViewer, string name)
+    {
+        itemViewer.SetActive(true);
+
+        EquippableBase item = ((EquippableBase)Registry.ItemRegistry[name]);
+
+        Text[] children = itemViewer.transform.GetComponentsInChildren<Text>();
+
+        children[0].text = name;
+        children[1].text = "Equipment type: ";
+        switch (item.equipSlot)
+        {
+            case 0:
+                children[1].text += "Weapon";
+                break;
+            case 1:
+                children[1].text += "Helmet";
+                break;
+            case 2:
+                children[1].text += "Chestplate";
+                break;
+            case 3:
+                children[1].text += "Legs";
+                break;
+            case 4:
+                children[1].text += "Boots";
+                break;
+            case 5:
+                children[1].text += "Hands";
+                break;
+            case 6:
+                children[1].text += "Accessory";
+                break;
+        }
+
+        children[2].color = new Color(0.195f, 0.195f, 0.195f, 1);
+        children[2].text = "Health: " + item.stats[Stats.MaxHealth];
+
+        children[3].color = new Color(0.195f, 0.195f, 0.195f, 1);
+        children[3].text = "Physical Strength: " + item.stats[Stats.Attack];
+
+        children[4].color = new Color(0.195f, 0.195f, 0.195f, 1);
+        children[4].text = "AEtheric Strength: " + item.stats[Stats.MagicAttack];
+
+        children[5].color = new Color(0.195f, 0.195f, 0.195f, 1);
+        children[5].text = "Physical Defense: " + item.stats[Stats.Defense];
+
+        children[6].color = new Color(0.195f, 0.195f, 0.195f, 1);
+        children[6].text = "AEtheric Defense: " + item.stats[Stats.MagicDefense];
+
+        children[7].color = new Color(0.195f, 0.195f, 0.195f, 1);
+        children[7].text = "Crit Chance: " + item.stats[Stats.CritChance] + "%";
+
+        children[8].text = item.FlavorText;
+        children[9].text = "Sells for: " + item.SellAmount;
+    }
+
+    private void UpdateComparison(EquippableBase equipped, EquippableBase inInv, Stats stat, Text equippedText, Text inInvText)
+    {
+        if (equipped.stats[stat] > inInv.stats[stat])
+        {
+            equippedText.color = Color.green;
+            inInvText.color = Color.red;
+        }
+        else if (equipped.stats[stat] < inInv.stats[stat])
+        {
+            equippedText.color = Color.red;
+            inInvText.color = Color.green;
+        }
+        else
+        {
+            equippedText.color = Color.blue;
+            inInvText.color = Color.blue;
+        }
     }
 }

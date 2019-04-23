@@ -383,12 +383,16 @@ public class Battle : MonoBehaviour
                     if (selectedPlayer != -1)
                     {
                         int n = PlayerAtPos(pos.x, pos.y);
-                        players[n].position = players[selectedPlayer].position;
-                        players[selectedPlayer].position = pos;
-                        participantModels[players[n]].transform.position = new Vector3(players[n].position.x + topLeft.x, 1, (mapSizeY - 1) - players[n].position.y + topLeft.y);
-                        participantModels[players[selectedPlayer]].transform.position = new Vector3(players[selectedPlayer].position.x + topLeft.x, 1, (mapSizeY - 1) - players[selectedPlayer].position.y + topLeft.y);
+                        if (n != -1)
+                        {
+                            players[n].position = players[selectedPlayer].position;
+                            players[selectedPlayer].position = pos;
+                            participantModels[players[n]].transform.position = new Vector3(players[n].position.x + topLeft.x, 1, (mapSizeY - 1) - players[n].position.y + topLeft.y);
+                            participantModels[players[selectedPlayer]].transform.position = new Vector3(players[selectedPlayer].position.x + topLeft.x, 1, (mapSizeY - 1) - players[selectedPlayer].position.y + topLeft.y);
+                            actionTaken = true;
+                        }
                         selectedPlayer = -1;
-                        actionTaken = true;
+                        updateTilesThisFrame = true;
                     }
                     break;
                 case BattleState.Player:
@@ -452,6 +456,7 @@ public class Battle : MonoBehaviour
                         selectedEnemy = enemies.Count + PlayerAtPos(pos.x, pos.y);
                 }
             }
+            ui.UpdateSelectedUnit();
         }
     }
 
@@ -525,6 +530,7 @@ public class Battle : MonoBehaviour
             selectedPlayer = -1;
             moveMarker.SetActive(false);
             updateTilesThisFrame = true;
+            ui.UpdateSelectedUnit();
         }
     }
 
@@ -549,6 +555,7 @@ public class Battle : MonoBehaviour
     private void ToMatch()
     {
         battleState = BattleState.Player;
+        updateTilesThisFrame = true;
     }
 
     private void ToAttack()
@@ -668,6 +675,7 @@ public class Battle : MonoBehaviour
             }
             battleState = BattleState.Enemy;
         }
+        ui.UpdateSelectedUnit();
     }
 
     /// <summary>
@@ -1038,8 +1046,10 @@ public class Battle : MonoBehaviour
             foreach (Player p in players)
             {
                 tileList[p.position.x, (mapSizeY - 1) - p.position.y].GetComponent<BattleTile>().playerMoveRange = true;
+                tileList[p.position.x, (mapSizeY - 1) - p.position.y].GetComponent<BattleTile>().enemyDanger = true;
             }
-            return;
+            if(selectedPlayer != -1)
+                tileList[players[selectedPlayer].position.x, (mapSizeY - 1) - players[selectedPlayer].position.y].GetComponent<BattleTile>().enemyDanger = false;
         }
 
         //Shows skill range and what is targettable within that range if a spell is selected or hovered

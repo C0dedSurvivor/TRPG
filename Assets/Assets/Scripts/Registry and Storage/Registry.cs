@@ -64,50 +64,51 @@ public class Registry{
         WeaponTypeRegistry[8].diagonalRanges.Add(new WeaponStatsAtRange(1, false, DamageType.Physical, false, 1.1f));
 
         //Adds all the weapons
-        ItemRegistry.Add("Fists", new EquippableBase(0, 4, 0, ""));
+        ItemRegistry.Add("Fists", new EquippableBase(0, 4, 0, "", new Dictionary<Stats, int>()));
 
-        ItemRegistry.Add("Wooden Sword", new EquippableBase(0, 1, 500, "A wooden training sword. Not gonna do a lot of damage, but it can get the job done", 0, 2));
-        ItemRegistry.Add("Iron Sword", new EquippableBase(0, 1, 500, "Pretty middle of the road as swords go, but a solid choice nonetheless", 0, 5));
-        ItemRegistry.Add("Steel Sword", new EquippableBase(0, 1, 500, "A very well built sword, solid and sharp", 0, 8, 0, 0, 0, 5));
-        ItemRegistry.Add("Mirendell", new EquippableBase(0, 1, 500, "A legendary sword. Very shiny", 0, 13, 0, 0, 0, 20));
+        ItemRegistry.Add("Wooden Sword", new EquippableBase(0, 1, 500, "A wooden training sword. Not gonna do a lot of damage, but it can get the job done", new Dictionary<Stats, int>() { { Stats.Attack, 2 } }));
+        ItemRegistry.Add("Iron Sword", new EquippableBase(0, 1, 500, "Pretty middle of the road as swords go, but a solid choice nonetheless", new Dictionary<Stats, int>() { { Stats.Attack, 5 } }));
+        ItemRegistry.Add("Steel Sword", new EquippableBase(0, 1, 500, "A very well built sword, solid and sharp", new Dictionary<Stats, int>() { { Stats.Attack, 5 }, { Stats.CritChance, 5 } }));
+        ItemRegistry.Add("Mirendell", new EquippableBase(0, 1, 500, "A legendary sword. Very shiny", new Dictionary<Stats, int>() { { Stats.Attack, 13 }, { Stats.CritChance, 20 } }));
 
-        ItemRegistry.Add("Wooden Lance", new EquippableBase(0, 2, 500, "A wooden training lance. Surprisingly sharp for what it is", 0, 3));
-        ItemRegistry.Add("Iron Lance", new EquippableBase(0, 2, 500, "A sturdy lance. Not the best at piercing armor, but will tear through flesh no problem", 0, 4));
-        ItemRegistry.Add("Steel Lance", new EquippableBase(0, 2, 500, "A solid lance that can pierce metal as well as bone", 0, 6));
-        ItemRegistry.Add("Sapphire Lance", new EquippableBase(0, 2, 500, "A gorgeous lance that sparkles with every movement. Horrible for stealth but looks more than fabuluous enough to make up for it", 0, 8, 0, 0, 0, 10));
-        ItemRegistry.Add("Leviantal", new EquippableBase(0, 2, 500, "A legendary lance", 0, 13, 0, 0, 0, 30));
+        ItemRegistry.Add("Wooden Lance", new EquippableBase(0, 2, 500, "A wooden training lance. Surprisingly sharp for what it is", new Dictionary<Stats, int>() { { Stats.Attack, 3 } }));
+        ItemRegistry.Add("Iron Lance", new EquippableBase(0, 2, 500, "A sturdy lance. Not the best at piercing armor, but will tear through flesh no problem", new Dictionary<Stats, int>() { { Stats.Attack, 4 } }));
+        ItemRegistry.Add("Steel Lance", new EquippableBase(0, 2, 500, "A solid lance that can pierce metal as well as bone", new Dictionary<Stats, int>() { { Stats.Attack, 6 } }));
+        ItemRegistry.Add("Sapphire Lance", new EquippableBase(0, 2, 500, "A gorgeous lance that sparkles with every movement. Horrible for stealth but looks more than fabuluous enough to make up for it", new Dictionary<Stats, int>() { { Stats.Attack, 8 }, { Stats.CritChance, 10 } }));
+        ItemRegistry.Add("Leviantal", new EquippableBase(0, 2, 500, "A legendary lance", new Dictionary<Stats, int>() { { Stats.Attack, 13 }, { Stats.CritChance, 30 } }));
 
-        ItemRegistry.Add("Wooden Axe", new EquippableBase(0, 3, 500, "A wooden training axe. Not much more than a bludgeoning weapon but it does what it needs to", 0, 3));
-        ItemRegistry.Add("Iron Axe", new EquippableBase(0, 3, 500, "As good at cleaving heads as it is wood, this is a good choice for any warrior", 0, 6));
-        ItemRegistry.Add("Steel Axe", new EquippableBase(0, 3, 500, "Cuts through metal armor like butter, this is a well crafted axe that can deal massive damage", 0, 9, 0, 0, 0, 15));
-        ItemRegistry.Add("Xarok", new EquippableBase(0, 3, 500, "A legendary axe", 0, 12, 0, 0, 0, 35));
+        ItemRegistry.Add("Wooden Axe", new EquippableBase(0, 3, 500, "A wooden training axe. Not much more than a bludgeoning weapon but it does what it needs to", new Dictionary<Stats, int>() { { Stats.Attack, 3 } }));
+        ItemRegistry.Add("Iron Axe", new EquippableBase(0, 3, 500, "As good at cleaving heads as it is wood, this is a good choice for any warrior", new Dictionary<Stats, int>() { { Stats.Attack, 6 } }));
+        ItemRegistry.Add("Steel Axe", new EquippableBase(0, 3, 500, "Cuts through metal armor like butter, this is a well crafted axe that can deal massive damage", new Dictionary<Stats, int>() { { Stats.Attack, 9 }, { Stats.CritChance, 15 } }));
+        ItemRegistry.Add("Xarok", new EquippableBase(0, 3, 500, "A legendary axe", new Dictionary<Stats, int>() { { Stats.Attack, 12 }, { Stats.CritChance, 35 } }));
 
-        ItemRegistry.Add("Wooden Shield", new EquippableBase(0, 4, 500, "", 0, 2, 2));
-        ItemRegistry.Add("Leather Shield", new EquippableBase(0, 4, 500, "", 0, 2, 4));
-        ItemRegistry.Add("Iron Rimmed Shield", new EquippableBase(0, 4, 500, "", 0, 3, 6));
-        ItemRegistry.Add("Iron Shield", new EquippableBase(0, 4, 500, "", 0, 3, 8));
-        ItemRegistry.Add("Steel Shield", new EquippableBase(0, 4, 500, "", 0, 5, 10));
+        ItemRegistry.Add("Wooden Shield", new EquippableBase(0, 4, 500, "", new Dictionary<Stats, int>() { { Stats.Attack, 2 }, { Stats.Defense, 2 } }));
+        ItemRegistry.Add("Leather Shield", new EquippableBase(0, 4, 500, "", new Dictionary<Stats, int>() { { Stats.Attack, 2 }, { Stats.Defense, 4 } }));
+        ItemRegistry.Add("Iron Rimmed Shield", new EquippableBase(0, 4, 500, "", new Dictionary<Stats, int>() { { Stats.Attack, 3 }, { Stats.Defense, 6 } }));
+        ItemRegistry.Add("Iron Shield", new EquippableBase(0, 4, 500, "", new Dictionary<Stats, int>() { { Stats.Attack, 3 }, { Stats.Defense, 8 } }));
+        ItemRegistry.Add("Steel Shield", new EquippableBase(0, 4, 500, "", new Dictionary<Stats, int>() { { Stats.Attack, 5 }, { Stats.Defense, 20 } }));
 
-        ItemRegistry.Add("A Tome I Guess", new EquippableBase(0, 5, 500, "", 0, 0, 0, 5));
-        ItemRegistry.Add("A Better Tome I Guess", new EquippableBase(0, 5, 500, "", 0, 0, 0, 7));
-        ItemRegistry.Add("An Even Better Tome I Guess", new EquippableBase(0, 5, 500, "", 0, 0, 0, 10));
-        ItemRegistry.Add("The Best Tome I Guess", new EquippableBase(0, 5, 500, "", 0, 0, 0, 13));
+        ItemRegistry.Add("A Tome I Guess", new EquippableBase(0, 5, 500, "", new Dictionary<Stats, int>() { { Stats.MagicAttack, 2 } }));
+        ItemRegistry.Add("A Better Tome I Guess", new EquippableBase(0, 5, 500, "", new Dictionary<Stats, int>() { { Stats.MagicAttack, 7 } }));
+        ItemRegistry.Add("An Even Better Tome I Guess", new EquippableBase(0, 5, 500, "", new Dictionary<Stats, int>() { { Stats.MagicAttack, 10 } }));
+        ItemRegistry.Add("The Best Tome I Guess", new EquippableBase(0, 5, 500, "", new Dictionary<Stats, int>() { { Stats.MagicAttack, 13 } }));
 
-        ItemRegistry.Add("Wooden Bow", new EquippableBase(0, 6, 500, "", 0, 7));
-        ItemRegistry.Add("Iron Bow", new EquippableBase(0, 6, 500, "", 0, 9, 0, 0, 0, 10));
-        ItemRegistry.Add("Aluminum Bow", new EquippableBase(0, 6, 500, "", 0, 11, 0, 0, 0, 20));
-        ItemRegistry.Add("Arlia", new EquippableBase(0, 6, 500, "", 0, 14, 0, 0, 0, 20));
+        ItemRegistry.Add("Wooden Bow", new EquippableBase(0, 6, 500, "", new Dictionary<Stats, int>() { { Stats.Attack, 7 } }));
+        ItemRegistry.Add("Iron Bow", new EquippableBase(0, 6, 500, "", new Dictionary<Stats, int>() { { Stats.Attack, 9 }, { Stats.CritChance, 10 } }));
+        ItemRegistry.Add("Aluminum Bow", new EquippableBase(0, 6, 500, "", new Dictionary<Stats, int>() { { Stats.Attack, 11 }, { Stats.CritChance, 20 } }));
+        ItemRegistry.Add("Arlia", new EquippableBase(0, 6, 500, "", new Dictionary<Stats, int>() { { Stats.Attack, 14 }, { Stats.CritChance, 20 } }));
 
         //Adds all the testing items
         ItemRegistry.Add("Animal Tooth", new ItemBase(99, 5, "Might be worth some money"));
         ItemRegistry.Add("Arrows", new ItemBase(100, 4, "For shooting with a bow. Not much more to say here"));
         ItemRegistry.Add("Bandage", new ItemBase(150, 20, "Old fashioned healing, but it does what it needs to"));
         ItemRegistry.Add("Bar of Iron", new ItemBase(30, 100, "A solid bar of iron, used for making heavy weapons. I have no clue how I'm carrying all of this"));
-        ItemRegistry.Add("Battle Axe", new EquippableBase(0, 2, 500, "Cleaving skulls", 0, 6));
-        ItemRegistry.Add("Bloodstone Necklace", new EquippableBase(6, 1, 1000, "Forged from the blood of my enemies (aka a ruby), this necklace enhances aEtheric spells", 5, 0, 0, 2, 0, 0, 0, 0, 5));
+        ItemRegistry.Add("Battle Axe", new EquippableBase(0, 2, 500, "Cleaving skulls", new Dictionary<Stats, int>() { { Stats.Attack, 6 } }));
+        ItemRegistry.Add("Bloodstone Necklace", new EquippableBase(6, 1, 1000, "Forged from the blood of my enemies (aka a ruby), this necklace enhances aEtheric spells", 
+            new Dictionary<Stats, int>() { { Stats.MaxHealth, 5 }, { Stats.MagicAttack, 2 }, { Stats.SpellDamageEffectiveness, 5 } }));
         ItemRegistry.Add("Copper Ore", new ItemBase(40, 145, "The raw form of copper, an important material for making aEther-based machinery"));
-        ItemRegistry.Add("Crossbow", new EquippableBase(0, 6, 600, "Sends a deadly projectile through armor or shadowy... things... all the same", 0, 7));
-        ItemRegistry.Add("Dagger", new EquippableBase(0, 0, 500, "A tried and true tool for any job, be it eating, sculpting, or murder", 0, 2));
+        ItemRegistry.Add("Crossbow", new EquippableBase(0, 6, 600, "Sends a deadly projectile through armor or shadowy... things... all the same", new Dictionary<Stats, int>() { { Stats.Attack, 7 } }));
+        ItemRegistry.Add("Dagger", new EquippableBase(0, 0, 500, "A tried and true tool for any job, be it eating, sculpting, or murder", new Dictionary<Stats, int>() { { Stats.Attack, 2 } }));
 
         ItemRegistry.Add("Egg", new ItemBase(99, 4, "The infinite potential of new life. Or a good breakfast. Your choice"));
         ItemRegistry.Add("Empty Bottle (Large)", new ItemBase(100, 1, "A large bottle of the most dangerous substance in the universe, air. 100% of people exposed to it have died, y'know"));
@@ -116,18 +117,19 @@ public class Registry{
         ItemRegistry.Add("Mana Potion (Large)", new ItemBase(100, 150, "A bottle of contained aEther. Can be smashed to restore some aEther to the nearby environment"));
         ItemRegistry.Add("Potion of Healing (Large)", new ItemBase(100, 150, "Heals for 50 health"));
         ItemRegistry.Add("Ruby", new ItemBase(50, 5000, "A beautiful ruby. Can be sold for a high price to shops"));
-        ItemRegistry.Add("Staff of Healing", new EquippableBase(0, 7, 1000, "Heals things", 20, 0, 5, 2));
+        ItemRegistry.Add("Staff of Healing", new EquippableBase(0, 7, 1000, "Heals things", new Dictionary<Stats, int>() { { Stats.MaxHealth, 20 }, { Stats.Defense, 5 }, { Stats.MagicAttack, 3 } }));
         
-        EquippableBase helmOfHealing = new EquippableBase(1, 0, 100, "It's a helmet. Riding your bike has never been safer!\nHeals for 10 health every other turn.", 0, 0, 5);
+        EquippableBase helmOfHealing = new EquippableBase(1, 0, 100, "It's a helmet. Riding your bike has never been safer!\nHeals for 10 health every other turn.", new Dictionary<Stats, int>() { { Stats.Defense, 5 } });
         helmOfHealing.AddEffect(new TriggeredEffect(EffectTriggers.StartOfTurn, new HealingPart(TargettingType.Self, 0, 10, 0)), -1, 2);
         ItemRegistry.Add("Helmet of Healing", helmOfHealing);
 
-        EquippableBase demonSword = new EquippableBase(0, 0, 500, "This sword has eyes. Why.\nKilling an enemy with a basic attack heals you.", 0, 13, 0, 0, 0, 20);
+        EquippableBase demonSword = new EquippableBase(0, 0, 500, "This sword has eyes. Why.\nKilling an enemy with a basic attack heals you.", new Dictionary<Stats, int>() { { Stats.Attack, 13 }, { Stats.CritChance, 20 } });
         //If you kill an enemy with a basic attack, heals you for 25% of your health
         demonSword.AddEffect(new TriggeredEffect(EffectTriggers.BasicAttack, new AddTriggerPart(TargettingType.Self, new TriggeredEffect(EffectTriggers.KillAnEnemy, new HealingPart(TargettingType.Self, 0, 0, 25)), 1, -1, 1)));
         ItemRegistry.Add("Demonic Sword", demonSword);
 
-        EquippableBase crescentRose = new EquippableBase(1, 8, 10000, "A breathtaking weapon from another world. It's also a gun!\nKilling an enemy with a basic attack allows you to move again.", 0, 20, 0, 0, 0, 10, 1);
+        EquippableBase crescentRose = new EquippableBase(1, 8, 10000, "A breathtaking weapon from another world. It's also a gun!\nKilling an enemy with a basic attack allows you to move again.", 
+            new Dictionary<Stats, int>() { { Stats.Attack, 20 }, { Stats.Defense, 10 }, { Stats.MaxMove, 1 } });
         //If you kill an enemy with a basic attack, increase your movement speed by one for this turn and allow you to move again
         crescentRose.AddEffect(new TriggeredEffect(EffectTriggers.BasicAttack, new AddTriggerPart(TargettingType.Self, 
             new TriggeredEffect(EffectTriggers.KillAnEnemy, new StatChangePart(TargettingType.Self, Stats.MaxMove, 1, 1, 1)), 1, -1, 1)));
@@ -135,19 +137,20 @@ public class Registry{
             TriggeredEffect(EffectTriggers.KillAnEnemy, new UniqueEffectPart(TargettingType.Self, UniqueEffects.MoveAgain)), 1, -1, 1)));
         ItemRegistry.Add("Crescent Rose", crescentRose);
 
-        EquippableBase desperationChestplate = new EquippableBase(2, 0, 500, "A remnant of the desperate last stand of a brave knight.\nMassively increase defense for a short time on low health.", 10, 0, 5);
+        EquippableBase desperationChestplate = new EquippableBase(2, 0, 500, "A remnant of the desperate last stand of a brave knight.\nMassively increase defense for a short time on low health.", new Dictionary<Stats, int>() { { Stats.MaxHealth, 10 }, { Stats.Defense, 5 } });
         desperationChestplate.AddEffect(new TriggeredEffect(EffectTriggers.FallBelow25Percent, new StatChangePart(TargettingType.Self, Stats.Defense, 20, 1, 2)));
         ItemRegistry.Add("Chestplate of the Last Stand", desperationChestplate);
 
-        EquippableBase amuletOfRejuv = new EquippableBase(6, 0, 500, "An amulet filled with a powerful healing magic.\nGet a burst of healing at low health once per battle.", 0, 0, 0, 3, 4, 0, 0, 0, 5, 0, 0, 0, 0, 15, 15);
+        EquippableBase amuletOfRejuv = new EquippableBase(6, 0, 500, "An amulet filled with a powerful healing magic.\nGet a burst of healing at low health once per battle.", 
+            new Dictionary<Stats, int>() { { Stats.Defense, 3 }, { Stats.MagicDefense, 4 }, { Stats.SpellLifesteal, 5 }, { Stats.HealingEffectiveness, 15 }, { Stats.HealingReceptiveness, 15 } });
         amuletOfRejuv.AddEffect(new TriggeredEffect(EffectTriggers.FallBelow25Percent, new HealingPart(TargettingType.Self, 0, 0, 30)), 1);
         ItemRegistry.Add("Amulet of Rejuvenation", amuletOfRejuv);
 
-        EquippableBase thornyLeggings = new EquippableBase(3, 0, 500, "Leggings possessed by a spirit of vengence.\nReturns some of the damage you take to the attacker.", 0, 5, 5);
+        EquippableBase thornyLeggings = new EquippableBase(3, 0, 500, "Leggings possessed by a spirit of vengence.\nReturns some of the damage you take to the attacker.", new Dictionary<Stats, int>() { { Stats.Attack, 5 }, { Stats.Defense, 5 } });
         thornyLeggings.AddEffect(new TriggeredEffect(EffectTriggers.TakeDamage, new DamagePart(TargettingType.Enemy, DamageType.Physical, 1, 0, 0, 0, 100, 0.1f)));
         ItemRegistry.Add("Thorny Leggings", thornyLeggings);
 
-        EquippableBase priestNecklace = new EquippableBase(6, 0, 500, "A holy necklace.\nReturns some of the healing you take to the person that healed you.", 10, 0, 0, 0, 3);
+        EquippableBase priestNecklace = new EquippableBase(6, 0, 500, "A holy necklace.\nReturns some of the healing you take to the person that healed you.", new Dictionary<Stats, int>() { { Stats.MaxHealth, 10 }, { Stats.MagicDefense, 3 } });
         priestNecklace.AddEffect(new TriggeredEffect(EffectTriggers.GettingHealed, new HealingPart(TargettingType.Ally, 1, 0, 0, 100, 0.1f)));
         ItemRegistry.Add("Priest Necklace", priestNecklace);
 

@@ -256,7 +256,9 @@ public class BattleParticipant
         {
             if (i != null)
             {
-                value += ((EquippableBase)Registry.ItemRegistry[i.Name]).stats[stat];
+                EquippableBase temp = ((EquippableBase)Registry.ItemRegistry[i.Name]);
+                if(temp.stats.ContainsKey(stat))
+                    value += temp.stats[stat];
             }
         }
 

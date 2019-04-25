@@ -449,7 +449,7 @@ public class GameStorage : MonoBehaviour {
 
     /*
      * 
-     * Custom Mathematical Functions
+     * Custom Helper Functions
      * 
     */
 
@@ -470,5 +470,19 @@ public class GameStorage : MonoBehaviour {
     {
         //Debug.Log(v1.eulerAngles.x + " = " + v2.eulerAngles.x + " | " + v1.eulerAngles.y + " = " + v2.eulerAngles.y + " | " + v1.eulerAngles.z + " = " + v2.eulerAngles.z);
         return Approximately(v1.eulerAngles, v2.eulerAngles);
+    }
+
+    public static string StatToString(Stats stat)
+    {
+        string s = stat.ToString();
+        for(int i = 1; i < s.Length; i++)
+        {
+            if (char.IsUpper(s[i]))
+            {
+                s = s.Substring(0, i) + " " + s.Substring(i);
+                i++;
+            }
+        }
+        return s;
     }
 }

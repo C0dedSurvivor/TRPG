@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,17 +9,18 @@ public class EquipInventory : GridInventoryGUI
     public GameObject equipButton;
     public GameObject discardButton;
 
-    public GameObject item1Info;
-    public GameObject item2Info;
-
     public GameObject unequipButton;
 
     //To hide the skill pieces
     public GameObject skillText;
     public GameObject skillButton;
 
+    public GameObject itemInfoTextPrefab;
+
     //Currently selected equipment slot
     private int invSlot;
+
+    private int mousedOverItem;
 
     /// <summary>
     /// Opens the equippables viewer for a given slot
@@ -27,6 +29,7 @@ public class EquipInventory : GridInventoryGUI
     public void OpenEquipInventory(int inv)
     {
         invSlot = inv;
+        mousedOverItem = int.MinValue;
         //Min makes both accessory slots grab the accessory inventory
         itemList = Inventory.GetItemList(Mathf.Min(invSlot, 6));
 
@@ -129,138 +132,156 @@ public class EquipInventory : GridInventoryGUI
         OpenEquipInventory(invSlot);
     }
 
-
-    //Needs a ground-up rewrite
-
-
     /// <summary>
     /// If the player is mousing over an equippable, displays the item info panel and updates the contained information accordingly
     /// </summary>
     /// <param name="item">The ID of the item being moused over, negative for an equipped item and positive for an unequipped item</param>
     public override void MouseOverItem(int item)
     {
-        itemInfo.SetActive(true);
         itemInfo.transform.position = Input.mousePosition + new Vector3(2, -2, 0);
-
-        //If mousing over an equipped item
-        if (item < 0)
+        if (item != mousedOverItem)
         {
-            if (GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(-item - 1) != null)
+            itemInfo.SetActive(true);
+            mousedOverItem = item;
+            //If mousing over an equipped item
+            if (item < 0)
             {
-
-                UpdateItemInfo(item1Info, GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(-item - 1).Name);
-                item2Info.SetActive(false);
+                if (GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(-item - 1) != null)
+                    UpdateSingleItemInfo(GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(-item - 1).Name);
+                else
+                    itemInfo.SetActive(false);
             }
+            //If the player is mousing over an unequipped item for a slot with nothing equipped
+            else if (GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot) == null)
+            {
+                UpdateSingleItemInfo(itemList[item].Name);
+            }
+            //If player is mousing over an unequipped item for an inventory slot with an equipped item
             else
-                itemInfo.SetActive(false);
-        }
-        //If the player is mousing over an unequipped item for a slot with nothing equipped
-        else if (GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot) == null)
-        {
-            UpdateItemInfo(item1Info, itemList[item].Name);
-            item2Info.SetActive(false);
-        }
-        //If player is mousing over an unequipped item for an inventory slot with an equipped item
-        else
-        {
-            string itemName = GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot).Name;
-            UpdateItemInfo(item1Info, itemName);
-            UpdateItemInfo(item2Info, itemList[item].Name);
-
-            //
-            //
-            //Sets the comparison colors for all of the stats
-            //
-            //
-
-            EquippableBase equipped = ((EquippableBase)Registry.ItemRegistry[itemName]);
-            EquippableBase inInv = ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]);
-            Text[] children1 = item1Info.transform.GetComponentsInChildren<Text>();
-            Text[] children2 = item2Info.transform.GetComponentsInChildren<Text>();
-            
-            UpdateComparison(equipped, inInv, Stats.MaxHealth, children1[2], children2[2]);
-            UpdateComparison(equipped, inInv, Stats.Attack, children1[3], children2[3]);
-            UpdateComparison(equipped, inInv, Stats.MagicAttack, children1[4], children2[4]);
-            UpdateComparison(equipped, inInv, Stats.Defense, children1[5], children2[5]);
-            UpdateComparison(equipped, inInv, Stats.MagicDefense, children1[6], children2[6]);
-            UpdateComparison(equipped, inInv, Stats.CritChance, children1[7], children2[7]);
+            {
+                string itemName = GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot).Name;
+                UpdateComparison(((EquippableBase)Registry.ItemRegistry[itemName]), itemList[item].Name);
+            }
         }
         base.MouseOverItem(item);
     }
 
-    private void UpdateItemInfo(GameObject itemViewer, string name)
+    /// <summary>
+    /// Resets the moused over item when the item is no longer moused over
+    /// </summary>
+    public override void MouseLeaveItem()
     {
-        itemViewer.SetActive(true);
-
-        EquippableBase item = ((EquippableBase)Registry.ItemRegistry[name]);
-
-        Text[] children = itemViewer.transform.GetComponentsInChildren<Text>();
-
-        children[0].text = name;
-        children[1].text = "Equipment type: ";
-        switch (item.equipSlot)
-        {
-            case 0:
-                children[1].text += "Weapon";
-                break;
-            case 1:
-                children[1].text += "Helmet";
-                break;
-            case 2:
-                children[1].text += "Chestplate";
-                break;
-            case 3:
-                children[1].text += "Legs";
-                break;
-            case 4:
-                children[1].text += "Boots";
-                break;
-            case 5:
-                children[1].text += "Hands";
-                break;
-            case 6:
-                children[1].text += "Accessory";
-                break;
-        }
-
-        children[2].color = new Color(0.195f, 0.195f, 0.195f, 1);
-        children[2].text = "Health: " + item.stats[Stats.MaxHealth];
-
-        children[3].color = new Color(0.195f, 0.195f, 0.195f, 1);
-        children[3].text = "Physical Strength: " + item.stats[Stats.Attack];
-
-        children[4].color = new Color(0.195f, 0.195f, 0.195f, 1);
-        children[4].text = "AEtheric Strength: " + item.stats[Stats.MagicAttack];
-
-        children[5].color = new Color(0.195f, 0.195f, 0.195f, 1);
-        children[5].text = "Physical Defense: " + item.stats[Stats.Defense];
-
-        children[6].color = new Color(0.195f, 0.195f, 0.195f, 1);
-        children[6].text = "AEtheric Defense: " + item.stats[Stats.MagicDefense];
-
-        children[7].color = new Color(0.195f, 0.195f, 0.195f, 1);
-        children[7].text = "Crit Chance: " + item.stats[Stats.CritChance] + "%";
-
-        children[8].text = item.FlavorText;
-        children[9].text = "Sells for: " + item.SellAmount;
+        mousedOverItem = int.MinValue;
+        base.MouseLeaveItem();
     }
 
-    private void UpdateComparison(EquippableBase equipped, EquippableBase inInv, Stats stat, Text equippedText, Text inInvText)
+    /// <summary>
+    /// Updates the item info with the base info for the given item
+    /// </summary>
+    /// <param name="textList">The text items to update with the info</param>
+    /// <param name="item">The name of the item</param>
+    private void UpdateBaseInfo(Text[] textList, string item)
     {
-        if (equipped.stats[stat] > inInv.stats[stat])
+        textList[0].text = item;
+        textList[1].text = "Equipment type: ";
+        switch (((EquippableBase)Registry.ItemRegistry[item]).equipSlot)
         {
-            equippedText.color = Color.green;
-            inInvText.color = Color.red;
+            case 0:
+                textList[1].text += "Weapon";
+                break;
+            case 1:
+                textList[1].text += "Helmet";
+                break;
+            case 2:
+                textList[1].text += "Chestplate";
+                break;
+            case 3:
+                textList[1].text += "Legs";
+                break;
+            case 4:
+                textList[1].text += "Boots";
+                break;
+            case 5:
+                textList[1].text += "Hands";
+                break;
+            case 6:
+                textList[1].text += "Accessory";
+                break;
         }
-        else if (equipped.stats[stat] < inInv.stats[stat])
+    }
+
+    /// <summary>
+    /// Updates the info panel with the info of a given item
+    /// </summary>
+    /// <param name="name">The name of the item</param>
+    private void UpdateSingleItemInfo(string name)
+    {
+        EquippableBase item = ((EquippableBase)Registry.ItemRegistry[name]);
+
+        Text[] children = itemInfo.transform.GetComponentsInChildren<Text>();
+
+        UpdateBaseInfo(children, name);
+
+        //Removes the previous info texts
+        for(int i = 2; i < children.Length; i++)
         {
-            equippedText.color = Color.red;
-            inInvText.color = Color.green;
+            Destroy(itemInfo.transform.GetChild(i).gameObject);
         }
-        else
+
+        foreach(Stats stat in (Stats[])Enum.GetValues(typeof(Stats)))
         {
-            equippedText.color = Color.blue;
-            inInvText.color = Color.blue;
+            if (item.stats.ContainsKey(stat))
+            {
+                Text text = Instantiate(itemInfoTextPrefab, itemInfo.transform).GetComponent<Text>();
+                string statName = GameStorage.StatToString(stat);
+                bool isPercent = statName.Contains("Effectiveness") || statName.Contains("Receptiveness") || statName.Contains("Lifesteal") || statName.Contains("Chance");
+                text.text = statName + ": " + ((isPercent && item.stats[stat] > 0) ? "+" : "") + item.stats[stat] + (isPercent ? "%" : "");
+            }
         }
+
+        Text flavorText = Instantiate(itemInfoTextPrefab, itemInfo.transform).GetComponent<Text>();
+        flavorText.text = item.FlavorText;
+
+        Text sellText = Instantiate(itemInfoTextPrefab, itemInfo.transform).GetComponent<Text>();
+        sellText.text = "Sells for: " + item.SellAmount;
+    }
+
+    /// <summary>
+    /// Updates the info panel to show a comparison between the equipped itm for a slot and the unequipped one
+    /// </summary>
+    /// <param name="equipped">The equipped item</param>
+    /// <param name="inInvName">Name of the unequipped item</param>
+    private void UpdateComparison(EquippableBase equipped, string inInvName)
+    {
+        Text[] children = itemInfo.transform.GetComponentsInChildren<Text>();
+        
+        UpdateBaseInfo(children, inInvName);
+
+        EquippableBase inInv = ((EquippableBase)Registry.ItemRegistry[inInvName]);
+
+        //Removes the previous info texts
+        for (int i = 2; i < children.Length; i++)
+        {
+            Destroy(itemInfo.transform.GetChild(i).gameObject);
+        }
+
+        foreach (Stats stat in (Stats[])Enum.GetValues(typeof(Stats)))
+        {
+            if (equipped.stats.ContainsKey(stat) || inInv.stats.ContainsKey(stat))
+            {
+                Text text = Instantiate(itemInfoTextPrefab, itemInfo.transform).GetComponent<Text>();
+                string statName = GameStorage.StatToString(stat);
+                bool isPercent = statName.Contains("Effectiveness") || statName.Contains("Receptiveness") || statName.Contains("Lifesteal") || statName.Contains("Chance");
+                int equippedStat = equipped.stats.ContainsKey(stat) ? equipped.stats[stat] : 0;
+                int inInvStat = inInv.stats.ContainsKey(stat) ? inInv.stats[stat] : 0;
+                text.text = statName + ": " + ((isPercent && equippedStat > 0) ? "+" : "") + equippedStat + (isPercent ? "%" : "") + " -> " + ((isPercent && inInvStat > 0) ? "+" : "") + inInvStat + (isPercent ? "%" : "");
+            }
+        }
+
+        Text flavorText = Instantiate(itemInfoTextPrefab, itemInfo.transform).GetComponent<Text>();
+        flavorText.text = inInv.FlavorText;
+
+        Text sellText = Instantiate(itemInfoTextPrefab, itemInfo.transform).GetComponent<Text>();
+        sellText.text = "Sells for: " + inInv.SellAmount;
     }
 }

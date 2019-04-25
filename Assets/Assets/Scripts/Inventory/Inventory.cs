@@ -63,11 +63,11 @@ public class StoredItem
                     {
                         return -1;
                     }
-                    if (item1.stats[Stats.MaxHealth] + item1.stats[Stats.Attack] + item1.stats[Stats.Defense] + item1.stats[Stats.MagicAttack] + item1.stats[Stats.MagicDefense] + item1.stats[Stats.CritChance] > item2.stats[Stats.MaxHealth] + item2.stats[Stats.Attack] + item2.stats[Stats.Defense] + item2.stats[Stats.MagicAttack] + item2.stats[Stats.MagicDefense] + item2.stats[Stats.CritChance])
+                    if (item1.TotalStats > item2.TotalStats)
                     {
                         return -1;
                     }
-                    else if (item1.stats[Stats.MaxHealth] + item1.stats[Stats.Attack] + item1.stats[Stats.Defense] + item1.stats[Stats.MagicAttack] + item1.stats[Stats.MagicDefense] + item1.stats[Stats.CritChance] < item2.stats[Stats.MaxHealth] + item2.stats[Stats.Attack] + item2.stats[Stats.Defense] + item2.stats[Stats.MagicAttack] + item2.stats[Stats.MagicDefense] + item2.stats[Stats.CritChance])
+                    else if (item1.TotalStats < item2.TotalStats)
                     {
                         return 1;
                     }

@@ -75,7 +75,7 @@ public class VisualInventoryBase : MonoBehaviour {
     /// <summary>
     /// Hides the skill info when the player is no longer mousing over an item
     /// </summary>
-    public void MouseLeaveItem()
+    public virtual void MouseLeaveItem()
     {
         itemInfo.SetActive(false);
     }

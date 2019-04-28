@@ -128,7 +128,7 @@ public class Registry{
         demonSword.AddEffect(new TriggeredEffect(EffectTriggers.BasicAttack, new AddTriggerPart(TargettingType.Self, new TriggeredEffect(EffectTriggers.KillAnEnemy, new HealingPart(TargettingType.Self, 0, 0, 25)), 1, -1, 1)));
         ItemRegistry.Add("Demonic Sword", demonSword);
 
-        EquippableBase crescentRose = new EquippableBase(1, 8, 10000, "A breathtaking weapon from another world. It's also a gun!\nKilling an enemy with a basic attack allows you to move again.", 
+        EquippableBase crescentRose = new EquippableBase(0, 8, 10000, "A breathtaking weapon from another world. It's also a gun!\nKilling an enemy with a basic attack allows you to move again.", 
             new Dictionary<Stats, int>() { { Stats.Attack, 20 }, { Stats.Defense, 10 }, { Stats.MaxMove, 1 } });
         //If you kill an enemy with a basic attack, increase your movement speed by one for this turn and allow you to move again
         crescentRose.AddEffect(new TriggeredEffect(EffectTriggers.BasicAttack, new AddTriggerPart(TargettingType.Self, 

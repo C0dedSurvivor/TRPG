@@ -54,7 +54,7 @@ public class Skill {
         partList.Add(new HealingPart(target, healing, flatHealing, percentMaxHealth, percentCurrentHealth));
     }
 
-    public void AddStatPart(TargettingType target, Stats affectedStat, int flat, int multiplier, int duration, int chance = 100)
+    public void AddStatPart(TargettingType target, Stats affectedStat, int flat, float multiplier, int duration, int chance = 100)
     {
         partList.Add(new StatChangePart(target, affectedStat, flat, multiplier, duration, chance));
     }

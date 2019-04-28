@@ -35,46 +35,17 @@ public class Player : BattleParticipant
     //Skills assigned to the quick cast buttons in battle
     public List<Vector2Int> skillQuickList = new List<Vector2Int>();
 
-    public Player(int x, int y, int mT, string name) : base(name)
+    public Player(int x, int y, int mT, string name) : base(x, y, mT, name)
     {
         position = new Vector2Int(x, y);
         //Generates default player data if that player's file doesn't exist
         if (!File.Exists("Assets/Resources/Storage/Players/" + name + ".data")) {
-            moveType = mT;
-            stats.Add(Stats.MaxHealth, 150 + mT);
-            stats.Add(Stats.Attack, 15 + mT);
-            stats.Add(Stats.Defense, 15 + mT);
-            stats.Add(Stats.MagicAttack, 15 + mT);
-            stats.Add(Stats.MagicDefense, 15 + mT);
-            stats.Add(Stats.CritChance, 15 + mT);
-            stats.Add(Stats.MaxMove, Registry.MovementRegistry[moveType].moveSpeed);
-            stats.Add(Stats.BasicAttackLifesteal, 0);
-            stats.Add(Stats.SpellLifesteal, 0);
-            stats.Add(Stats.BasicAttackEffectiveness, 100);
-            stats.Add(Stats.SpellDamageEffectiveness, 100);
-            stats.Add(Stats.BasicAttackReceptiveness, 100);
-            stats.Add(Stats.SpellDamageReceptiveness, 100);
-            stats.Add(Stats.HealingEffectiveness, 100);
-            stats.Add(Stats.HealingReceptiveness, 100);
-            cHealth = GetEffectiveStat(Stats.MaxHealth);
             //Divides by two to test healing
-            cHealth = GetEffectiveStat(Stats.MaxHealth) / 2;
+            //cHealth = GetEffectiveStat(Stats.MaxHealth) / 2;
             equippedWeapon = new Equippable("Dagger");
             skillQuickList.Add(new Vector2Int(1, 1));
             skillQuickList.Add(new Vector2Int(1, 2));
             skillQuickList.Add(new Vector2Int(1, 3));
-
-            //grab all the skills
-            List<int> treeList = GameStorage.GetPlayerSkillList(name);
-            foreach (int tree in treeList)
-            {
-                skillTreeList.Add(tree, new Dictionary<int, SkillInfo>());
-                foreach (int skill in GameStorage.skillTreeList[tree].Keys) {
-                    skillTreeList[tree].Add(skill, new SkillInfo());
-                    if (GameStorage.skillTreeList[tree][skill].dependencies.Count == 0)
-                        skillTreeList[tree][skill].unlocked = true;
-                }
-            }
         }
         else
         {
@@ -142,27 +113,18 @@ public class Player : BattleParticipant
         exp = file.ReadInt32();
         skillPoints = file.ReadInt32();
         moveType = file.ReadInt32();
-        stats.Add(Stats.Attack, file.ReadInt32());
+        stats[Stats.Attack] = file.ReadInt32();
         attackGrowthType = file.ReadString();
-        stats.Add(Stats.Defense, file.ReadInt32());
+        stats[Stats.Defense] = file.ReadInt32();
         defenseGrowthType = file.ReadString();
-        stats.Add(Stats.MagicAttack, file.ReadInt32());
+        stats[Stats.MagicAttack] = file.ReadInt32();
         mAttackGrowthType = file.ReadString();
-        stats.Add(Stats.MagicDefense, file.ReadInt32());
+        stats[Stats.MagicDefense] = file.ReadInt32();
         mDefenseGrowthType = file.ReadString();
-        stats.Add(Stats.CritChance, file.ReadInt32());
+        stats[Stats.CritChance] = file.ReadInt32();
         cHealth = file.ReadInt32();
-        stats.Add(Stats.MaxHealth, file.ReadInt32());
-        stats.Add(Stats.MaxMove, Registry.MovementRegistry[moveType].moveSpeed);
-        stats.Add(Stats.BasicAttackLifesteal, 0);
-        stats.Add(Stats.SpellLifesteal, 0);
-        stats.Add(Stats.BasicAttackEffectiveness, 100);
-        stats.Add(Stats.SpellDamageEffectiveness, 100);
-        stats.Add(Stats.BasicAttackReceptiveness, 100);
-        stats.Add(Stats.SpellDamageReceptiveness, 100);
-        stats.Add(Stats.HealingEffectiveness, 100);
-        stats.Add(Stats.HealingReceptiveness, 100);
-        cHealth = GetEffectiveStat(Stats.MaxHealth);
+        stats[Stats.MaxHealth] = file.ReadInt32();
+        stats[Stats.MaxMove] = Registry.MovementRegistry[moveType].moveSpeed;
         healthGrowthType = file.ReadString();
         for(int i = 0; i < equipment.Length; i++)
         {

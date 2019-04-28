@@ -23,7 +23,7 @@ public class ShopkeepGUI : GearInventoryGUI
     public void OpenBuyingShop(List<string> shopList)
     {
         form = "buy";
-        Destroy();
+        Close();
         foreach (string i in shopList)
         {
             switch (currentFilter)
@@ -55,15 +55,15 @@ public class ShopkeepGUI : GearInventoryGUI
     public void OpenSellingShop()
     {
         form = "sell";
-        Destroy();
+        Close();
     }
 
     /// <summary>
     /// Clears all of the visibles and data
     /// </summary>
-    public override void Destroy()
+    public override void Close()
     {
-        base.Destroy();
+        base.Close();
         selected.Clear();
     }
 
@@ -89,7 +89,7 @@ public class ShopkeepGUI : GearInventoryGUI
         }
 
         //Re-generates the visual inventory
-        Destroy();
+        Close();
         GenerateInventory();
 
         for (int i = 0; i < itemBoxList.Count; i++)

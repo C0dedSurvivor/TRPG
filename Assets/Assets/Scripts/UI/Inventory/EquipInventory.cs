@@ -56,6 +56,7 @@ public class EquipInventory : GridInventoryGUI
         unequipButton.SetActive(false);
         skillText.SetActive(true);
         skillButton.SetActive(true);
+        mousedOverItem = int.MinValue;
     }
 
     /// <summary>

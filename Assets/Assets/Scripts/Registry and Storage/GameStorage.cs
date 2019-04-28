@@ -230,7 +230,7 @@ public class GameStorage : MonoBehaviour {
         Skill holyHandGrenade = new Skill("Holy Hand Grenade", TargettingType.AllInRange, 1, 7, 5, 5, 0, 0);
         holyHandGrenade.AddDamagePart(TargettingType.Enemy, DamageType.Magical, 3, 3, 0, 0);
         holyHandGrenade.AddHealPart(TargettingType.Ally, 3, 3, 0, 0);
-        holyHandGrenade.AddStatPart(TargettingType.Ally, Stats.Attack, 5, 0, 3);
+        holyHandGrenade.AddStatPart(TargettingType.Ally, Stats.Attack, 5, 1, 3);
         testSkillTree.Add(1, holyHandGrenade);
 
         Skill firewall = new Skill("Firewall", TargettingType.AllInRange, 4, 7, 1, 3, 1, 1);
@@ -240,7 +240,7 @@ public class GameStorage : MonoBehaviour {
 
         Skill conflagration = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
         conflagration.AddDamagePart(TargettingType.Enemy, DamageType.Magical, 10, 0, 0, 0);
-        conflagration.AddStatPart(TargettingType.Enemy, Stats.Attack, 0, -4, 3);
+        conflagration.AddStatPart(TargettingType.Enemy, Stats.Attack, 0, 0.75f, 3);
         conflagration.AddDependency(1);
         testSkillTree.Add(3, conflagration);
 
@@ -356,6 +356,8 @@ public class GameStorage : MonoBehaviour {
         switch (name)
         {
             case "Player1":
+            case "Player3":
+            case "Player4":
                 playerSkillTrees.Add(1);
                 playerSkillTrees.Add(2);
                 playerSkillTrees.Add(3);
@@ -468,7 +470,6 @@ public class GameStorage : MonoBehaviour {
     
     public static bool Approximately(Quaternion v1, Quaternion v2)
     {
-        //Debug.Log(v1.eulerAngles.x + " = " + v2.eulerAngles.x + " | " + v1.eulerAngles.y + " = " + v2.eulerAngles.y + " | " + v1.eulerAngles.z + " = " + v2.eulerAngles.z);
         return Approximately(v1.eulerAngles, v2.eulerAngles);
     }
 

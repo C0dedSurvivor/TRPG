@@ -15,7 +15,7 @@ public class AddTriggerPart : SkillPartBase
     public AddTriggerPart(TargettingType target, TriggeredEffect effect, int maxTimesThisBattle = -1, int turnCooldown = -1, int maxActiveTurns = -1, int chance = 100) : base(target, chance)
     {
         this.effect = effect;
-        this.maxActiveTurns = maxActiveTurns;
+        this.maxTimesThisBattle = maxTimesThisBattle;
         this.turnCooldown = turnCooldown;
         this.maxActiveTurns = maxActiveTurns;
     }

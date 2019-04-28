@@ -963,9 +963,9 @@ public class Battle : MonoBehaviour
         if (damage > 0 && attacker.GetEffectiveStat(Stats.BasicAttackLifesteal) > 0)
         {
             eventQueue.Insert(new TextEvent(attacker.name + " lifesteals from the blow."));
-            eventQueue.Insert(new ExecuteEffectEvent(new HealingPart(TargettingType.Self, 0, Mathf.RoundToInt(damage * attacker.GetEffectiveStat(Stats.BasicAttackLifesteal) / 100.0f), 0), attacker, attacker));
+            eventQueue.Insert(new ExecuteEffectEvent(new HealingPart(TargettingType.Self, 0, Mathf.CeilToInt(damage * attacker.GetEffectiveStat(Stats.BasicAttackLifesteal) / 100.0f), 0), attacker, attacker));
         }
-        
+
         eventQueue.Insert(new FunctionEvent<BattleParticipant, BattleParticipant>(PerformCounterattack, defender, attacker));
     }
 
@@ -991,8 +991,24 @@ public class Battle : MonoBehaviour
             if (damage > 0 && attacker.GetEffectiveStat(Stats.BasicAttackLifesteal) > 0)
             {
                 eventQueue.Insert(new TextEvent(attacker.name + " lifesteals from the blow."));
-                eventQueue.Insert(new ExecuteEffectEvent(new HealingPart(TargettingType.Self, 0, Mathf.RoundToInt(damage * attacker.GetEffectiveStat(Stats.BasicAttackLifesteal) / 100.0f), 0), attacker, attacker));
+                eventQueue.Insert(new ExecuteEffectEvent(new HealingPart(TargettingType.Self, 0, Mathf.CeilToInt(damage * attacker.GetEffectiveStat(Stats.BasicAttackLifesteal) / 100.0f), 0), attacker, attacker));
             }
+
+            eventQueue.Insert(new FunctionEvent< BattleParticipant, BattleParticipant > (CheckForKill, attacker, defender));
+        }
+    }
+
+    /// <summary>
+    /// Checks to see if a pawn dies from a source of damage and checks for relevant triggers
+    /// </summary>
+    /// <param name="attacker">The pawn that may have killed another</param>
+    /// <param name="defender">The target that may have died</param>
+    private void CheckForKill(BattleParticipant attacker, BattleParticipant defender)
+    {
+        if (defender.cHealth <= 0)
+        {
+            CheckEventTriggers(defender, EffectTriggers.Die);
+            CheckEventTriggers(attacker, EffectTriggers.KillAnEnemy);
         }
     }
 
@@ -1351,6 +1367,7 @@ public class Battle : MonoBehaviour
     private void CheckEventTriggers(BattleParticipant triggered, EffectTriggers trigger, BattleParticipant other = null, int data = -1)
     {
         List<SkillPartBase> list = triggered.GetTriggeredEffects(trigger);
+        Debug.Log("Checking for trigger: " + trigger + ". Results: " + list.Count);
         foreach (SkillPartBase effect in list)
         {
             if (effect.targetType == TargettingType.Self || effect.targetType == TargettingType.AllAllies)
@@ -1431,7 +1448,10 @@ public class Battle : MonoBehaviour
                         CheckEventTriggers(target, EffectTriggers.TakeMagicDamage, caster, damage);
                     }
                     if (fromSpell && caster.GetEffectiveStat(Stats.SpellLifesteal) > 0)
-                        eventQueue.Insert(new ExecuteEffectEvent(new HealingPart(TargettingType.Self, 0, Mathf.RoundToInt(damage * caster.GetEffectiveStat(Stats.SpellLifesteal) / 100.0f), 0), caster, caster));
+                    {
+                        eventQueue.Insert(new TextEvent(caster.name + " steals some life essence from the spell."));
+                        eventQueue.Insert(new ExecuteEffectEvent(new HealingPart(TargettingType.Self, 0, Mathf.CeilToInt(damage * caster.GetEffectiveStat(Stats.SpellLifesteal) / 100.0f), 0), caster, caster));
+                    }
                 }
 
                 //If this causes them to fall below 50% health
@@ -1441,11 +1461,7 @@ public class Battle : MonoBehaviour
                 if (previousHealth >= target.GetEffectiveStat(Stats.MaxHealth) / 4.0 && target.cHealth < target.GetEffectiveStat(Stats.MaxHealth) / 4.0)
                     CheckEventTriggers(target, EffectTriggers.FallBelow25Percent, caster);
                 //If the target dies
-                if (target.cHealth <= 0)
-                {
-                    CheckEventTriggers(target, EffectTriggers.Die);
-                    CheckEventTriggers(caster, EffectTriggers.KillAnEnemy);
-                }
+                eventQueue.Insert(new FunctionEvent<BattleParticipant, BattleParticipant>(CheckForKill, caster, target));
 
                 eventQueue.Insert(new FunctionEvent(delegate { CheckForDeath(); }));
             }
@@ -1476,6 +1492,14 @@ public class Battle : MonoBehaviour
             else if (effect is StatChangePart)
             {
                 StatChangePart trueEffect = effect as StatChangePart;
+                if(trueEffect.StatMod.flatMod < 0)
+                    eventQueue.Insert(new TextEvent(target.name + "'s " + GameStorage.StatToString(trueEffect.StatMod.affectedStat) + " was decreased by " + trueEffect.StatMod.flatMod + "!"));
+                else if(trueEffect.StatMod.flatMod > 0)
+                    eventQueue.Insert(new TextEvent(target.name + "'s " + GameStorage.StatToString(trueEffect.StatMod.affectedStat) + " was increased by " + trueEffect.StatMod.flatMod + "!"));
+                if (trueEffect.StatMod.multMod < 1)
+                    eventQueue.Insert(new TextEvent(target.name + "'s " + GameStorage.StatToString(trueEffect.StatMod.affectedStat) + " was decreased by " + ((1 - trueEffect.StatMod.flatMod) * 100) + "%!"));
+                else if (trueEffect.StatMod.multMod > 1)
+                    eventQueue.Insert(new TextEvent(target.name + "'s " + GameStorage.StatToString(trueEffect.StatMod.affectedStat) + " was increased by " + ((trueEffect.StatMod.flatMod - 1) * 100) + "%!"));
                 target.AddMod(trueEffect.StatMod);
             }
 
@@ -1571,7 +1595,7 @@ public class Battle : MonoBehaviour
                     //Makes that pawn able to move again if it can move at all
                     case UniqueEffects.MoveAgain:
                         //If the target cannot already move again
-                        if (!target.moved)
+                        if (target.moved)
                         {
                             //Check if the target is able to move again
                             bool canMove = target.CanMove();

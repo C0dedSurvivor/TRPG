@@ -93,11 +93,6 @@ public class BattleParticipant
 
     public FacingDirection facing = FacingDirection.North;
 
-    public BattleParticipant(string name)
-    {
-        this.name = name;
-    }
-
     //Enemy creator
     public BattleParticipant(int x, int y, int mT, string name)
     {
@@ -105,9 +100,9 @@ public class BattleParticipant
         position.x = x;
         position.y = y;
         moveType = mT;
-        stats.Add(Stats.MaxHealth, 1);
-        stats.Add(Stats.Attack, 15 + mT);
-        stats.Add(Stats.Defense, 15 + mT);
+        stats.Add(Stats.MaxHealth, 20 + mT);
+        stats.Add(Stats.Attack, 20 + mT);
+        stats.Add(Stats.Defense, 10 + mT);
         stats.Add(Stats.MagicAttack, 15 + mT);
         stats.Add(Stats.MagicDefense, 15 + mT);
         stats.Add(Stats.CritChance, 15 + mT);
@@ -190,16 +185,17 @@ public class BattleParticipant
     /// <returns>A new statMod containing the combined values of all statMods affecting this pawn for the specified stat</returns>
     public StatMod GetStatMod(Stats affectedStat)
     {
-        StatMod statMod = new StatMod(affectedStat, 0, 1, 0);
+        StatMod statMod = new StatMod(affectedStat, 0, 0, 0);
 
         foreach (StatMod s in modifierList)
         {
             if (s.affectedStat == affectedStat)
             {
                 statMod.flatMod += s.flatMod;
-                statMod.multMod += s.multMod;
+                statMod.multMod += s.multMod - 1;
             }
         }
+        statMod.multMod += 1;
 
         return statMod;
     }
@@ -265,7 +261,7 @@ public class BattleParticipant
         StatMod s = GetStatMod(stat);
 
         value += s.flatMod;
-        value *= (int)(1.0f + 0.125f * s.multMod);
+        value = Mathf.RoundToInt(value * s.multMod);
 
         if (stat == Stats.MaxMove && value < 0)
             value = 0;
@@ -314,12 +310,14 @@ public class BattleParticipant
 
     public void AddTemporaryTrigger(TriggeredEffect effect, int maxTimesThisBattle, int turnCooldown, int maxActiveTurns)
     {
+        Debug.Log("Adding a temporary effect");
         temporaryEffectList.Add(new Pair<TriggeredEffect, TemporaryEffectData>(effect, new TemporaryEffectData(maxTimesThisBattle, turnCooldown, maxActiveTurns)));
     }
 
     public void StartOfMatch()
     {
         moved = false;
+        temporaryEffectList = new List<Pair<TriggeredEffect, TemporaryEffectData>>();
         foreach (Equippable i in equipment)
         {
             if (i != null)
@@ -331,7 +329,6 @@ public class BattleParticipant
                 }
             }
         }
-        temporaryEffectList = new List<Pair<TriggeredEffect, TemporaryEffectData>>();
     }
 
     public void StartOfTurn()

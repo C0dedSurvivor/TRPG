@@ -5,13 +5,12 @@ using System.Text;
 
 public class StatMod
 {
-    //atk, def, matk, mdef, crit, move
     public Stats affectedStat;
     public int flatMod;
-    public int multMod;
+    public float multMod;
     public int duration;
 
-    public StatMod(Stats stat, int flat, int mult, int dur)
+    public StatMod(Stats stat, int flat, float mult, int dur)
     {
         affectedStat = stat;
         flatMod = flat;

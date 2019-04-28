@@ -58,7 +58,17 @@ public class VisualInventoryBase : MonoBehaviour {
         }
     }
 
-    //
+    public virtual void Close()
+    {
+        for (int i = 0; i < itemBoxList.Count; i++)
+        {
+            Destroy(itemBoxList[i]);
+        }
+        itemBoxList.Clear();
+        enabled = false;
+        itemInfo.SetActive(false);
+    }
+
     /// <summary>
     /// Makes sure whatever gets shown stays within the bounds of the screen
     /// To be overridden with that info needs to be shown then called

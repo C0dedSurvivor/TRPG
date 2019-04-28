@@ -18,7 +18,7 @@ public class TemporaryEffectData
 
     public TemporaryEffectData(int maxTimesThisBattle = -1, int turnCooldown = -1, int maxActiveTurns = -1)
     {
-        this.maxActiveTurns = maxActiveTurns;
+        this.maxTimesThisBattle = maxTimesThisBattle;
         this.turnCooldown = turnCooldown;
         this.maxActiveTurns = maxActiveTurns;
     }
@@ -29,7 +29,7 @@ public class TemporaryEffectData
         if (maxTimesThisBattle != -1 && usesThisBattle >= maxTimesThisBattle)
             return false;
         //If it is still on cooldown
-        if (turnCooldown > turnsSinceLastUse)
+        if (turnCooldown != -1 && turnCooldown > turnsSinceLastUse)
             return false;
         return true;
     }

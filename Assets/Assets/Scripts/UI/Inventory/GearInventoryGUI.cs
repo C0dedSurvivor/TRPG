@@ -44,15 +44,10 @@ public class GearInventoryGUI : VisualInventoryBase
     /// <summary>
     /// Clears all of the visibles and data
     /// </summary>
-    public virtual void Destroy()
+    public override void Close()
     {
-        for (int i = 0; i < itemBoxList.Count; i++)
-        {
-            Destroy(itemBoxList[i]);
-        }
-        itemBoxList.Clear();
+        base.Close();
         itemList.Clear();
-        enabled = false;
     }
 
     /// <summary>
@@ -135,7 +130,7 @@ public class GearInventoryGUI : VisualInventoryBase
     public void ChangeInventory(int filter)
     {
         GetComponent<GearTurner>().ResetRotation();
-        Destroy();
+        Close();
         GenerateInventory();
     }
 }

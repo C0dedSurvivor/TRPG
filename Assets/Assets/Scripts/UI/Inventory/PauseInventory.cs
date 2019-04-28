@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -28,9 +29,9 @@ public class PauseInventory : GearInventoryGUI {
     /// <summary>
     /// Clears all of the visibles and data
     /// </summary>
-    public override void Destroy()
+    public override void Close()
     {
-        base.Destroy();
+        base.Close();
         sorting.gameObject.SetActive(false);
         filter.gameObject.SetActive(false);
         sortAndFilter.gameObject.SetActive(false);
@@ -113,73 +114,59 @@ public class PauseInventory : GearInventoryGUI {
     /// <summary>
     /// Displays and updates the item info card if the player is mousing over an item
     /// </summary>
-    /// <param name="item">The index of the item you are mousing over</param>
-    public override void MouseOverItem(int item)
+    /// <param name="index">The index of the item you are mousing over</param>
+    public override void MouseOverItem(int index)
     {
+        Text[] children = itemInfo.transform.GetComponentsInChildren<Text>();
+
         itemInfo.SetActive(true);
         itemInfo.transform.position = Input.mousePosition + new Vector3(2, -2, 0);
-        itemInfo.transform.GetChild(0).GetComponent<Text>().text = itemList[item].Name;
+        itemInfo.transform.GetChild(0).GetComponent<Text>().text = itemList[index].Name;
         //Has to display extra stat information if the item is an equippable
-        if (Registry.ItemRegistry[itemList[item].Name] is EquippableBase)
+        if (Registry.ItemRegistry[itemList[index].Name] is EquippableBase)
         {
-            itemInfo.transform.GetChild(1).GetComponent<Text>().text = "Equipment type: ";
-            switch (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).equipSlot)
+            EquippableBase item = ((EquippableBase)Registry.ItemRegistry[itemList[index].Name]);
+            children[1].text = "Equipment type: ";
+            switch (item.equipSlot)
             {
                 case 0:
-                    itemInfo.transform.GetChild(1).GetComponent<Text>().text += "Weapon";
+                    children[1].text += "Weapon";
                     break;
                 case 1:
-                    itemInfo.transform.GetChild(1).GetComponent<Text>().text += "Helmet";
+                    children[1].text += "Helmet";
                     break;
                 case 2:
-                    itemInfo.transform.GetChild(1).GetComponent<Text>().text += "Chestplate";
+                    children[1].text += "Chestplate";
                     break;
                 case 3:
-                    itemInfo.transform.GetChild(1).GetComponent<Text>().text += "Legs";
+                    children[1].text += "Legs";
                     break;
                 case 4:
-                    itemInfo.transform.GetChild(1).GetComponent<Text>().text += "Boots";
+                    children[1].text += "Boots";
                     break;
                 case 5:
-                    itemInfo.transform.GetChild(1).GetComponent<Text>().text += "Hands";
+                    children[1].text += "Hands";
                     break;
                 case 6:
-                    itemInfo.transform.GetChild(1).GetComponent<Text>().text += "Accessory";
+                    children[1].text += "Accessory";
                     break;
             }
-            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MaxHealth] != 0)
+            foreach (Stats stat in (Stats[])Enum.GetValues(typeof(Stats)))
             {
-                itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nHealth: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MaxHealth];
+                if (item.stats.ContainsKey(stat))
+                {
+                    string statName = GameStorage.StatToString(stat);
+                    bool isPercent = statName.Contains("Effectiveness") || statName.Contains("Receptiveness") || statName.Contains("Lifesteal") || statName.Contains("Chance");
+                    children[1].text += "\n" + statName + ": " + item.stats[stat] + (isPercent ? "%" : "");
+                }
             }
-            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Attack] != 0)
-            {
-                itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nPhysical Strength: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Attack];
-            }
-            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicAttack] != 0)
-            {
-                itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nAEtheric Strength: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicAttack];
-            }
-            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Defense] != 0)
-            {
-                itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nDefense: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.Defense];
-            }
-            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicDefense] != 0)
-            {
-                itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nAEtheric Defense: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.MagicDefense];
-            }
-            if (((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.CritChance] != 0)
-            {
-                itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nCrit Chance: " + ((EquippableBase)Registry.ItemRegistry[itemList[item].Name]).stats[Stats.CritChance] + "%";
-            }
-            itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\n" + Registry.ItemRegistry[itemList[item].Name].FlavorText;
-            itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nSells for: " + Registry.ItemRegistry[itemList[item].Name].SellAmount;
         }
         else
         {
-            itemInfo.transform.GetChild(1).GetComponent<Text>().text = itemList[item].amount + "/" + Registry.ItemRegistry[itemList[item].Name].MaxStack;
-            itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\n" + Registry.ItemRegistry[itemList[item].Name].FlavorText;
-            itemInfo.transform.GetChild(1).GetComponent<Text>().text += "\nSells for: " + Registry.ItemRegistry[itemList[item].Name].SellAmount;
+            children[1].text = itemList[index].amount + "/" + Registry.ItemRegistry[itemList[index].Name].MaxStack;
         }
-        base.MouseOverItem(item);
+        children[1].text += "\n" + Registry.ItemRegistry[itemList[index].Name].FlavorText;
+        children[1].text += "\nSells for: " + Registry.ItemRegistry[itemList[index].Name].SellAmount;
+        base.MouseOverItem(index);
     }
 }

@@ -31,15 +31,10 @@ public class GridInventoryGUI : VisualInventoryBase
     /// <summary>
     /// Clears all of the visibles and data
     /// </summary>
-    public virtual void Close()
+    public override void Close()
     {
-        for (int i = 0; i < itemBoxList.Count; i++)
-        {
-            Destroy(itemBoxList[i]);
-        }
-        itemBoxList.Clear();
+        base.Close();
         gameObject.SetActive(false);
-        enabled = false;
     }
 
     /// <summary>

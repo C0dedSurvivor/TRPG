@@ -33,7 +33,8 @@ Click on an item to select it to discard
 Move - WASD <br />
 Interact with object in world - R <br />
 Enter/Leave/Navigate pause menu - Escape <br />
-Zoom camera in or out in map - Control + scroll wheel
+Zoom camera in or out in map - Control + scroll wheel <br />
+Speed up/continue text box - Enter
 
 ## Known bugs:
 * Leaving the window then coming back to it makes some UI textures no longer display

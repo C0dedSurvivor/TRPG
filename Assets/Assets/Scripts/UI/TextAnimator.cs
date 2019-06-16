@@ -6,7 +6,7 @@ using UnityEngine.UI;
 [RequireComponent(typeof(Text))]
 public class TextAnimator : MonoBehaviour
 {
-    private const float delay = 0.1f;
+    private const float delay = 0.05f;
 
     private Queue<TextEvent> toAnimate = new Queue<TextEvent>();
     private TextEvent currentAnim = null;

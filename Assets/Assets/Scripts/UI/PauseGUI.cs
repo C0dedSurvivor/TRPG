@@ -41,6 +41,7 @@ public class PauseGUI : MonoBehaviour
             {
                 loadedMenu = 1;
                 Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
                 pauseLandingScreen.SetActive(true);
                 paused = true;
             }
@@ -56,7 +57,7 @@ public class PauseGUI : MonoBehaviour
                 equipInv.Close();
             }
             //If the player wants to go back to the player info screen
-            else if (loadedMenu == 3 && GetComponentInParent<SkillTreeGUI>().failedSkillUnlock.activeSelf != true)
+            else if (loadedMenu == 3 && playerSkillScreen.GetComponent<SkillTreeGUI>().failedSkillUnlock.activeSelf != true)
             {
                 BackToPlayer();
             }
@@ -70,6 +71,10 @@ public class PauseGUI : MonoBehaviour
     {
         loadedMenu = 0;
         Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+        ClosePlayerSelection();
+        outerGear.GetComponent<PauseInventory>().Close();
+        GameObject.Find("Pause Inner Wheel").GetComponent<GearTurner>().moveToButton(3);
         pauseLandingScreen.SetActive(false);
         paused = false;
     }
@@ -124,8 +129,8 @@ public class PauseGUI : MonoBehaviour
     {
         loadedMenu = 2;
         PauseGUI.playerID = playerID;
-        UpdatePlayerEquipped();
         playerInfoScreen.SetActive(true);
+        UpdatePlayerEquipped();
     }
 
     /// <summary>
@@ -166,7 +171,20 @@ public class PauseGUI : MonoBehaviour
     public void OpenSkillScreen()
     {
         loadedMenu = 3;
-        gameObject.GetComponent<SkillTreeGUI>().OpenSkillMenu(playerID);
         playerSkillScreen.SetActive(true);
+        playerSkillScreen.GetComponent<SkillTreeGUI>().OpenSkillMenu(playerID);
+    }
+
+    /// <summary>
+    /// Exits the game
+    /// 
+    /// 
+    /// To Do: Add prompt to save when persistence works
+    /// 
+    /// 
+    /// </summary>
+    public void QuitGame()
+    {
+        Application.Quit();
     }
 }

@@ -119,7 +119,7 @@ public class BattleParticipant
         equippedWeapon = new Equippable("Wooden Sword");
 
         //Grab all the skill trees and skills for this pawn
-        List<int> treeList = GameStorage.GetPlayerSkillList("");
+        List<int> treeList = GameStorage.GetPlayerSkillList(name);
         foreach (int tree in treeList)
         {
             skillTreeList.Add(tree, new Dictionary<int, SkillInfo>());

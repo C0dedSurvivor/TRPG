@@ -19,10 +19,19 @@ public class MapPlayerScript : MonoBehaviour {
 	void Start () {
         //Locks and hides the cursor on startup
         Cursor.lockState = CursorLockMode.Locked;
-	}
-	
-	// Update is called once per frame
-	void Update () {
+        Cursor.visible = false;
+    }
+
+    // Initializes all of the storages and registries
+    void Awake()
+    {
+        Registry.FillRegistry();
+        GameStorage.FillStorage();
+        Inventory.LoadInventory();
+    }
+
+    // Update is called once per frame
+    void Update () {
         if (!PauseGUI.paused && !battleController.IsBattling)
         {
             //Interacts with any objects directly in front of the player that have a PlayerInteraction method

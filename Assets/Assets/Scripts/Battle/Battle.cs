@@ -125,14 +125,6 @@ public class Battle : MonoBehaviour
 
     #endregion
 
-    // Use this for initialization
-    void Awake()
-    {
-        Registry.FillRegistry();
-        GameStorage.FillStorage();
-        Inventory.LoadInventory();
-    }
-
     /// <summary>
     /// Sets up all of the variables and prefabs needed during the battle
     /// </summary>
@@ -266,7 +258,7 @@ public class Battle : MonoBehaviour
             else if (eventQueue.Count != 0)
             {
                 BattleEventBase currentEvent = eventQueue.GetNext();
-                if (currentEvent is ExecuteEffectEvent)
+                if (currentEvent is ExecuteEffectEvent && battleState != BattleState.None)
                 {
                     Debug.Log("EXECUTING AN EFFECT EVENT");
                     ExecuteEffectEvent trueEvent = (ExecuteEffectEvent)currentEvent;
@@ -285,7 +277,7 @@ public class Battle : MonoBehaviour
                         }
                     }
                 }
-                if (currentEvent is TextEvent)
+                if (currentEvent is TextEvent && battleState != BattleState.None)
                 {
                     Debug.Log("EXECUTING A TEXT EVENT");
                     littleInfoSys.Enqueue(currentEvent as TextEvent);
@@ -303,10 +295,10 @@ public class Battle : MonoBehaviour
                 }
                 if (currentEvent is FunctionEvent)
                 {
-                    Debug.Log("EXECUTING A FUNCTION EVENT");
+                    Debug.Log("EXECUTING A FUNCTION EVENT " + ((FunctionEvent)currentEvent).function.GetInvocationList()[0].Method.Name);
                     ((FunctionEvent)currentEvent).function();
                 }
-                if (currentEvent is FunctionEvent<BattleParticipant, BattleParticipant>)
+                if (currentEvent is FunctionEvent<BattleParticipant, BattleParticipant> && battleState != BattleState.None)
                 {
                     Debug.Log("EXECUTING A FUNCTION EVENT<T1, T2>");
                     FunctionEvent<BattleParticipant, BattleParticipant> trueEvent = (FunctionEvent<BattleParticipant, BattleParticipant>)currentEvent;
@@ -512,7 +504,6 @@ public class Battle : MonoBehaviour
         }
         else
         {
-            battleState = BattleState.None;
             ExpungeAll();
         }
         ui.EndOfBattle();
@@ -575,8 +566,9 @@ public class Battle : MonoBehaviour
         {
             Vector2Int diff = new Vector2Int(selectedMoveSpot.x - players[selectedPlayer].position.x, -(selectedMoveSpot.y - players[selectedPlayer].position.y));
             Debug.Log(diff);
-            if (CanMoveYFirst(players[selectedPlayer], diff))
+            if (CanMoveYFirst(players[selectedPlayer], new Vector2Int(diff.x, -diff.y)))
             {
+                Debug.Log("Can move y first");
                 if (diff.y != 0)
                 {
                     FacingDirection direction = diff.y > 0 ? FacingDirection.North : FacingDirection.South;
@@ -656,24 +648,27 @@ public class Battle : MonoBehaviour
         selectedPlayer = -1;
         selectedEnemy = -1;
         selectedSpell = -1;
-        updateTilesThisFrame = true;
-        battleState = BattleState.Player;
+        if (battleState != BattleState.None)
+        {
+            updateTilesThisFrame = true;
+            battleState = BattleState.Player;
 
-        //Checks if all players are done moving
-        bool playersDone = true;
-        foreach (Player p in players)
-        {
-            if (!p.moved)
-                playersDone = false;
-        }
-        if (playersDone)
-        {
-            //Resets to start enemy moves
-            for (int j = 0; j < enemies.Count; j++)
+            //Checks if all players are done moving
+            bool playersDone = true;
+            foreach (Player p in players)
             {
-                enemies[j].moved = !enemies[j].CanMove();
+                if (!p.moved)
+                    playersDone = false;
             }
-            battleState = BattleState.Enemy;
+            if (playersDone)
+            {
+                //Resets to start enemy moves
+                for (int j = 0; j < enemies.Count; j++)
+                {
+                    enemies[j].moved = !enemies[j].CanMove();
+                }
+                battleState = BattleState.Enemy;
+            }
         }
         ui.UpdateSelectedUnit();
     }
@@ -1722,7 +1717,8 @@ public class Battle : MonoBehaviour
         //Figures out what skill the player wants to cast
         Skill displaySkill = GameStorage.skillTreeList[players[selectedPlayer].skillQuickList[selectedSpell - 1].x][players[selectedPlayer].skillQuickList[selectedSpell - 1].y];
         CastSkill(displaySkill, spellCastPosition.x, spellCastPosition.y, players[selectedPlayer]);
-        FinishedMovingPawn();
+        eventQueue.Insert(new FunctionEvent(FinishedMovingPawn));
+        selectedSpell = -1;
     }
 
     /// <summary>

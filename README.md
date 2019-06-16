@@ -37,3 +37,6 @@ Zoom camera in or out in map - Control + scroll wheel
 
 ## Known bugs:
 * Leaving the window then coming back to it makes some UI textures no longer display
+* Some jitter can occur when generating skill trees with horizontal scrolling
+* Skill trees with vertical scrolling are not centered correctly and that can lead to some skills being partially or entirely off screen
+* Visual indicators for attack range don't always work around walls

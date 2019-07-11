@@ -149,11 +149,11 @@ public class Inventory
 
     public static SortingType sortingType = SortingType.AmountDecreasing;
 
-    public static void LoadInventory()
+    public static void LoadInventory(int slot)
     {
-        if (File.Exists("Assets/Resources/Storage/Inventory.data"))
+        if (File.Exists("Assets/Resources/Storage/Slot" + slot + "/Inventory.data"))
         {
-            Stream inStream = File.OpenRead("Assets/Resources/Storage/Inventory.data");
+            Stream inStream = File.OpenRead("Assets/Resources/Storage/Slot" + slot + "/Inventory.data");
             BinaryReader file = new BinaryReader(inStream);
             int amt = file.ReadInt32();
             for(int i = 0; i < amt; i++)
@@ -209,9 +209,13 @@ public class Inventory
         SortInventory((int)sortingType);
     }
 
-    public static void SaveInventory()
+    /// <summary>
+    /// Save the inventory
+    /// </summary>
+    /// <param slot="slot">The save slot to save to</param>
+    public static void SaveInventory(int slot)
     {
-        Stream outStream = File.OpenWrite("Assets/Resources/Storage/Inventory.data");
+        Stream outStream = File.OpenWrite("Assets/Resources/Storage/Slot" + slot + "/Inventory.data");
         BinaryWriter file = new BinaryWriter(outStream);
         file.Write(itemList.Count);
         foreach(StoredItem item in itemList)

@@ -22,14 +22,6 @@ public class MapPlayerScript : MonoBehaviour {
         Cursor.visible = false;
     }
 
-    // Initializes all of the storages and registries
-    void Awake()
-    {
-        Registry.FillRegistry();
-        GameStorage.FillStorage();
-        Inventory.LoadInventory();
-    }
-
     // Update is called once per frame
     void Update () {
         if (!PauseGUI.paused && !battleController.IsBattling)

@@ -64,7 +64,7 @@ public class BattleUI : MonoBehaviour
         {
             playerStats.SetActive(true);
             UpdateStats(battleController.players[battleController.selectedPlayer], playerStats.GetComponentsInChildren<Text>());
-            if (Battle.battleState != BattleState.Swap && !battleController.players[battleController.selectedPlayer].moved)
+            if (Battle.battleState != BattleState.Swap && !battleController.players[battleController.selectedPlayer].tempStats.moved)
             {
                 quickSkill1.SetActive(true);
                 quickSkill2.SetActive(true);
@@ -101,7 +101,7 @@ public class BattleUI : MonoBehaviour
                         damageNote1.text = "This enemy will not live for much longer.";
                     }
                     float pd = (battleController.players[battleController.selectedPlayer].cHealth - battleController.GetDamageValues(battleController.enemies[battleController.selectedEnemy], battleController.players[battleController.selectedPlayer]).First) / (battleController.players[battleController.selectedPlayer].GetEffectiveStat(Stats.MaxHealth) * 1.0f);
-                    if (battleController.enemies[battleController.selectedEnemy].GetWeaponStatsAtDistance(battleController.players[battleController.selectedPlayer].position - battleController.enemies[battleController.selectedEnemy].position) == null)
+                    if (battleController.enemies[battleController.selectedEnemy].GetWeaponStatsAtDistance(battleController.players[battleController.selectedPlayer].tempStats.position - battleController.enemies[battleController.selectedEnemy].tempStats.position) == null)
                     {
                         damageNote2.text = "And they shouldn't be able to counterattack me from this range.";
                     }
@@ -143,7 +143,7 @@ public class BattleUI : MonoBehaviour
         if (battleController.selectedEnemy != -1)
         {
             enemyStats.SetActive(true);
-            BattleParticipant pawn = null;
+            BattlePawnBase pawn = null;
 
             //If it is actually an enemy
             if (battleController.selectedEnemy < battleController.enemies.Count)
@@ -167,7 +167,7 @@ public class BattleUI : MonoBehaviour
     /// <summary>
     /// Updates the given stat display with the stats of the selected pawn
     /// </summary>
-    private void UpdateStats(BattleParticipant pawn, Text[] statDisplays)
+    private void UpdateStats(BattlePawnBase pawn, Text[] statDisplays)
     {
         statDisplays[0].text = pawn.name;
         statDisplays[1].text = "Atk: " + pawn.GetEffectiveStat(Stats.Attack);

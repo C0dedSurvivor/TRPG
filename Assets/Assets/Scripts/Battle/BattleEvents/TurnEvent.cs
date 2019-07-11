@@ -4,10 +4,10 @@ using UnityEngine;
 
 public struct TurnEvent : BattleEventBase
 {
-    public BattleParticipant turner;
+    public BattlePawnBase turner;
     public FacingDirection direction;
 
-    public TurnEvent(BattleParticipant turner, FacingDirection direction)
+    public TurnEvent(BattlePawnBase turner, FacingDirection direction)
     {
         this.turner = turner;
         this.direction = direction;

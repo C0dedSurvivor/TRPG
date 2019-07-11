@@ -533,7 +533,6 @@ public class SkillTreeGUI : MonoBehaviour {
     public void SwapQuickSkill(int place)
     {
         GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillQuickList[place] = new Vector2Int(currentSkillTree, selectedSkill);
-        GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].SavePlayer();
         GetComponentInParent<SkillTreeGUI>().quickSkillSwitcher.SetActive(false);
     }
 

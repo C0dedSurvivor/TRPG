@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class Enemy : BattleParticipant{
+public class Enemy : BattlePawnBase{
     //Will be used later for advanced AIs
     //See Battle's MoveEnemies() for more information
     int packVar;

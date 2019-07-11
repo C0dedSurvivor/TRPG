@@ -26,16 +26,21 @@ public class Registry{
     public static void FillRegistry()
     {
         //Adds all the different movement types
-        MovementRegistry.Add(1, new MovementType("tank", new List<BattleTiles>() { BattleTiles.Normal, BattleTiles.Forest, BattleTiles.Burning, BattleTiles.MoveDown,
-            BattleTiles.MoveLeft, BattleTiles.MoveRandom, BattleTiles.MoveRight, BattleTiles.MoveUp }, true, 1));
-        MovementRegistry.Add(2, new MovementType("average", new List<BattleTiles>() { BattleTiles.Normal, BattleTiles.Forest, BattleTiles.Burning, BattleTiles.MoveDown,
-            BattleTiles.MoveLeft, BattleTiles.MoveRandom, BattleTiles.MoveRight, BattleTiles.MoveUp }, true, 2));
-        MovementRegistry.Add(3, new MovementType("horse calvalry", new List<BattleTiles>() { BattleTiles.Normal, BattleTiles.Burning, BattleTiles.MoveDown,
-            BattleTiles.MoveLeft, BattleTiles.MoveRandom, BattleTiles.MoveRight, BattleTiles.MoveUp }, true, 3));
-        MovementRegistry.Add(4, new MovementType("flying calvalry", new List<BattleTiles>() { BattleTiles.Normal, BattleTiles.Forest, BattleTiles.Burning, BattleTiles.MoveDown,
-            BattleTiles.MoveLeft, BattleTiles.MoveRandom, BattleTiles.MoveRight, BattleTiles.MoveUp, BattleTiles.Water }, false, 3));
-        MovementRegistry.Add(5, new MovementType("water walker", new List<BattleTiles>() { BattleTiles.Normal, BattleTiles.Forest, BattleTiles.Burning, BattleTiles.MoveDown,
-            BattleTiles.MoveLeft, BattleTiles.MoveRandom, BattleTiles.MoveRight, BattleTiles.MoveUp , BattleTiles.Water }, true, 2));
+        MovementRegistry.Add(1, new MovementType("Tank", new Dictionary<BattleTiles, bool>() { {BattleTiles.Normal, false }, {BattleTiles.Forest, true },
+            { BattleTiles.Burning, false }, {BattleTiles.MoveDown, false }, { BattleTiles.MoveLeft, false }, {BattleTiles.MoveRandom, false },
+            { BattleTiles.MoveRight, false }, {BattleTiles.MoveUp, false } }, 1));
+        MovementRegistry.Add(2, new MovementType("Average", new Dictionary<BattleTiles, bool>() { {BattleTiles.Normal, false }, {BattleTiles.Forest, true },
+            { BattleTiles.Burning, false }, {BattleTiles.MoveDown, false }, { BattleTiles.MoveLeft, false }, {BattleTiles.MoveRandom, false },
+            { BattleTiles.MoveRight, false }, {BattleTiles.MoveUp, false } }, 2));
+        MovementRegistry.Add(3, new MovementType("Horse calvalry", new Dictionary<BattleTiles, bool>() { {BattleTiles.Normal, false }, {BattleTiles.Forest, true },
+            { BattleTiles.Burning, false }, {BattleTiles.MoveDown, false }, { BattleTiles.MoveLeft, false }, {BattleTiles.MoveRandom, false },
+            { BattleTiles.MoveRight, false }, {BattleTiles.MoveUp, false } }, 3));
+        MovementRegistry.Add(4, new MovementType("Flying calvalry", new Dictionary<BattleTiles, bool>() { {BattleTiles.Normal, false }, {BattleTiles.Forest, false },
+            { BattleTiles.Burning, false }, {BattleTiles.MoveDown, false }, { BattleTiles.MoveLeft, false }, {BattleTiles.MoveRandom, false },
+            { BattleTiles.MoveRight, false }, {BattleTiles.MoveUp, false }, {BattleTiles.Water, false } }, 3));
+        MovementRegistry.Add(5, new MovementType("Water walker", new Dictionary<BattleTiles, bool>() { {BattleTiles.Normal, false }, {BattleTiles.Forest, true },
+            { BattleTiles.Burning, false }, {BattleTiles.MoveDown, false }, { BattleTiles.MoveLeft, false }, {BattleTiles.MoveRandom, false },
+            { BattleTiles.MoveRight, false }, {BattleTiles.MoveUp, false }, {BattleTiles.Water, false } }, 2));
 
         //Adds all weapon types to registry
         WeaponTypeRegistry.Add(0, new WeaponType("Unarmed"));

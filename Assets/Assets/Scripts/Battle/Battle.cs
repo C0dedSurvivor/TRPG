@@ -85,7 +85,7 @@ public class Battle : MonoBehaviour
     //Stores the enemy data
     public List<Enemy> enemies;
     //Stores the visual representation of the participants
-    public Dictionary<BattleParticipant, GameObject> participantModels = new Dictionary<BattleParticipant, GameObject>();
+    public Dictionary<BattlePawnBase, GameObject> participantModels = new Dictionary<BattlePawnBase, GameObject>();
     //This is a camera
     private GameObject battleCamera;
     public GameObject mapPlayer;
@@ -167,12 +167,11 @@ public class Battle : MonoBehaviour
         for (int i = 0; i < GameStorage.activePlayerList.Count; i++)
         {
             players.Add(GameStorage.playerMasterList[GameStorage.activePlayerList[i]]);
-            players[i].position = new Vector2Int(6 + 2 * i, 10 + i % 2);
-            players[i].StartOfMatch();
+            players[i].tempStats = new BattleOnlyStats(6 + 2 * i, 10 + i % 2, players[i]);
             CheckEventTriggers(players[i], EffectTriggers.StartOfMatch);
             CheckEventTriggers(players[i], EffectTriggers.StartOfTurn);
             participantModels.Add(players[i], Instantiate(PlayerBattleModelPrefab));
-            participantModels[players[i]].transform.position = new Vector3(players[i].position.x + topLeft.x, 1, (mapSizeY - 1) - players[i].position.y + topLeft.y);
+            participantModels[players[i]].transform.position = new Vector3(players[i].tempStats.position.x + topLeft.x, 1, (mapSizeY - 1) - players[i].tempStats.position.y + topLeft.y);
         }
         //Generates enemies
         enemies = new List<Enemy>();
@@ -182,11 +181,10 @@ public class Battle : MonoBehaviour
         enemies.Add(new Enemy("Enemy4", 14, 5, 5, 5, 5));
         foreach (Enemy e in enemies)
         {
-            e.StartOfMatch();
             CheckEventTriggers(e, EffectTriggers.StartOfMatch);
             CheckEventTriggers(e, EffectTriggers.StartOfTurn);
             participantModels.Add(e, Instantiate(EnemyBattleModelPrefab));
-            participantModels[e].transform.position = new Vector3(e.position.x + topLeft.x, 1, (mapSizeY - 1) - e.position.y + topLeft.y);
+            participantModels[e].transform.position = new Vector3(e.tempStats.position.x + topLeft.x, 1, (mapSizeY - 1) - e.tempStats.position.y + topLeft.y);
         }
         eventQueue.Insert(new FunctionEvent(ui.StartBattle));
     }
@@ -223,16 +221,16 @@ public class Battle : MonoBehaviour
                 {
                     currentAnimations[i].StepAnimation();
 
-                    //Debug.Log(currentAnimations[i].mover.transform.position + "|" + currentAnimations[i].finalPosition + "|" + currentAnimations[i].mover.transform.rotation.eulerAngles + "|" + currentAnimations[i].finalRotation.eulerAngles);
+                    //Debug.Log(currentAnimations[i].mover.transform.tempStats.position + "|" + currentAnimations[i].finalPosition + "|" + currentAnimations[i].mover.transform.rotation.eulerAngles + "|" + currentAnimations[i].finalRotation.eulerAngles);
                     if (currentAnimations[i].IsDone())
                     {
-                        //Debug.Log(GameStorage.Approximately(currentAnimations[i].mover.transform.position, currentAnimations[i].finalPosition) + " | " + currentAnimations[i].mover.transform.position + "|" + currentAnimations[i].finalPosition + "|" + eventQueue.Count);
+                        //Debug.Log(GameStorage.Approximately(currentAnimations[i].mover.transform.tempStats.position, currentAnimations[i].finalPosition) + " | " + currentAnimations[i].mover.transform.tempStats.position + "|" + currentAnimations[i].finalPosition + "|" + eventQueue.Count);
                         if (battleState != BattleState.None)
                             updateTilesThisFrame = true;
                         //If it is a pawn being moved, execute the tile effects on them
                         if (participantModels.ContainsValue(currentAnimations[i].mover))
                         {
-                            BattleParticipant pawn = null;
+                            BattlePawnBase pawn = null;
                             foreach (Player p in players)
                             {
                                 if (participantModels[p] == currentAnimations[i].mover)
@@ -244,7 +242,7 @@ public class Battle : MonoBehaviour
                                     pawn = e;
                             }
                             Vector3 diff = ((FlatSpeedMovementAnim)currentAnimations[i]).Difference;
-                            pawn.position -= new Vector2Int(Mathf.RoundToInt(diff.x), -Mathf.RoundToInt(diff.z));
+                            pawn.tempStats.position -= new Vector2Int(Mathf.RoundToInt(diff.x), -Mathf.RoundToInt(diff.z));
                             
                             //Triggers the tile effects that should activate from this movement
                             TriggerTileEffects(pawn, eventQueue.StillMoving(currentAnimations[i].mover) ? MoveTriggers.PassOver : MoveTriggers.StopOnTile);
@@ -288,7 +286,7 @@ public class Battle : MonoBehaviour
                     if (trueEvent.turner.cHealth > 0)
                     {
                         Debug.Log("EXECUTING A TURN EVENT");
-                        trueEvent.turner.facing = trueEvent.direction;
+                        trueEvent.turner.tempStats.facing = trueEvent.direction;
                         participantModels[trueEvent.turner].transform.rotation = Quaternion.Euler(0, 90 * (int)trueEvent.direction, 0);
                         Debug.Log("Turned to face: " + 90 * (int)trueEvent.direction);
                     }
@@ -298,10 +296,10 @@ public class Battle : MonoBehaviour
                     Debug.Log("EXECUTING A FUNCTION EVENT " + ((FunctionEvent)currentEvent).function.GetInvocationList()[0].Method.Name);
                     ((FunctionEvent)currentEvent).function();
                 }
-                if (currentEvent is FunctionEvent<BattleParticipant, BattleParticipant> && battleState != BattleState.None)
+                if (currentEvent is FunctionEvent<BattlePawnBase, BattlePawnBase> && battleState != BattleState.None)
                 {
                     Debug.Log("EXECUTING A FUNCTION EVENT<T1, T2>");
-                    FunctionEvent<BattleParticipant, BattleParticipant> trueEvent = (FunctionEvent<BattleParticipant, BattleParticipant>)currentEvent;
+                    FunctionEvent<BattlePawnBase, BattlePawnBase> trueEvent = (FunctionEvent<BattlePawnBase, BattlePawnBase>)currentEvent;
                     trueEvent.function(trueEvent.first, trueEvent.second);
                 }
             }
@@ -377,10 +375,10 @@ public class Battle : MonoBehaviour
                         int n = PlayerAtPos(pos.x, pos.y);
                         if (n != -1)
                         {
-                            players[n].position = players[selectedPlayer].position;
-                            players[selectedPlayer].position = pos;
-                            participantModels[players[n]].transform.position = new Vector3(players[n].position.x + topLeft.x, 1, (mapSizeY - 1) - players[n].position.y + topLeft.y);
-                            participantModels[players[selectedPlayer]].transform.position = new Vector3(players[selectedPlayer].position.x + topLeft.x, 1, (mapSizeY - 1) - players[selectedPlayer].position.y + topLeft.y);
+                            players[n].tempStats.position = players[selectedPlayer].tempStats.position;
+                            players[selectedPlayer].tempStats.position = pos;
+                            participantModels[players[n]].transform.position = new Vector3(players[n].tempStats.position.x + topLeft.x, 1, (mapSizeY - 1) - players[n].tempStats.position.y + topLeft.y);
+                            participantModels[players[selectedPlayer]].transform.position = new Vector3(players[selectedPlayer].tempStats.position.x + topLeft.x, 1, (mapSizeY - 1) - players[selectedPlayer].tempStats.position.y + topLeft.y);
                             actionTaken = true;
                         }
                         selectedPlayer = -1;
@@ -389,7 +387,7 @@ public class Battle : MonoBehaviour
                     break;
                 case BattleState.Player:
                     //If player is trying to move a pawn
-                    if (tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerMoveRange && !players[selectedPlayer].moved)
+                    if (tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerMoveRange && !players[selectedPlayer].tempStats.moved)
                     {
                         selectedMoveSpot.Set(pos.x, pos.y);
                         moveMarker.transform.position = new Vector3(pos.x + topLeft.x, 1, (mapSizeY - 1) - pos.y + topLeft.y);
@@ -397,7 +395,7 @@ public class Battle : MonoBehaviour
 
                         //Update the line renderer
                         moveMarker.GetComponent<LineRenderer>().SetPosition(0, Vector3.zero);
-                        Vector2Int moveDifference = new Vector2Int(selectedMoveSpot.x - players[selectedPlayer].position.x, selectedMoveSpot.y - players[selectedPlayer].position.y);
+                        Vector2Int moveDifference = new Vector2Int(selectedMoveSpot.x - players[selectedPlayer].tempStats.position.x, selectedMoveSpot.y - players[selectedPlayer].tempStats.position.y);
 
                         if (CanMoveYFirst(players[selectedPlayer], moveDifference))
                         {
@@ -470,7 +468,7 @@ public class Battle : MonoBehaviour
         {
             Destroy(obj);
         }
-        participantModels = new Dictionary<BattleParticipant, GameObject>();
+        participantModels = new Dictionary<BattlePawnBase, GameObject>();
         Destroy(battleCamera);
         battleCamera = null;
         Destroy(moveMarker);
@@ -564,7 +562,7 @@ public class Battle : MonoBehaviour
     {
         if (selectedMoveSpot.x != -1)
         {
-            Vector2Int diff = new Vector2Int(selectedMoveSpot.x - players[selectedPlayer].position.x, -(selectedMoveSpot.y - players[selectedPlayer].position.y));
+            Vector2Int diff = new Vector2Int(selectedMoveSpot.x - players[selectedPlayer].tempStats.position.x, -(selectedMoveSpot.y - players[selectedPlayer].tempStats.position.y));
             Debug.Log(diff);
             if (CanMoveYFirst(players[selectedPlayer], new Vector2Int(diff.x, -diff.y)))
             {
@@ -576,7 +574,9 @@ public class Battle : MonoBehaviour
                     for (int y = 0; y < Mathf.Abs(diff.y); y++)
                     {
                         Debug.Log("Adding y");
-                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, participantModels[players[selectedPlayer]].transform.position + new Vector3(0, 0, y * Mathf.Sign(diff.y)), participantModels[players[selectedPlayer]].transform.position + new Vector3(0, 0, (y + 1) * Mathf.Sign(diff.y))));
+                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, 
+                            participantModels[players[selectedPlayer]].transform.position + new Vector3(0, 0, y * Mathf.Sign(diff.y)), 
+                            participantModels[players[selectedPlayer]].transform.position + new Vector3(0, 0, (y + 1) * Mathf.Sign(diff.y))));
                     }
                 }
 
@@ -587,7 +587,9 @@ public class Battle : MonoBehaviour
                     for (int x = 0; x < Mathf.Abs(diff.x); x++)
                     {
                         Debug.Log("Adding x");
-                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, participantModels[players[selectedPlayer]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0, diff.y), participantModels[players[selectedPlayer]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0, diff.y)));
+                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, 
+                            participantModels[players[selectedPlayer]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0, diff.y), 
+                            participantModels[players[selectedPlayer]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0, diff.y)));
                     }
                 }
             }
@@ -599,7 +601,9 @@ public class Battle : MonoBehaviour
                     eventQueue.Insert(new TurnEvent(players[selectedPlayer], direction));
                     for (int x = 0; x < Mathf.Abs(diff.x); x++)
                     {
-                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, participantModels[players[selectedPlayer]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0), participantModels[players[selectedPlayer]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0)));
+                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, 
+                            participantModels[players[selectedPlayer]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0), 
+                            participantModels[players[selectedPlayer]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0)));
                     }
                 }
                 if (diff.y != 0)
@@ -608,7 +612,9 @@ public class Battle : MonoBehaviour
                     eventQueue.Insert(new TurnEvent(players[selectedPlayer], direction2));
                     for (int y = 0; y < Mathf.Abs(diff.y); y++)
                     {
-                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, participantModels[players[selectedPlayer]].transform.position + new Vector3(diff.x, 0, y * Mathf.Sign(diff.y)), participantModels[players[selectedPlayer]].transform.position + new Vector3(diff.x, 0, (y + 1) * Mathf.Sign(diff.y))));
+                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, 
+                            participantModels[players[selectedPlayer]].transform.position + new Vector3(diff.x, 0, y * Mathf.Sign(diff.y)), 
+                            participantModels[players[selectedPlayer]].transform.position + new Vector3(diff.x, 0, (y + 1) * Mathf.Sign(diff.y))));
                     }
                 }
             }
@@ -642,7 +648,7 @@ public class Battle : MonoBehaviour
     {
         if (selectedPlayer != -1)
         {
-            players[selectedPlayer].moved = true;
+            players[selectedPlayer].tempStats.moved = true;
             selectedMoveSpot = new Vector2Int(-1, -1);
         }
         selectedPlayer = -1;
@@ -657,7 +663,7 @@ public class Battle : MonoBehaviour
             bool playersDone = true;
             foreach (Player p in players)
             {
-                if (!p.moved)
+                if (!p.tempStats.moved)
                     playersDone = false;
             }
             if (playersDone)
@@ -665,7 +671,7 @@ public class Battle : MonoBehaviour
                 //Resets to start enemy moves
                 for (int j = 0; j < enemies.Count; j++)
                 {
-                    enemies[j].moved = !enemies[j].CanMove();
+                    enemies[j].tempStats.moved = !enemies[j].CanMove();
                 }
                 battleState = BattleState.Enemy;
             }
@@ -684,7 +690,7 @@ public class Battle : MonoBehaviour
             canSwap = false;
             foreach (Player p in players)
             {
-                p.moved = true;
+                p.tempStats.moved = true;
             }
             FinishedMovingPawn();
         }
@@ -731,21 +737,21 @@ public class Battle : MonoBehaviour
             {
                 if (PlayerAtPos(aPos.x, aPos.y) != -1)
                 {
-                    possibleMoves.Add(new EnemyMove(pos.x, pos.y, aPos.x, aPos.y, 15 - (Mathf.Abs(pos.x - enemies[ID].position.x) + Mathf.Abs(pos.y - enemies[ID].position.y)), 1));
+                    possibleMoves.Add(new EnemyMove(pos.x, pos.y, aPos.x, aPos.y, 15 - (Mathf.Abs(pos.x - enemies[ID].tempStats.position.x) + Mathf.Abs(pos.y - enemies[ID].tempStats.position.y)), 1));
                 }
             }
             foreach (Player p in players)
             {
                 //If this move is the closest the enemy can get to a player, make it the move that happens if no attacks are possible
-                if (Vector2Int.Distance(p.position, pos) < fallbackMove.priority)
+                if (Vector2Int.Distance(p.tempStats.position, pos) < fallbackMove.priority)
                 {
-                    fallbackMove = new EnemyMove(pos.x, pos.y, Vector2Int.Distance(p.position, pos), 0);
+                    fallbackMove = new EnemyMove(pos.x, pos.y, Vector2Int.Distance(p.tempStats.position, pos), 0);
                 }
                 //If this move ties with the current fallback move for distance from a player, pick a random one
-                else if (Vector2Int.Distance(p.position, pos) == fallbackMove.priority)
+                else if (Vector2Int.Distance(p.tempStats.position, pos) == fallbackMove.priority)
                 {
                     if (Random.Range(0, 2) == 1)
-                        fallbackMove = new EnemyMove(pos.x, pos.y, Vector2Int.Distance(p.position, pos), 0);
+                        fallbackMove = new EnemyMove(pos.x, pos.y, Vector2Int.Distance(p.tempStats.position, pos), 0);
                 }
             }
         }
@@ -765,7 +771,7 @@ public class Battle : MonoBehaviour
         }
 
         //Sets up the animations for moving the enemy
-        Vector2Int diff = possibleMoves[0].movePosition - enemies[ID].position;
+        Vector2Int diff = possibleMoves[0].movePosition - enemies[ID].tempStats.position;
         diff.y = -diff.y;
 
         if (CanMoveYFirst(enemies[ID], diff))
@@ -777,7 +783,9 @@ public class Battle : MonoBehaviour
                 eventQueue.Insert(new TurnEvent(enemies[ID], direction));
                 for (int y = 0; y < Mathf.Abs(diff.y); y++)
                 {
-                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, participantModels[enemies[ID]].transform.position + new Vector3(0, 0, y * Mathf.Sign(diff.y)), participantModels[enemies[ID]].transform.position + new Vector3(0, 0, (y + 1) * Mathf.Sign(diff.y))));
+                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, 
+                        participantModels[enemies[ID]].transform.position + new Vector3(0, 0, y * Mathf.Sign(diff.y)), 
+                        participantModels[enemies[ID]].transform.position + new Vector3(0, 0, (y + 1) * Mathf.Sign(diff.y))));
                 }
             }
             if (diff.x != 0)
@@ -787,7 +795,9 @@ public class Battle : MonoBehaviour
                 eventQueue.Insert(new TurnEvent(enemies[ID], direction2));
                 for (int x = 0; x < Mathf.Abs(diff.x); x++)
                 {
-                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, participantModels[enemies[ID]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0, diff.y), participantModels[enemies[ID]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0, diff.y)));
+                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, 
+                        participantModels[enemies[ID]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0, diff.y), 
+                        participantModels[enemies[ID]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0, diff.y)));
                 }
             }
         }
@@ -800,7 +810,9 @@ public class Battle : MonoBehaviour
                 eventQueue.Insert(new TurnEvent(enemies[ID], direction));
                 for (int x = 0; x < Mathf.Abs(diff.x); x++)
                 {
-                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, participantModels[enemies[ID]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0), participantModels[enemies[ID]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0)));
+                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, 
+                        participantModels[enemies[ID]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0), 
+                        participantModels[enemies[ID]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0)));
                 }
             }
             if (diff.y != 0)
@@ -810,13 +822,15 @@ public class Battle : MonoBehaviour
                 eventQueue.Insert(new TurnEvent(enemies[ID], direction2));
                 for (int y = 0; y < Mathf.Abs(diff.y); y++)
                 {
-                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, participantModels[enemies[ID]].transform.position + new Vector3(diff.x, 0, y * Mathf.Sign(diff.y)), participantModels[enemies[ID]].transform.position + new Vector3(diff.x, 0, (y + 1) * Mathf.Sign(diff.y))));
+                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, 
+                        participantModels[enemies[ID]].transform.position + new Vector3(diff.x, 0, y * Mathf.Sign(diff.y)), 
+                        participantModels[enemies[ID]].transform.position + new Vector3(diff.x, 0, (y + 1) * Mathf.Sign(diff.y))));
                 }
             }
         }
-        enemies[ID].moved = true;
+        enemies[ID].tempStats.moved = true;
         if (possibleMoves[0].attackPosition.x != -1)
-            eventQueue.Insert(new FunctionEvent<BattleParticipant, BattleParticipant>(PerformAttack, enemies[movingEnemy], players[PlayerAtPos(possibleMoves[0].attackPosition.x, possibleMoves[0].attackPosition.y)]));
+            eventQueue.Insert(new FunctionEvent<BattlePawnBase, BattlePawnBase>(PerformAttack, enemies[movingEnemy], players[PlayerAtPos(possibleMoves[0].attackPosition.x, possibleMoves[0].attackPosition.y)]));
         updateTilesThisFrame = true;
     }
 
@@ -855,20 +869,20 @@ public class Battle : MonoBehaviour
         {
             if (p.cHealth > 0)
             {
-                p.StartOfTurn();
+                p.tempStats.StartOfTurn();
 
                 //Checks if any tile effects for ending a turn on a tile need to be done
                 TriggerTileEffects(p, MoveTriggers.StartOfTurn);
 
                 CheckEventTriggers(p, EffectTriggers.StartOfTurn);
-                p.moved = !p.CanMove();
+                p.tempStats.moved = !p.CanMove();
             }
         }
         foreach (Enemy e in enemies)
         {
             if (e.cHealth > 0)
             {
-                e.StartOfTurn();
+                e.tempStats.StartOfTurn();
 
                 //Checks if any tile effects for ending a turn on a tile need to be done
                 TriggerTileEffects(e, MoveTriggers.StartOfTurn);
@@ -896,7 +910,7 @@ public class Battle : MonoBehaviour
             {
                 deadCount++;
                 participantModels[p].SetActive(false);
-                p.position.Set(-200, -200);
+                p.tempStats.position.Set(-200, -200);
             }
         }
         if (deadCount == players.Count)
@@ -908,7 +922,7 @@ public class Battle : MonoBehaviour
             {
                 deadCount++;
                 participantModels[e].SetActive(false);
-                e.position.Set(-200, -200);
+                e.tempStats.position.Set(-200, -200);
             }
         }
         if (deadCount == enemies.Count)
@@ -921,10 +935,10 @@ public class Battle : MonoBehaviour
     /// <param name="attacker">The pawn doing the attacking</param>
     /// <param name="target">The pawn getting attacked</param>
     /// <returns>The first value is the amount of damage, the second is the damage type and whether or not the weapon is ranged</returns>
-    public Pair<int, DamageType> GetDamageValues(BattleParticipant attacker, BattleParticipant target)
+    public Pair<int, DamageType> GetDamageValues(BattlePawnBase attacker, BattlePawnBase target)
     {
         //Gets the distance between the player and enemy
-        Vector2Int dist = target.position - attacker.position;
+        Vector2Int dist = target.tempStats.position - attacker.tempStats.position;
 
         WeaponStatsAtRange stats = attacker.GetWeaponStatsAtDistance(dist);
 
@@ -943,7 +957,7 @@ public class Battle : MonoBehaviour
     /// </summary>
     /// <param name="attacker">The pawn that is initially attacking</param>
     /// <param name="defender">The pawn that is initially defending</param>
-    public void PerformAttack(BattleParticipant attacker, BattleParticipant defender)
+    public void PerformAttack(BattlePawnBase attacker, BattlePawnBase defender)
     {
         Pair<int, DamageType> attackData = GetDamageValues(attacker, defender);
 
@@ -961,7 +975,7 @@ public class Battle : MonoBehaviour
             eventQueue.Insert(new ExecuteEffectEvent(new HealingPart(TargettingType.Self, 0, Mathf.CeilToInt(damage * attacker.GetEffectiveStat(Stats.BasicAttackLifesteal) / 100.0f), 0), attacker, attacker));
         }
 
-        eventQueue.Insert(new FunctionEvent<BattleParticipant, BattleParticipant>(PerformCounterattack, defender, attacker));
+        eventQueue.Insert(new FunctionEvent<BattlePawnBase, BattlePawnBase>(PerformCounterattack, defender, attacker));
     }
 
     /// <summary>
@@ -969,10 +983,10 @@ public class Battle : MonoBehaviour
     /// </summary>
     /// <param name="attacker">The counterattacker, aka the one who was hit by the initial attack</param>
     /// <param name="defender">The former attacker</param>
-    public void PerformCounterattack(BattleParticipant attacker, BattleParticipant defender)
+    public void PerformCounterattack(BattlePawnBase attacker, BattlePawnBase defender)
     {
         //If the defender lives and can attack back at that range
-        if (attacker.cHealth > 0 && defender.cHealth > 0 && attacker.GetWeaponStatsAtDistance(attacker.position - defender.position) != null)
+        if (attacker.cHealth > 0 && defender.cHealth > 0 && attacker.GetWeaponStatsAtDistance(attacker.tempStats.position - defender.tempStats.position) != null)
         {
             eventQueue.Insert(new TextEvent(attacker.name + " returns the favor!"));
             Pair<int, DamageType> attackData = GetDamageValues(attacker, defender);
@@ -989,7 +1003,7 @@ public class Battle : MonoBehaviour
                 eventQueue.Insert(new ExecuteEffectEvent(new HealingPart(TargettingType.Self, 0, Mathf.CeilToInt(damage * attacker.GetEffectiveStat(Stats.BasicAttackLifesteal) / 100.0f), 0), attacker, attacker));
             }
 
-            eventQueue.Insert(new FunctionEvent< BattleParticipant, BattleParticipant > (CheckForKill, attacker, defender));
+            eventQueue.Insert(new FunctionEvent< BattlePawnBase, BattlePawnBase > (CheckForKill, attacker, defender));
         }
     }
 
@@ -998,7 +1012,7 @@ public class Battle : MonoBehaviour
     /// </summary>
     /// <param name="attacker">The pawn that may have killed another</param>
     /// <param name="defender">The target that may have died</param>
-    private void CheckForKill(BattleParticipant attacker, BattleParticipant defender)
+    private void CheckForKill(BattlePawnBase attacker, BattlePawnBase defender)
     {
         if (defender.cHealth <= 0)
         {
@@ -1014,7 +1028,7 @@ public class Battle : MonoBehaviour
     {
         for (int id = 0; id < players.Count; id++)
         {
-            if (players[id].position.x == x && players[id].position.y == y)
+            if (players[id].tempStats.position.x == x && players[id].tempStats.position.y == y)
                 return id;
         }
         return -1;
@@ -1027,7 +1041,7 @@ public class Battle : MonoBehaviour
     {
         for (int e = 0; e < enemies.Count; e++)
         {
-            if (enemies[e].position.x == x && enemies[e].position.y == y)
+            if (enemies[e].tempStats.position.x == x && enemies[e].tempStats.position.y == y)
                 return e;
         }
         return -1;
@@ -1056,11 +1070,11 @@ public class Battle : MonoBehaviour
         {
             foreach (Player p in players)
             {
-                tileList[p.position.x, (mapSizeY - 1) - p.position.y].GetComponent<BattleTile>().playerMoveRange = true;
-                tileList[p.position.x, (mapSizeY - 1) - p.position.y].GetComponent<BattleTile>().enemyDanger = true;
+                tileList[p.tempStats.position.x, (mapSizeY - 1) - p.tempStats.position.y].GetComponent<BattleTile>().playerMoveRange = true;
+                tileList[p.tempStats.position.x, (mapSizeY - 1) - p.tempStats.position.y].GetComponent<BattleTile>().enemyDanger = true;
             }
             if(selectedPlayer != -1)
-                tileList[players[selectedPlayer].position.x, (mapSizeY - 1) - players[selectedPlayer].position.y].GetComponent<BattleTile>().enemyDanger = false;
+                tileList[players[selectedPlayer].tempStats.position.x, (mapSizeY - 1) - players[selectedPlayer].tempStats.position.y].GetComponent<BattleTile>().enemyDanger = false;
         }
 
         //Shows skill range and what is targettable within that range if a spell is selected or hovered
@@ -1069,7 +1083,7 @@ public class Battle : MonoBehaviour
             int skillToShow = selectedSpell;
             if (hoveredSpell != -1)
                 skillToShow = hoveredSpell;
-            Vector2Int skillPos = players[selectedPlayer].position;
+            Vector2Int skillPos = players[selectedPlayer].tempStats.position;
             if (selectedMoveSpot.x != -1)
                 skillPos = selectedMoveSpot;
             Skill displaySkill = GameStorage.skillTreeList[players[selectedPlayer].skillQuickList[skillToShow - 1].x][players[selectedPlayer].skillQuickList[skillToShow - 1].y];
@@ -1120,11 +1134,11 @@ public class Battle : MonoBehaviour
         {
             WeaponType weapon = Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[players[selectedPlayer].equippedWeapon.Name]).subType];
 
-            List<Vector2Int> attackSpots = GetViableAttackSpaces(weapon, players[selectedPlayer].position);
+            List<Vector2Int> attackSpots = GetViableAttackSpaces(weapon, players[selectedPlayer].tempStats.position);
             foreach (Vector2Int attackPos in attackSpots)
             {
                 //If the player can attack an enemy or heal an ally at that position
-                if (EnemyAtPos(attackPos.x, attackPos.y) != -1 || (PlayerAtPos(attackPos.x, attackPos.y) != -1 && weapon.GetStatsAtRange(attackPos - players[selectedPlayer].position).heals))
+                if (EnemyAtPos(attackPos.x, attackPos.y) != -1 || (PlayerAtPos(attackPos.x, attackPos.y) != -1 && weapon.GetStatsAtRange(attackPos - players[selectedPlayer].tempStats.position).heals))
                     tileList[attackPos.x, (mapSizeY - 1) - attackPos.y].GetComponent<BattleTile>().playerAttackRange = true;
             }
         }
@@ -1196,21 +1210,21 @@ public class Battle : MonoBehaviour
     /// </summary>
     /// <param name="mover">The pawn that is moving</param>
     /// <param name="relativeMove">The position they want to move to relative to their current position</param>
-    private bool CanMoveYFirst(BattleParticipant mover, Vector2Int relativeMove)
+    private bool CanMoveYFirst(BattlePawnBase mover, Vector2Int relativeMove)
     {
         for (int y = 0; y <= Mathf.Abs(relativeMove.y); y++)
         {
-            if (!mover.ValidMoveTile(battleMap[mover.position.x, mover.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y))]))
+            if (!mover.ValidMoveTile(battleMap[mover.tempStats.position.x, mover.tempStats.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y))]))
                 return false;
-            if ((mover is Player ? EnemyAtPos(mover.position.x, mover.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y))) : PlayerAtPos(mover.position.x, mover.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y)))) != -1)
+            if ((mover is Player ? EnemyAtPos(mover.tempStats.position.x, mover.tempStats.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y))) : PlayerAtPos(mover.tempStats.position.x, mover.tempStats.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y)))) != -1)
                 return false;
         }
 
         for (int x = 0; x <= Mathf.Abs(relativeMove.x); x++)
         {
-            if (!mover.ValidMoveTile(battleMap[mover.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.position.y + relativeMove.y]))
+            if (!mover.ValidMoveTile(battleMap[mover.tempStats.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.tempStats.position.y + relativeMove.y]))
                 return false;
-            if ((mover is Player ? EnemyAtPos(mover.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.position.y + relativeMove.y) : PlayerAtPos(mover.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.position.y + relativeMove.y)) != -1)
+            if ((mover is Player ? EnemyAtPos(mover.tempStats.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.tempStats.position.y + relativeMove.y) : PlayerAtPos(mover.tempStats.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.tempStats.position.y + relativeMove.y)) != -1)
                 return false;
         }
         return true;
@@ -1221,21 +1235,21 @@ public class Battle : MonoBehaviour
     /// </summary>
     /// <param name="mover">The pawn that is moving</param>
     /// <param name="relativeMove">The position they want to move to relative to their current position</param>
-    private bool CanMoveXFirst(BattleParticipant mover, Vector2Int relativeMove)
+    private bool CanMoveXFirst(BattlePawnBase mover, Vector2Int relativeMove)
     {
         for (int x = 0; x <= Mathf.Abs(relativeMove.x); x++)
         {
-            if (!mover.ValidMoveTile(battleMap[mover.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.position.y]))
+            if (!mover.ValidMoveTile(battleMap[mover.tempStats.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.tempStats.position.y]))
                 return false;
-            if ((mover is Player ? EnemyAtPos(mover.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.position.y) : PlayerAtPos(mover.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.position.y)) != -1)
+            if ((mover is Player ? EnemyAtPos(mover.tempStats.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.tempStats.position.y) : PlayerAtPos(mover.tempStats.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.tempStats.position.y)) != -1)
                 return false;
         }
 
         for (int y = 0; y <= Mathf.Abs(relativeMove.y); y++)
         {
-            if (!mover.ValidMoveTile(battleMap[mover.position.x + relativeMove.x, mover.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y))]))
+            if (!mover.ValidMoveTile(battleMap[mover.tempStats.position.x + relativeMove.x, mover.tempStats.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y))]))
                 return false;
-            if ((mover is Player ? EnemyAtPos(mover.position.x + relativeMove.x, mover.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y))) : PlayerAtPos(mover.position.x + relativeMove.x, mover.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y)))) != -1)
+            if ((mover is Player ? EnemyAtPos(mover.tempStats.position.x + relativeMove.x, mover.tempStats.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y))) : PlayerAtPos(mover.tempStats.position.x + relativeMove.x, mover.tempStats.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y)))) != -1)
                 return false;
         }
         return true;
@@ -1246,7 +1260,7 @@ public class Battle : MonoBehaviour
     /// </summary>
     /// <param name="entity">The entity moving</param>
     /// <returns>First = a valid position, Second = whether or not moving vertically first is valid</returns>
-    private List<Vector2Int> GetViableMovements(BattleParticipant entity)
+    private List<Vector2Int> GetViableMovements(BattlePawnBase entity)
     {
         List<Vector2Int> moveSpots = new List<Vector2Int>();
         bool isPlayer = entity is Player;
@@ -1255,22 +1269,22 @@ public class Battle : MonoBehaviour
         {
             for (int y = -maxMove; y <= maxMove; y++)
             {
-                if (Mathf.Abs(x) + Mathf.Abs(y) <= maxMove && x + entity.position.x >= 0 && x + entity.position.x < mapSizeX && y + entity.position.y >= 0 && y + entity.position.y < mapSizeY)
+                if (Mathf.Abs(x) + Mathf.Abs(y) <= maxMove && x + entity.tempStats.position.x >= 0 && x + entity.tempStats.position.x < mapSizeX && y + entity.tempStats.position.y >= 0 && y + entity.tempStats.position.y < mapSizeY)
                 {
                     //It is automatically valid if the entity is moving to itself
                     if (x == 0 && y == 0)
                     {
-                        moveSpots.Add(new Vector2Int(entity.position.x, entity.position.y));
+                        moveSpots.Add(new Vector2Int(entity.tempStats.position.x, entity.tempStats.position.y));
                         continue;
                     }
                     //It is an invalid move position if it would overlap with an existing entity
-                    if (PlayerAtPos(x + entity.position.x, y + entity.position.y) != -1)
+                    if (PlayerAtPos(x + entity.tempStats.position.x, y + entity.tempStats.position.y) != -1)
                         continue;
-                    if (EnemyAtPos(x + entity.position.x, y + entity.position.y) != -1)
+                    if (EnemyAtPos(x + entity.tempStats.position.x, y + entity.tempStats.position.y) != -1)
                         continue;
 
                     if (CanMoveYFirst(entity, new Vector2Int(x, y)) || CanMoveXFirst(entity, new Vector2Int(x, y)))
-                        moveSpots.Add(new Vector2Int(x + entity.position.x, y + entity.position.y));
+                        moveSpots.Add(new Vector2Int(x + entity.tempStats.position.x, y + entity.tempStats.position.y));
                 }
             }
         }
@@ -1339,12 +1353,12 @@ public class Battle : MonoBehaviour
     /// </summary>
     /// <param name="pawn">What pawn is on this tile</param>
     /// <param name="trigger">The type of effects to trigger</param>
-    private void TriggerTileEffects(BattleParticipant pawn, MoveTriggers trigger)
+    private void TriggerTileEffects(BattlePawnBase pawn, MoveTriggers trigger)
     {
         List<TileEffects> effects = new List<TileEffects>();
-        if (Registry.DefaultTileEffects.ContainsKey(battleMap[pawn.position.x, pawn.position.y]) && Registry.DefaultTileEffects[battleMap[pawn.position.x, pawn.position.y]].Contains(trigger))
-            effects.Add(Registry.DefaultTileEffects[battleMap[pawn.position.x, pawn.position.y]]);
-        effects.AddRange(temporaryTileEffects.GetTileEffects(pawn.position, trigger));
+        if (Registry.DefaultTileEffects.ContainsKey(battleMap[pawn.tempStats.position.x, pawn.tempStats.position.y]) && Registry.DefaultTileEffects[battleMap[pawn.tempStats.position.x, pawn.tempStats.position.y]].Contains(trigger))
+            effects.Add(Registry.DefaultTileEffects[battleMap[pawn.tempStats.position.x, pawn.tempStats.position.y]]);
+        effects.AddRange(temporaryTileEffects.GetTileEffects(pawn.tempStats.position, trigger));
         foreach (TileEffects effect in effects)
         {
             effect.effects[trigger].target = pawn;
@@ -1359,9 +1373,9 @@ public class Battle : MonoBehaviour
     /// <param name="trigger">The type of trigger that was tripped</param>
     /// <param name="other">If the event involved another pawn, such as taking damage or giving healing</param>
     /// <param name="data">If the event has other important data, such as the amount of damage taken</param>
-    private void CheckEventTriggers(BattleParticipant triggered, EffectTriggers trigger, BattleParticipant other = null, int data = -1)
+    private void CheckEventTriggers(BattlePawnBase triggered, EffectTriggers trigger, BattlePawnBase other = null, int data = -1)
     {
-        List<SkillPartBase> list = triggered.GetTriggeredEffects(trigger);
+        List<SkillPartBase> list = triggered.tempStats.GetTriggeredEffects(trigger);
         Debug.Log("Checking for trigger: " + trigger + ". Results: " + list.Count);
         foreach (SkillPartBase effect in list)
         {
@@ -1400,7 +1414,7 @@ public class Battle : MonoBehaviour
     /// <param name="target">The target for the skill</param>
     /// <param name="fromSpell">Whether this effect is part of a spell or not</param>
     /// <param name="valueFromPrevious">If this effect depends on the value from a previous event, this is the value. -1 if it doesn't depend on anything.</param>
-    public void ExecuteEffect(SkillPartBase effect, BattleParticipant caster, BattleParticipant target, bool fromSpell = false, int valueFromPrevious = -1)
+    public void ExecuteEffect(SkillPartBase effect, BattlePawnBase caster, BattlePawnBase target, bool fromSpell = false, int valueFromPrevious = -1)
     {
         //If it passes its chance to proc
         if (target != null && Random.Range(0, 101) <= effect.chanceToProc)
@@ -1456,7 +1470,7 @@ public class Battle : MonoBehaviour
                 if (previousHealth >= target.GetEffectiveStat(Stats.MaxHealth) / 4.0 && target.cHealth < target.GetEffectiveStat(Stats.MaxHealth) / 4.0)
                     CheckEventTriggers(target, EffectTriggers.FallBelow25Percent, caster);
                 //If the target dies
-                eventQueue.Insert(new FunctionEvent<BattleParticipant, BattleParticipant>(CheckForKill, caster, target));
+                eventQueue.Insert(new FunctionEvent<BattlePawnBase, BattlePawnBase>(CheckForKill, caster, target));
 
                 eventQueue.Insert(new FunctionEvent(delegate { CheckForDeath(); }));
             }
@@ -1495,7 +1509,7 @@ public class Battle : MonoBehaviour
                     eventQueue.Insert(new TextEvent(target.name + "'s " + GameStorage.StatToString(trueEffect.StatMod.affectedStat) + " was decreased by " + ((1 - trueEffect.StatMod.flatMod) * 100) + "%!"));
                 else if (trueEffect.StatMod.multMod > 1)
                     eventQueue.Insert(new TextEvent(target.name + "'s " + GameStorage.StatToString(trueEffect.StatMod.affectedStat) + " was increased by " + ((trueEffect.StatMod.flatMod - 1) * 100) + "%!"));
-                target.AddMod(trueEffect.StatMod);
+                target.tempStats.AddMod(trueEffect.StatMod);
             }
 
             //Adds or removes status effects
@@ -1518,7 +1532,7 @@ public class Battle : MonoBehaviour
             else if (effect is AddTriggerPart)
             {
                 AddTriggerPart trueEffect = effect as AddTriggerPart;
-                target.AddTemporaryTrigger(trueEffect.effect, trueEffect.maxTimesThisBattle, trueEffect.turnCooldown, trueEffect.maxActiveTurns);
+                target.tempStats.AddTemporaryTrigger(trueEffect.effect, trueEffect.maxTimesThisBattle, trueEffect.turnCooldown, trueEffect.maxActiveTurns);
             }
 
             //Moves the target in a given direction for a maximum of the given spaces
@@ -1534,7 +1548,7 @@ public class Battle : MonoBehaviour
                 //If the target is being pushed away from the center, figure out what direction they should be moved in
                 if (direction == MoveDirection.FromCenter)
                 {
-                    Vector2Int diff = target.position - trueEffect.center;
+                    Vector2Int diff = target.tempStats.position - trueEffect.center;
                     //If they are equal, prioritizes y
                     if (Mathf.Abs(diff.x) > Mathf.Abs(diff.y))
                     {
@@ -1555,8 +1569,10 @@ public class Battle : MonoBehaviour
                     int dir = direction == MoveDirection.Up ? 1 : -1;
                     for (int i = 1; i <= trueEffect.amount; i++)
                     {
-                        if (target.ValidMoveTile(battleMap[target.position.x, target.position.y + i * dir]))
-                            eventQueue.Insert(new MovementEvent(participantModels[target], 0.1f, participantModels[target].transform.position + new Vector3Int(0, 0, i - 1) * dir, participantModels[target].transform.position + new Vector3Int(0, 0, i) * dir));
+                        if (target.ValidMoveTile(battleMap[target.tempStats.position.x, target.tempStats.position.y + i * dir]))
+                            eventQueue.Insert(new MovementEvent(participantModels[target], 0.1f, 
+                                participantModels[target].transform.position + new Vector3Int(0, 0, i - 1) * dir, 
+                                participantModels[target].transform.position + new Vector3Int(0, 0, i) * dir));
                         else
                         {
                             //If the pawn hits a spot where they can't move any further, stun them for a turn
@@ -1571,8 +1587,10 @@ public class Battle : MonoBehaviour
                     int dir = direction == MoveDirection.Right ? 1 : -1;
                     for (int i = 1; i <= trueEffect.amount; i++)
                     {
-                        if (target.ValidMoveTile(battleMap[target.position.x + i * dir, target.position.y]))
-                            eventQueue.Insert(new MovementEvent(participantModels[target], 0.1f, participantModels[target].transform.position + new Vector3Int(i - 1, 0, 0) * dir, participantModels[target].transform.position + new Vector3Int(i, 0, 0) * dir));
+                        if (target.ValidMoveTile(battleMap[target.tempStats.position.x + i * dir, target.tempStats.position.y]))
+                            eventQueue.Insert(new MovementEvent(participantModels[target], 0.1f, 
+                                participantModels[target].transform.position + new Vector3Int(i - 1, 0, 0) * dir, 
+                                participantModels[target].transform.position + new Vector3Int(i, 0, 0) * dir));
                         else
                         {
                             //If the pawn hits a spot where they can't move any further, stun them for a turn
@@ -1590,11 +1608,11 @@ public class Battle : MonoBehaviour
                     //Makes that pawn able to move again if it can move at all
                     case UniqueEffects.MoveAgain:
                         //If the target cannot already move again
-                        if (target.moved)
+                        if (target.tempStats.moved)
                         {
                             //Check if the target is able to move again
                             bool canMove = target.CanMove();
-                            target.moved = !canMove;
+                            target.tempStats.moved = !canMove;
                             if (canMove)
                             {
                                 eventQueue.Insert(new TextEvent(target.name + " is reinvigorated and can move again!"));
@@ -1651,7 +1669,7 @@ public class Battle : MonoBehaviour
     /// <param name="castedX">The x coordinate of the space to affect</param>
     /// <param name="castedY">The y coordinate of the space to affect</param>
     /// <param name="IDUsingMove">If it is greater than the amount for players, it denotes an enemy</param>
-    public void CastSkill(Skill castedSpell, int castedX, int castedY, BattleParticipant caster)
+    public void CastSkill(Skill castedSpell, int castedX, int castedY, BattlePawnBase caster)
     {
         Debug.Log(castedX + " " + castedY);
 

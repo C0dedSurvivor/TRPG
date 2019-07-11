@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 
-public class Player : BattleParticipant
+public class Player : BattlePawnBase
 {
-
 	private int level;
 	private int exp;
 	/*
@@ -35,11 +34,49 @@ public class Player : BattleParticipant
     //Skills assigned to the quick cast buttons in battle
     public List<Vector2Int> skillQuickList = new List<Vector2Int>();
 
-    public Player(int x, int y, int mT, string name) : base(x, y, mT, name)
+    /// <summary>
+    /// Loads a player from a save file, or the default file if this is the first encounter
+    /// </summary>
+    /// <param name="path">The path of the file to load from</param>
+    public Player(string path, string name = null) : base()
     {
-        position = new Vector2Int(x, y);
         //Generates default player data if that player's file doesn't exist
-        if (!File.Exists("Assets/Resources/Storage/Players/" + name + ".data")) {
+        if (!File.Exists(path)) {
+            /*
+             * This will be replaced with loading the stats from a template file based on the pawn name
+             */
+            this.name = name;
+            moveType = 4;
+            stats.Add(Stats.MaxHealth, 20 + moveType);
+            stats.Add(Stats.Attack, 20 + moveType);
+            stats.Add(Stats.Defense, 10 + moveType);
+            stats.Add(Stats.MagicAttack, 15 + moveType);
+            stats.Add(Stats.MagicDefense, 15 + moveType);
+            stats.Add(Stats.CritChance, 15 + moveType);
+            stats.Add(Stats.MaxMove, Registry.MovementRegistry[moveType].moveSpeed);
+            stats.Add(Stats.BasicAttackLifesteal, 0);
+            stats.Add(Stats.SpellLifesteal, 0);
+            stats.Add(Stats.BasicAttackEffectiveness, 100);
+            stats.Add(Stats.SpellDamageEffectiveness, 100);
+            stats.Add(Stats.BasicAttackReceptiveness, 100);
+            stats.Add(Stats.SpellDamageReceptiveness, 100);
+            stats.Add(Stats.HealingEffectiveness, 100);
+            stats.Add(Stats.HealingReceptiveness, 100);
+            cHealth = stats[Stats.MaxHealth];
+
+            //Grab all the skill trees and skills for this pawn
+            List<int> treeList = GameStorage.GetPlayerSkillList(name);
+            foreach (int tree in treeList)
+            {
+                skillTreeList.Add(tree, new Dictionary<int, SkillInfo>());
+                foreach (int skill in GameStorage.skillTreeList[tree].Keys)
+                {
+                    skillTreeList[tree].Add(skill, new SkillInfo());
+                    if (GameStorage.skillTreeList[tree][skill].dependencies.Count == 0)
+                        skillTreeList[tree][skill].unlocked = true;
+                }
+            }
+
             //Divides by two to test healing
             //cHealth = GetEffectiveStat(Stats.MaxHealth) / 2;
             equippedWeapon = new Equippable("Dagger");
@@ -49,17 +86,60 @@ public class Player : BattleParticipant
         }
         else
         {
-            LoadPlayer();
+            Stream inStream = File.OpenRead(path);
+            BinaryReader file = new BinaryReader(inStream);
+            level = file.ReadInt32();
+            exp = file.ReadInt32();
+            skillPoints = file.ReadInt32();
+            moveType = file.ReadInt32();
+            stats[Stats.Attack] = file.ReadInt32();
+            attackGrowthType = file.ReadString();
+            stats[Stats.Defense] = file.ReadInt32();
+            defenseGrowthType = file.ReadString();
+            stats[Stats.MagicAttack] = file.ReadInt32();
+            mAttackGrowthType = file.ReadString();
+            stats[Stats.MagicDefense] = file.ReadInt32();
+            mDefenseGrowthType = file.ReadString();
+            stats[Stats.CritChance] = file.ReadInt32();
+            cHealth = file.ReadInt32();
+            stats[Stats.MaxHealth] = file.ReadInt32();
+            stats[Stats.MaxMove] = Registry.MovementRegistry[moveType].moveSpeed;
+            healthGrowthType = file.ReadString();
+            for (int i = 0; i < equipment.Length; i++)
+            {
+                equipment[i] = new Equippable(file.ReadString());
+            }
+            skillQuickList.Add(new Vector2Int(file.ReadInt32(), file.ReadInt32()));
+            skillQuickList.Add(new Vector2Int(file.ReadInt32(), file.ReadInt32()));
+            skillQuickList.Add(new Vector2Int(file.ReadInt32(), file.ReadInt32()));
+            skillTreeList.Clear();
+            int treeCount = file.ReadInt32();
+            for (int tree = 0; tree < treeCount; tree++)
+            {
+                int currentTree = file.ReadInt32();
+                skillTreeList.Add(currentTree, new Dictionary<int, SkillInfo>());
+                int skillCount = file.ReadInt32();
+                for (int skill = 0; skill < skillCount; skill++)
+                {
+                    skillTreeList[currentTree].Add(file.ReadInt32(), new SkillInfo(file.ReadBoolean(), file.ReadInt32()));
+                }
+            }
+            file.Close();
+            //For testing healing
+            //cHealth /= 2;
+            //For testing specific weapons
+            //equippedWeapon = "Demonic Sword";
         }
     }
 
     /// <summary>
     /// Saves the player data to its respective file
     /// </summary>
-    public void SavePlayer()
+    /// <param slot="slot">The save slot to save to</param>
+    public void SavePlayer(int slot)
     {
         Debug.Log("Saving the player");
-        Stream outStream = File.OpenWrite("Assets/Resources/Storage/Players/" + name + ".data");
+        Stream outStream = File.OpenWrite("Assets/Resources/Storage/Slot" + slot + "/Players/" + name + ".data");
         BinaryWriter file = new BinaryWriter(outStream);
         file.Write(level);
         file.Write(exp);
@@ -103,74 +183,12 @@ public class Player : BattleParticipant
     }
 
     /// <summary>
-    /// Loads the player data from its respective file if it exists
-    /// </summary>
-    public void LoadPlayer()
-    {
-        Stream inStream = File.OpenRead("Assets/Resources/Storage/Players/" + name + ".data");
-        BinaryReader file = new BinaryReader(inStream);
-        level = file.ReadInt32();
-        exp = file.ReadInt32();
-        skillPoints = file.ReadInt32();
-        moveType = file.ReadInt32();
-        stats[Stats.Attack] = file.ReadInt32();
-        attackGrowthType = file.ReadString();
-        stats[Stats.Defense] = file.ReadInt32();
-        defenseGrowthType = file.ReadString();
-        stats[Stats.MagicAttack] = file.ReadInt32();
-        mAttackGrowthType = file.ReadString();
-        stats[Stats.MagicDefense] = file.ReadInt32();
-        mDefenseGrowthType = file.ReadString();
-        stats[Stats.CritChance] = file.ReadInt32();
-        cHealth = file.ReadInt32();
-        stats[Stats.MaxHealth] = file.ReadInt32();
-        stats[Stats.MaxMove] = Registry.MovementRegistry[moveType].moveSpeed;
-        healthGrowthType = file.ReadString();
-        for(int i = 0; i < equipment.Length; i++)
-        {
-            equipment[i] = new Equippable(file.ReadString());
-        }
-        skillQuickList.Add(new Vector2Int(file.ReadInt32(), file.ReadInt32()));
-        skillQuickList.Add(new Vector2Int(file.ReadInt32(), file.ReadInt32()));
-        skillQuickList.Add(new Vector2Int(file.ReadInt32(), file.ReadInt32()));
-        skillTreeList.Clear();
-        int treeCount = file.ReadInt32();
-        for (int tree = 0; tree < treeCount; tree++)
-        {
-            int currentTree = file.ReadInt32();
-            skillTreeList.Add(currentTree, new Dictionary<int, SkillInfo>());
-            int skillCount = file.ReadInt32();
-            for(int skill = 0; skill < skillCount; skill++)
-            {
-                skillTreeList[currentTree].Add(file.ReadInt32(), new SkillInfo(file.ReadBoolean(), file.ReadInt32()));
-            }
-        }
-        file.Close();
-        //For testing healing
-        //cHealth /= 2;
-        //For testing specific weapons
-        //equippedWeapon = "Demonic Sword";
-    }
-
-    /// <summary>
     /// Equips the new item, returning the old one so it can be returned to the inventory. 
     /// </summary>
     public Equippable EquipItem(Equippable newEquippable, int slot) {
         Equippable item = equipment[slot];
         equipment[slot] = newEquippable;
 		return item;
-    }
-
-    /// <summary>
-    /// Changes the current health of the player to match if the max health is decreased
-    /// </summary>
-    /// <param name="prevMax">The previous max hp</param>
-    public void CheckHealthChange(int prevMax)
-    {
-        if (cHealth > GetEffectiveStat(Stats.MaxHealth))
-            cHealth = GetEffectiveStat(Stats.MaxHealth);
-        if(cHealth == prevMax)
-            cHealth = GetEffectiveStat(Stats.MaxHealth);
     }
 
     /// <summary>
@@ -306,8 +324,7 @@ public class Player : BattleParticipant
 
     public void EndOfMatch()
     {
-        temporaryEffectList = new List<Pair<TriggeredEffect, TemporaryEffectData>>();
-        modifierList.Clear();
+        tempStats = null;
         statusList.EndOfMatch();
     }
     

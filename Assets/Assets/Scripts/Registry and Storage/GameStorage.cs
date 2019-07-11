@@ -67,14 +67,34 @@ public class GameStorage : MonoBehaviour {
         PopulateSkillTree();
 
         testWall = Resources.Load<GameObject>("Prefabs/Map/TestWall");
-
-        //Instantiates temporary base players
-        playerMasterList.Add(new Player(6, 10, 3, "Player1"));
-        playerMasterList.Add(new Player(8, 11, 3, "Player2"));
-        playerMasterList.Add(new Player(10, 10, 3, "Player3"));
-        playerMasterList.Add(new Player(12, 11, 3, "Player4"));
-
+        /*
         //Instantiate the map and aEther maps with base values
+        for (int x = 0; x < mapXsize; x++)
+        {
+            for (int y = 0; y < mapYsize; y++)
+            {
+                if (map[x, y] == (int)BattleTiles.Impassable)
+                    Instantiate(testWall, new Vector3(x, 1, mapYsize - y - 1), Quaternion.Euler(0, 0, 0));
+            }
+        }
+        */
+    }
+
+    public static void LoadSaveData(int slot)
+    {
+        //Load players
+        string[] playerFiles = Directory.GetFiles("Assets/Resources/Storage/Slot" + slot + "/Players");
+        foreach(string playerData in playerFiles)
+        {
+            playerMasterList.Add(new Player(playerData));
+        }
+
+        playerMasterList.Add(new Player("falsetemppath", "Player1"));
+        playerMasterList.Add(new Player("falsetemppath", "Player2"));
+        playerMasterList.Add(new Player("falsetemppath", "Player3"));
+        playerMasterList.Add(new Player("falsetemppath", "Player4"));
+
+        //Load map
         for (int x = 0; x < mapXsize; x++)
         {
             for (int y = 0; y < mapYsize; y++)
@@ -88,14 +108,6 @@ public class GameStorage : MonoBehaviour {
         map[6, 189] = (int)BattleTiles.Impassable;
         map[4, 195] = (int)BattleTiles.Impassable;
         map[5, 194] = (int)BattleTiles.Impassable;
-        for (int x = 0; x < mapXsize; x++)
-        {
-            for (int y = 0; y < mapYsize; y++)
-            {
-                if (map[x, y] == (int)BattleTiles.Impassable)
-                    Instantiate(testWall, new Vector3(x, 1, mapYsize - y - 1), Quaternion.Euler(0, 0, 0));
-            }
-        }
     }
 
     /// <summary>
@@ -192,7 +204,7 @@ public class GameStorage : MonoBehaviour {
     /// <param name="tile">The int to check</param>
     public static bool IsGenericPassableTile(int tile)
     {
-        return Registry.MovementRegistry[2].passableTiles.Contains((BattleTiles)tile);
+        return Registry.MovementRegistry[2].passableTiles.ContainsKey((BattleTiles)tile);
     }
     
     /// <summary>
@@ -356,17 +368,28 @@ public class GameStorage : MonoBehaviour {
         switch (name)
         {
             case "Player1":
-            case "Player3":
-            case "Player4":
                 playerSkillTrees.Add(1);
                 playerSkillTrees.Add(2);
                 playerSkillTrees.Add(3);
                 playerSkillTrees.Add(4);
                 break;
             case "Player2":
-                playerSkillTrees.Add(2);
-                playerSkillTrees.Add(4);
                 playerSkillTrees.Add(1);
+                playerSkillTrees.Add(2);
+                playerSkillTrees.Add(3);
+                playerSkillTrees.Add(4);
+                break;
+            case "Player3":
+                playerSkillTrees.Add(1);
+                playerSkillTrees.Add(2);
+                playerSkillTrees.Add(3);
+                playerSkillTrees.Add(4);
+                break;
+            case "Player4":
+                playerSkillTrees.Add(1);
+                playerSkillTrees.Add(2);
+                playerSkillTrees.Add(3);
+                playerSkillTrees.Add(4);
                 break;
         }
         return playerSkillTrees;
@@ -376,24 +399,26 @@ public class GameStorage : MonoBehaviour {
     /// Allows saving from the map instance of this class
     /// Is a workaround to allow a button press to call this function
     /// </summary>
-    public void Save()
+    /// <param slot="slot">The save slot to save to</param>
+    public void Save(int slot)
     {
-        SaveAll();
+        SaveAll(slot);
     }
 
     /// <summary>
     /// Saves all of the important data across the game
     /// </summary>
-    private static void SaveAll()
+    /// <param slot="slot">The save slot to save to</param>
+    private static void SaveAll(int slot)
     {
         //Saves each pawn's stats and gear
         foreach(Player p in playerMasterList)
         {
-            p.SavePlayer();
+            p.SavePlayer(slot);
         }
-        Inventory.SaveInventory();
+        Inventory.SaveInventory(slot);
         //Saves any data not specifically in any other file
-        Stream outStream = File.OpenWrite("Assets/Resources/Storage/Player.data");
+        Stream outStream = File.OpenWrite("Assets/Resources/Storage/Slot"+ slot +"/Player.data");
         BinaryWriter file = new BinaryWriter(outStream);
         Transform player = GameObject.FindGameObjectWithTag("Player").transform;
         //Saves the player's position and rotation
@@ -426,11 +451,11 @@ public class GameStorage : MonoBehaviour {
     /// Loads all globally relevant data
     /// Should be the last thing loaded
     /// </summary>
-    public static void Load()
+    public static void Load(int slot)
     {
-        if (File.Exists("Assets/Resources/Storage/Player.data"))
+        if (File.Exists("Assets/Resources/Storage/Slot" + slot + "/Player.data"))
         {
-            Stream inStream = File.OpenRead("Assets/Resources/Storage/Player.data");
+            Stream inStream = File.OpenRead("Assets/Resources/Storage/Slot" + slot + "/Player.data");
             BinaryReader file = new BinaryReader(inStream);
             Transform player = GameObject.FindGameObjectWithTag("Player").transform;
             player.SetPositionAndRotation(new Vector3(file.ReadSingle(), file.ReadSingle(), file.ReadSingle()), Quaternion.Euler(file.ReadSingle(), file.ReadSingle(), file.ReadSingle()));

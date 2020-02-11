@@ -21,6 +21,8 @@ public class SkillPartBase {
     //1-100
     public int chanceToProc;
 
+    public SkillPartBase() { }
+
     public SkillPartBase(TargettingType targetType, int chanceToProc) {
         this.targetType = targetType;
         this.chanceToProc = chanceToProc;

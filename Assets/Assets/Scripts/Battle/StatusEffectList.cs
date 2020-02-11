@@ -4,20 +4,20 @@ using UnityEngine;
 
 public class StatusEffectList
 {
-    private List<Pair<Statuses, int>> effectList;
+    private List<Pair<string, int>> effectList;
 
     public StatusEffectList()
     {
-        effectList = new List<Pair<Statuses, int>>();
+        effectList = new List<Pair<string, int>>();
     }
 
     /// <summary>
     /// Returns if the list contains a certain status condition
     /// </summary>
     /// <param name="status">The status effect to check for</param>
-    public bool Contains(Statuses status)
+    public bool Contains(string status)
     {
-        foreach (Pair<Statuses, int> se in effectList)
+        foreach (Pair<string, int> se in effectList)
         {
             if (se.First == status)
                 return true;
@@ -30,10 +30,10 @@ public class StatusEffectList
     /// </summary>
     /// <param name="status">The status to add</param>
     /// <param name="limit">The limit of the status, -1 if there is not a limit</param>
-    public void Add(Statuses status, int limit)
+    public void Add(string status, int limit)
     {
-        Pair<Statuses, int> inList = null;
-        foreach (Pair<Statuses, int> se in effectList)
+        Pair<string, int> inList = null;
+        foreach (Pair<string, int> se in effectList)
         {
             if (se.First == status)
                 inList = se;
@@ -41,7 +41,7 @@ public class StatusEffectList
 
         if (inList == null)
         {
-            effectList.Add(new Pair<Statuses, int>(status, limit));
+            effectList.Add(new Pair<string, int>(status, limit));
         }
         else if (!(Registry.StatusEffectRegistry[status].limit != CountdownType.None))
         {
@@ -54,7 +54,7 @@ public class StatusEffectList
     /// Removes a given status from the list
     /// </summary>
     /// <param name="status">Status effect to remove</param>
-    public void Remove(Statuses status)
+    public void Remove(string status)
     {
         for(int i = 0; i < effectList.Count; i++)
         {

@@ -10,10 +10,10 @@ public class MovementType
     /// For each passable tile, say if it is limited movement.
     /// Limited movement means you cannot move into and over a tile of that type in the same move.
     /// </summary>
-    public Dictionary<BattleTiles, bool> passableTiles;
+    public Dictionary<int, bool> passableTiles;
     public int moveSpeed;
 
-    public MovementType(string name, Dictionary<BattleTiles, bool> passableTiles, int moveSpeed)
+    public MovementType(string name, Dictionary<int, bool> passableTiles, int moveSpeed)
     {
         this.name = name;
         this.passableTiles = passableTiles;

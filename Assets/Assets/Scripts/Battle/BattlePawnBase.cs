@@ -18,7 +18,11 @@ public enum Stats
     SpellDamageEffectiveness,
     SpellDamageReceptiveness,
     HealingEffectiveness,
-    HealingReceptiveness
+    HealingReceptiveness,
+    FlatArmorPierce,
+    PercentArmorPierce,
+    FlatMArmorPierce,
+    PercentMArmorPierce,
 }
 
 public class SkillInfo
@@ -49,7 +53,6 @@ public class BattlePawnBase
 
     public StatusEffectList statusList = new StatusEffectList();
 
-    //1 = slow, 2 = walking, 3 = riding
     public int moveType = 1;
 
     //0 = weapon, 1 = helmet, 2 = chestplate, 3 = legs, 4 = boots, 5 = gloves, 6 = accessory 1, 7 = accessory 2
@@ -96,6 +99,10 @@ public class BattlePawnBase
         stats.Add(Stats.SpellDamageReceptiveness, 100);
         stats.Add(Stats.HealingEffectiveness, 100);
         stats.Add(Stats.HealingReceptiveness, 100);
+        stats.Add(Stats.FlatArmorPierce, 0);
+        stats.Add(Stats.PercentArmorPierce, 0);
+        stats.Add(Stats.FlatMArmorPierce, 0);
+        stats.Add(Stats.PercentMArmorPierce, 0);
         cHealth = stats[Stats.MaxHealth];
         equippedWeapon = new Equippable("Wooden Sword");
 
@@ -104,10 +111,10 @@ public class BattlePawnBase
         foreach (int tree in treeList)
         {
             skillTreeList.Add(tree, new Dictionary<int, SkillInfo>());
-            foreach (int skill in GameStorage.skillTreeList[tree].Keys)
+            for (int skill = 0; skill < Registry.SpellTreeRegistry[tree].spells.Count; skill++)
             {
                 skillTreeList[tree].Add(skill, new SkillInfo());
-                if (GameStorage.skillTreeList[tree][skill].dependencies.Count == 0)
+                if (Registry.SpellTreeRegistry[tree][skill].dependencies.Count == 0)
                     skillTreeList[tree][skill].unlocked = true;
             }
         }
@@ -120,7 +127,7 @@ public class BattlePawnBase
     /// </summary>
     /// <param name="status">Status effect to add</param>
     /// <param name="duration">The duration of the status effect, -1 if time is not the condition on which it is removed</param>
-    public void AddStatusEffect(Statuses status, int duration = -1)
+    public void AddStatusEffect(string status, int duration = -1)
     {
         statusList.Add(status, duration);
 
@@ -132,7 +139,7 @@ public class BattlePawnBase
     /// Removes the specified status effect from this pawn
     /// </summary>
     /// <param name="status">The status effect to remove</param>
-    public void RemoveStatusEffect(Statuses status)
+    public void RemoveStatusEffect(string status)
     {
         if (statusList.Contains(status))
         {
@@ -174,8 +181,8 @@ public class BattlePawnBase
         {
             StatMod s = tempStats.GetStatMod(stat);
 
-            value += s.flatMod;
-            value = Mathf.RoundToInt(value * s.multMod);
+            value += s.flatChange;
+            value = Mathf.RoundToInt(value * s.multiplier);
         }
 
         if (stat == Stats.MaxMove && value < 0)
@@ -202,7 +209,7 @@ public class BattlePawnBase
     /// <param name="tileValue">Tile type to check for</param>
     public bool ValidMoveTile(int tileValue)
     {
-        return Registry.MovementRegistry[moveType].passableTiles.ContainsKey((BattleTiles)tileValue);
+        return Registry.MovementRegistry[moveType].passableTiles.ContainsKey(tileValue);
     }
 
     /// <summary>
@@ -223,8 +230,11 @@ public class BattlePawnBase
     /// <param name="damage">Amount of damage to deal</param>
     public int Damage(int damage)
     {
-        if (damage > 0 && statusList.Contains(Statuses.Sleep))
-            statusList.Remove(Statuses.Sleep);
+        //Replace with removedByDamage
+        //
+        //
+        //if (damage > 0 && statusList.Contains(string.Sleep))
+        //    statusList.Remove(string.Sleep);
         int trueDamage = GetDamage(damage);
         cHealth -= trueDamage;
         return trueDamage;
@@ -249,6 +259,6 @@ public class BattlePawnBase
     /// </summary>
     public bool CanMove()
     {
-        return !statusList.Contains(Statuses.Sleep) && cHealth > 0;
+        return cHealth > 0;
     }
 }

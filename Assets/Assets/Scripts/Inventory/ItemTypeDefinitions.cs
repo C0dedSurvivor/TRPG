@@ -7,6 +7,7 @@ using UnityEngine;
 /// </summary>
 public class ItemBase
 {
+    public string name { get; set; }
     //Max amount the player can hold
     int maxStack;
     //How much one of this item sells for
@@ -65,7 +66,7 @@ public class EquippableBase : ItemBase
     /// Keeps track of the battle-mutable effect limiters for each triggerable effect
     /// The TemporaryEffectData here should never be modified
     /// </summary>
-    public List<Pair<TriggeredEffect, TemporaryEffectData>> effects = new List<Pair<TriggeredEffect, TemporaryEffectData>>();
+    public List<AddTriggerPart> effects = new List<AddTriggerPart>();
 
     public int TotalStats
     {
@@ -89,7 +90,7 @@ public class EquippableBase : ItemBase
 
     public void AddEffect(TriggeredEffect effect, int maxTimesThisBattle = -1, int turnCooldown = -1, int maxActiveTurns = -1)
     {
-        effects.Add(new Pair<TriggeredEffect, TemporaryEffectData>(effect, new TemporaryEffectData(maxTimesThisBattle, turnCooldown, maxActiveTurns)));
+        effects.Add(new AddTriggerPart(TargettingType.Self, effect, maxTimesThisBattle, turnCooldown, maxActiveTurns));
     }
 }
 
@@ -98,17 +99,23 @@ public class EquippableBase : ItemBase
 /// </summary>
 public class BattleItemBase : ItemBase
 {
+    public TargettingType targetType;
+
     //Is this item can be used outside of battle
     public bool usableOutOfBattle;
 
     public List<SkillPartBase> partList = new List<SkillPartBase>();
 
-    public BattleItemBase(bool outOfBattleUse, List<SkillPartBase> effects, int maxStack, int sellPrice, string flavor = "") : base(maxStack, sellPrice, flavor)
+    public BattleItemBase(TargettingType targetType, bool outOfBattleUse, List<SkillPartBase> effects, int maxStack, int sellPrice, string flavor = "") : base(maxStack, sellPrice, flavor)
     {
+        this.targetType = targetType;
         usableOutOfBattle = outOfBattleUse;
-        foreach(SkillPartBase part in effects)
+        if (effects != null)
         {
-            partList.Add(part);
+            foreach (SkillPartBase part in effects)
+            {
+                partList.Add(part);
+            }
         }
     }
 }

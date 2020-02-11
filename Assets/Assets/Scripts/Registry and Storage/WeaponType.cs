@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class WeaponType
 {
-    string name;
+    public string name { get; set; }
     //List of special effects acivated at certain ranges
     public List<WeaponStatsAtRange> ranges;
     public List<WeaponStatsAtRange> diagonalRanges;

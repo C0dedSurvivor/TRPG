@@ -7,12 +7,14 @@ public class DamagePart : SkillPartBase{
     public int flatDamage;
     //Max health percent damage
     public int maxHpPercent;
-    //Remaining health percent damage
-    public int remainingHpPercent;
+    //Missing health percent damage
+    public int missingHpPercent;
     //How much these values should be changed by an extraneous value, 0 if not at all
     public float modifiedByValue;
 
     public DamageType damageType;
+
+    public DamagePart() { }
 
     /// <summary>
     /// Creates a new damage part with the corresponding damage values
@@ -24,7 +26,7 @@ public class DamagePart : SkillPartBase{
         this.damage = damage;
         this.flatDamage = flatDamage;
         maxHpPercent = maxHpDamage;
-        remainingHpPercent = remainingHpDamage;
+        missingHpPercent = remainingHpDamage;
         this.modifiedByValue = modifiedByValue;
     }
 }

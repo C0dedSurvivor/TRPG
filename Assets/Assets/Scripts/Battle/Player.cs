@@ -46,7 +46,7 @@ public class Player : BattlePawnBase
              * This will be replaced with loading the stats from a template file based on the pawn name
              */
             this.name = name;
-            moveType = 4;
+            moveType = 3;
             stats.Add(Stats.MaxHealth, 20 + moveType);
             stats.Add(Stats.Attack, 20 + moveType);
             stats.Add(Stats.Defense, 10 + moveType);
@@ -62,6 +62,10 @@ public class Player : BattlePawnBase
             stats.Add(Stats.SpellDamageReceptiveness, 100);
             stats.Add(Stats.HealingEffectiveness, 100);
             stats.Add(Stats.HealingReceptiveness, 100);
+            stats.Add(Stats.FlatArmorPierce, 0);
+            stats.Add(Stats.PercentArmorPierce, 0);
+            stats.Add(Stats.FlatMArmorPierce, 0);
+            stats.Add(Stats.PercentMArmorPierce, 0);
             cHealth = stats[Stats.MaxHealth];
 
             //Grab all the skill trees and skills for this pawn
@@ -69,10 +73,10 @@ public class Player : BattlePawnBase
             foreach (int tree in treeList)
             {
                 skillTreeList.Add(tree, new Dictionary<int, SkillInfo>());
-                foreach (int skill in GameStorage.skillTreeList[tree].Keys)
+                for(int skill = 0; skill < Registry.SpellTreeRegistry[tree].spells.Count; skill++)
                 {
                     skillTreeList[tree].Add(skill, new SkillInfo());
-                    if (GameStorage.skillTreeList[tree][skill].dependencies.Count == 0)
+                    if (Registry.SpellTreeRegistry[tree][skill].dependencies.Count == 0)
                         skillTreeList[tree][skill].unlocked = true;
                 }
             }
@@ -80,9 +84,9 @@ public class Player : BattlePawnBase
             //Divides by two to test healing
             //cHealth = GetEffectiveStat(Stats.MaxHealth) / 2;
             equippedWeapon = new Equippable("Dagger");
-            skillQuickList.Add(new Vector2Int(1, 1));
-            skillQuickList.Add(new Vector2Int(1, 2));
-            skillQuickList.Add(new Vector2Int(1, 3));
+            skillQuickList.Add(new Vector2Int(0, 0));
+            skillQuickList.Add(new Vector2Int(0, 1));
+            skillQuickList.Add(new Vector2Int(0, 2));
         }
         else
         {
@@ -336,6 +340,6 @@ public class Player : BattlePawnBase
     public void UnlockSkill(int treeID, int skillID)
     {
         skillTreeList[treeID][skillID].unlocked = true;
-        skillPoints -= GameStorage.skillTreeList[treeID][skillID].unlockCost;
+        skillPoints -= Registry.SpellTreeRegistry[treeID][skillID].unlockCost;
     }
 }

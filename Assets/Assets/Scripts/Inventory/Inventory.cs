@@ -197,7 +197,7 @@ public class Inventory
             AddItem(new Equippable("Xarok"));
 
             AddItem(new Equippable("Staff of Healing"));
-            Debug.Log(AddItem(new Equippable("Helmet of Healing")));
+            Debug.Log(AddItem(new Equippable("Helm of Healing")));
             Debug.Log(AddItem(new Equippable("Demonic Sword")));
             Debug.Log(AddItem(new Equippable("Crescent Rose")));
             Debug.Log(AddItem(new Equippable("Chestplate of the Last Stand")));

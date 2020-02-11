@@ -6,16 +6,16 @@ using UnityEngine;
 
 class TemporaryTileEffectList
 {
-    private List<Triple<Vector2Int, TileEffects, TemporaryEffectData>> tileEffects;
+    private List<Triple<Vector2Int, TileType, TemporaryEffectData>> tileEffects;
 
     public TemporaryTileEffectList()
     {
-        tileEffects = new List<Triple<Vector2Int, TileEffects, TemporaryEffectData>>();
+        tileEffects = new List<Triple<Vector2Int, TileType, TemporaryEffectData>>();
     }
 
-    public List<TileEffects> GetTileEffects(Vector2Int pos, MoveTriggers trigger)
+    public List<TileType> GetTileType(Vector2Int pos, MoveTriggers trigger)
     {
-        List<TileEffects> effect = new List<TileEffects>();
+        List<TileType> effect = new List<TileType>();
         for (int i = 0; i < tileEffects.Count; i++)
         {
             if (tileEffects[i].First.x == pos.x && tileEffects[i].First.y == pos.y 
@@ -36,7 +36,7 @@ class TemporaryTileEffectList
 
     public void StartOfTurn()
     {
-        foreach(Triple<Vector2Int, TileEffects, TemporaryEffectData> data in tileEffects)
+        foreach(Triple<Vector2Int, TileType, TemporaryEffectData> data in tileEffects)
         {
             data.Third.StartOfTurn();
         }

@@ -8,7 +8,7 @@ using System.Text;
 /// </summary>
 public class EnemyType
 {
-    string name;
+    public string name;
 
     int level1Atk;
     int level1MAtk;

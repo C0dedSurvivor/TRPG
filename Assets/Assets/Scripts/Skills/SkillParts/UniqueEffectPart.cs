@@ -17,6 +17,8 @@ public class UniqueEffectPart : SkillPartBase
 {
     public UniqueEffects effect;
 
+    public UniqueEffectPart() { }
+
     public UniqueEffectPart(TargettingType target, UniqueEffects effect, int chance = 100) : base(target, chance)
     {
         this.effect = effect;

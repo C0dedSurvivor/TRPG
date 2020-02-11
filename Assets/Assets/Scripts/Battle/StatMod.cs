@@ -6,15 +6,15 @@ using System.Text;
 public class StatMod
 {
     public Stats affectedStat;
-    public int flatMod;
-    public float multMod;
+    public int flatChange;
+    public float multiplier;
     public int duration;
 
-    public StatMod(Stats stat, int flat, float mult, int dur)
+    public StatMod(Stats stat, int flatChange, float multMod, int dur)
     {
         affectedStat = stat;
-        flatMod = flat;
-        multMod = mult;
+        this.flatChange = flatChange;
+        multiplier = multMod;
         duration = dur;
     }
 

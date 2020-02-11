@@ -115,10 +115,10 @@ public class Battle : MonoBehaviour
     private bool updateTilesThisFrame = false;
 
     //A list of all the temporary tile effects, the tiles they affect, and the limiters on the effect
-    private TemporaryTileEffectList temporaryTileEffects = new TemporaryTileEffectList();
+    private TemporaryTileEffectList temporaryTileType = new TemporaryTileEffectList();
 
     public BattleUI ui;
-    
+
     public TextAnimator littleInfoSys;
 
     public bool IsBattling { get { return battleState != BattleState.None || eventQueue.Count > 0 || currentAnimations.Count > 0 || !littleInfoSys.Done; } }
@@ -175,10 +175,10 @@ public class Battle : MonoBehaviour
         }
         //Generates enemies
         enemies = new List<Enemy>();
-        enemies.Add(new Enemy("Enemy1", 5, 5, 3, 5, 5));
-        enemies.Add(new Enemy("Enemy2", 10, 5, 2, 5, 5));
-        enemies.Add(new Enemy("Enemy3", 12, 5, 2, 5, 5));
-        enemies.Add(new Enemy("Enemy4", 14, 5, 5, 5, 5));
+        enemies.Add(new Enemy("Enemy1", 5, 5, 2, 5, 5));
+        enemies.Add(new Enemy("Enemy2", 10, 5, 1, 5, 5));
+        enemies.Add(new Enemy("Enemy3", 12, 5, 1, 5, 5));
+        enemies.Add(new Enemy("Enemy4", 14, 5, 4, 5, 5));
         foreach (Enemy e in enemies)
         {
             CheckEventTriggers(e, EffectTriggers.StartOfMatch);
@@ -243,7 +243,7 @@ public class Battle : MonoBehaviour
                             }
                             Vector3 diff = ((FlatSpeedMovementAnim)currentAnimations[i]).Difference;
                             pawn.tempStats.position -= new Vector2Int(Mathf.RoundToInt(diff.x), -Mathf.RoundToInt(diff.z));
-                            
+
                             //Triggers the tile effects that should activate from this movement
                             TriggerTileEffects(pawn, eventQueue.StillMoving(currentAnimations[i].mover) ? MoveTriggers.PassOver : MoveTriggers.StopOnTile);
                         }
@@ -438,7 +438,8 @@ public class Battle : MonoBehaviour
                     selectedSpell = -1;
                 }
 
-                if (battleState != BattleState.Attack || tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerAttackRange) {
+                if (battleState != BattleState.Attack || tileList[pos.x, (mapSizeY - 1) - pos.y].GetComponent<BattleTile>().playerAttackRange)
+                {
                     //Selecting an enemy
                     selectedEnemy = EnemyAtPos(pos.x, pos.y);
                     //If actually targetting another player for a healing attack
@@ -574,8 +575,8 @@ public class Battle : MonoBehaviour
                     for (int y = 0; y < Mathf.Abs(diff.y); y++)
                     {
                         Debug.Log("Adding y");
-                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, 
-                            participantModels[players[selectedPlayer]].transform.position + new Vector3(0, 0, y * Mathf.Sign(diff.y)), 
+                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f,
+                            participantModels[players[selectedPlayer]].transform.position + new Vector3(0, 0, y * Mathf.Sign(diff.y)),
                             participantModels[players[selectedPlayer]].transform.position + new Vector3(0, 0, (y + 1) * Mathf.Sign(diff.y))));
                     }
                 }
@@ -587,8 +588,8 @@ public class Battle : MonoBehaviour
                     for (int x = 0; x < Mathf.Abs(diff.x); x++)
                     {
                         Debug.Log("Adding x");
-                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, 
-                            participantModels[players[selectedPlayer]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0, diff.y), 
+                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f,
+                            participantModels[players[selectedPlayer]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0, diff.y),
                             participantModels[players[selectedPlayer]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0, diff.y)));
                     }
                 }
@@ -601,8 +602,8 @@ public class Battle : MonoBehaviour
                     eventQueue.Insert(new TurnEvent(players[selectedPlayer], direction));
                     for (int x = 0; x < Mathf.Abs(diff.x); x++)
                     {
-                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, 
-                            participantModels[players[selectedPlayer]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0), 
+                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f,
+                            participantModels[players[selectedPlayer]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0),
                             participantModels[players[selectedPlayer]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0)));
                     }
                 }
@@ -612,8 +613,8 @@ public class Battle : MonoBehaviour
                     eventQueue.Insert(new TurnEvent(players[selectedPlayer], direction2));
                     for (int y = 0; y < Mathf.Abs(diff.y); y++)
                     {
-                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, 
-                            participantModels[players[selectedPlayer]].transform.position + new Vector3(diff.x, 0, y * Mathf.Sign(diff.y)), 
+                        eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f,
+                            participantModels[players[selectedPlayer]].transform.position + new Vector3(diff.x, 0, y * Mathf.Sign(diff.y)),
                             participantModels[players[selectedPlayer]].transform.position + new Vector3(diff.x, 0, (y + 1) * Mathf.Sign(diff.y))));
                     }
                 }
@@ -783,8 +784,8 @@ public class Battle : MonoBehaviour
                 eventQueue.Insert(new TurnEvent(enemies[ID], direction));
                 for (int y = 0; y < Mathf.Abs(diff.y); y++)
                 {
-                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, 
-                        participantModels[enemies[ID]].transform.position + new Vector3(0, 0, y * Mathf.Sign(diff.y)), 
+                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f,
+                        participantModels[enemies[ID]].transform.position + new Vector3(0, 0, y * Mathf.Sign(diff.y)),
                         participantModels[enemies[ID]].transform.position + new Vector3(0, 0, (y + 1) * Mathf.Sign(diff.y))));
                 }
             }
@@ -795,8 +796,8 @@ public class Battle : MonoBehaviour
                 eventQueue.Insert(new TurnEvent(enemies[ID], direction2));
                 for (int x = 0; x < Mathf.Abs(diff.x); x++)
                 {
-                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, 
-                        participantModels[enemies[ID]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0, diff.y), 
+                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f,
+                        participantModels[enemies[ID]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0, diff.y),
                         participantModels[enemies[ID]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0, diff.y)));
                 }
             }
@@ -810,8 +811,8 @@ public class Battle : MonoBehaviour
                 eventQueue.Insert(new TurnEvent(enemies[ID], direction));
                 for (int x = 0; x < Mathf.Abs(diff.x); x++)
                 {
-                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, 
-                        participantModels[enemies[ID]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0), 
+                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f,
+                        participantModels[enemies[ID]].transform.position + new Vector3(x * Mathf.Sign(diff.x), 0),
                         participantModels[enemies[ID]].transform.position + new Vector3((x + 1) * Mathf.Sign(diff.x), 0)));
                 }
             }
@@ -822,8 +823,8 @@ public class Battle : MonoBehaviour
                 eventQueue.Insert(new TurnEvent(enemies[ID], direction2));
                 for (int y = 0; y < Mathf.Abs(diff.y); y++)
                 {
-                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, 
-                        participantModels[enemies[ID]].transform.position + new Vector3(diff.x, 0, y * Mathf.Sign(diff.y)), 
+                    eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f,
+                        participantModels[enemies[ID]].transform.position + new Vector3(diff.x, 0, y * Mathf.Sign(diff.y)),
                         participantModels[enemies[ID]].transform.position + new Vector3(diff.x, 0, (y + 1) * Mathf.Sign(diff.y))));
                 }
             }
@@ -864,7 +865,7 @@ public class Battle : MonoBehaviour
                 CheckEventTriggers(e, EffectTriggers.EndOfTurn);
             }
         }
-        temporaryTileEffects.EndOfTurn();
+        temporaryTileType.EndOfTurn();
         foreach (Player p in players)
         {
             if (p.cHealth > 0)
@@ -890,7 +891,7 @@ public class Battle : MonoBehaviour
                 CheckEventTriggers(e, EffectTriggers.StartOfTurn);
             }
         }
-        temporaryTileEffects.StartOfTurn();
+        temporaryTileType.StartOfTurn();
         movingEnemy = 0;
         turn++;
         battleState = BattleState.Player;
@@ -1003,7 +1004,7 @@ public class Battle : MonoBehaviour
                 eventQueue.Insert(new ExecuteEffectEvent(new HealingPart(TargettingType.Self, 0, Mathf.CeilToInt(damage * attacker.GetEffectiveStat(Stats.BasicAttackLifesteal) / 100.0f), 0), attacker, attacker));
             }
 
-            eventQueue.Insert(new FunctionEvent< BattlePawnBase, BattlePawnBase > (CheckForKill, attacker, defender));
+            eventQueue.Insert(new FunctionEvent<BattlePawnBase, BattlePawnBase>(CheckForKill, attacker, defender));
         }
     }
 
@@ -1073,7 +1074,7 @@ public class Battle : MonoBehaviour
                 tileList[p.tempStats.position.x, (mapSizeY - 1) - p.tempStats.position.y].GetComponent<BattleTile>().playerMoveRange = true;
                 tileList[p.tempStats.position.x, (mapSizeY - 1) - p.tempStats.position.y].GetComponent<BattleTile>().enemyDanger = true;
             }
-            if(selectedPlayer != -1)
+            if (selectedPlayer != -1)
                 tileList[players[selectedPlayer].tempStats.position.x, (mapSizeY - 1) - players[selectedPlayer].tempStats.position.y].GetComponent<BattleTile>().enemyDanger = false;
         }
 
@@ -1086,7 +1087,7 @@ public class Battle : MonoBehaviour
             Vector2Int skillPos = players[selectedPlayer].tempStats.position;
             if (selectedMoveSpot.x != -1)
                 skillPos = selectedMoveSpot;
-            Skill displaySkill = GameStorage.skillTreeList[players[selectedPlayer].skillQuickList[skillToShow - 1].x][players[selectedPlayer].skillQuickList[skillToShow - 1].y];
+            Skill displaySkill = Registry.SpellTreeRegistry[players[selectedPlayer].skillQuickList[skillToShow].x][players[selectedPlayer].skillQuickList[skillToShow].y];
 
             if (displaySkill.targetType == TargettingType.Self)
             {
@@ -1161,7 +1162,7 @@ public class Battle : MonoBehaviour
                 }
             }
             //If there is a selected enemy but no selected player, render the enemy's ranges
-            else if(selectedEnemy != -1)
+            else if (selectedEnemy != -1)
             {
                 List<Vector2Int> moveSpots = GetViableMovements(enemies[selectedEnemy]);
                 foreach (Vector2Int pos in moveSpots)
@@ -1300,49 +1301,101 @@ public class Battle : MonoBehaviour
         //Gets all of the straight viable attack position
         foreach (WeaponStatsAtRange statsAtRange in weapon.ranges)
         {
-            if (!statsAtRange.ranged && statsAtRange.atDistance > 1)
+            if (statsAtRange.atDistance >= 1)
             {
-                if (center.x + statsAtRange.atDistance < mapSizeX && battleMap[center.x + statsAtRange.atDistance, (mapSizeY - 1) - center.y] != (int)BattleTiles.Impassable && attackSpots.Contains(new Vector2Int(center.x + statsAtRange.atDistance - 1, center.y)))
-                    attackSpots.Add(new Vector2Int(center.x + statsAtRange.atDistance, center.y));
+                bool validLeftTile = true;
+                bool validRightTile = true;
+                bool validUpTile = true;
+                bool validDownTile = true;
+                //Checks to see if the attack's paths is unobstructed
+                for (int dist = 1; dist <= statsAtRange.atDistance && (validLeftTile || validRightTile || validUpTile || validDownTile); dist++)
+                {
+                    if (validLeftTile && (center.x - statsAtRange.atDistance < 0 ||
+                        (!statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x - dist, center.y]].blocksMeleeAttacks ||
+                        statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x - dist, center.y]].blocksRangedAttacks)))
+                    {
+                        validLeftTile = false;
+                    }
 
-                if (center.x - statsAtRange.atDistance >= 0 && battleMap[center.x - statsAtRange.atDistance, (mapSizeY - 1) - center.y] != (int)BattleTiles.Impassable && attackSpots.Contains(new Vector2Int(center.x - statsAtRange.atDistance + 1, center.y)))
+                    if (validRightTile && (center.x + statsAtRange.atDistance >= mapSizeX ||
+                        (!statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x + dist, center.y]].blocksMeleeAttacks ||
+                        statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x + dist, center.y]].blocksRangedAttacks)))
+                    {
+                        validRightTile = false;
+                    }
+
+                    if (validUpTile && (center.y - statsAtRange.atDistance < 0 ||
+                        (!statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x, (center.y - dist)]].blocksMeleeAttacks ||
+                        statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x, (center.y - dist)]].blocksRangedAttacks)))
+                    {
+                        validUpTile = false;
+                    }
+
+                    if (validDownTile && (center.y + statsAtRange.atDistance >= mapSizeY ||
+                        (!statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x, (center.y + dist)]].blocksMeleeAttacks ||
+                        statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x, (center.y + dist)]].blocksRangedAttacks)))
+                    {
+                        validDownTile = false;
+                    }
+                }
+                if (validLeftTile)
                     attackSpots.Add(new Vector2Int(center.x - statsAtRange.atDistance, center.y));
-
-                if (center.y + statsAtRange.atDistance < mapSizeY && battleMap[center.x, (mapSizeY - 1) - (center.y + statsAtRange.atDistance)] != (int)BattleTiles.Impassable && attackSpots.Contains(new Vector2Int(center.x, center.y + statsAtRange.atDistance - 1)))
-                    attackSpots.Add(new Vector2Int(center.x, center.y + statsAtRange.atDistance));
-
-                if (center.y - statsAtRange.atDistance >= 0 && battleMap[center.x, (mapSizeY - 1) - (center.y - statsAtRange.atDistance)] != (int)BattleTiles.Impassable && attackSpots.Contains(new Vector2Int(center.x, center.y - statsAtRange.atDistance + 1)))
-                    attackSpots.Add(new Vector2Int(center.x, center.y - statsAtRange.atDistance));
-            }
-            //If the weapon is ranged or the space is right against the attacker it just needs to be a place entities can exist
-            else
-            {
-                if (center.x + statsAtRange.atDistance < mapSizeX && battleMap[center.x + statsAtRange.atDistance, (mapSizeY - 1) - center.y] != (int)BattleTiles.Impassable)
+                if (validRightTile)
                     attackSpots.Add(new Vector2Int(center.x + statsAtRange.atDistance, center.y));
-                if (center.x - statsAtRange.atDistance >= 0 && battleMap[center.x - statsAtRange.atDistance, (mapSizeY - 1) - center.y] != (int)BattleTiles.Impassable)
-                    attackSpots.Add(new Vector2Int(center.x - statsAtRange.atDistance, center.y));
-                if (center.y + statsAtRange.atDistance < mapSizeY && battleMap[center.x, (mapSizeY - 1) - (center.y + statsAtRange.atDistance)] != (int)BattleTiles.Impassable)
-                    attackSpots.Add(new Vector2Int(center.x, center.y + statsAtRange.atDistance));
-                if (center.y - statsAtRange.atDistance >= 0 && battleMap[center.x, (mapSizeY - 1) - (center.y - statsAtRange.atDistance)] != (int)BattleTiles.Impassable)
-                    attackSpots.Add(new Vector2Int(center.x, center.y - statsAtRange.atDistance));
+                if (validUpTile)
+                    attackSpots.Add(new Vector2Int(center.x, (center.y - statsAtRange.atDistance)));
+                if (validDownTile)
+                    attackSpots.Add(new Vector2Int(center.x, (center.y + statsAtRange.atDistance)));
             }
         }
         //Gets all of the diagonal viable attack position
         foreach (WeaponStatsAtRange statsAtRange in weapon.diagonalRanges)
         {
-            if (center.y + statsAtRange.atDistance < mapSizeY)
+            if (statsAtRange.atDistance >= 1)
             {
-                if (center.x - statsAtRange.atDistance >= 0 && battleMap[center.x - statsAtRange.atDistance, (mapSizeY - 1) - (center.y + statsAtRange.atDistance)] != (int)BattleTiles.Impassable)
-                    attackSpots.Add(new Vector2Int(center.x - statsAtRange.atDistance, center.y + statsAtRange.atDistance));
-                if (center.x + statsAtRange.atDistance < mapSizeX && battleMap[center.x + statsAtRange.atDistance, (mapSizeY - 1) - (center.y + statsAtRange.atDistance)] != (int)BattleTiles.Impassable)
-                    attackSpots.Add(new Vector2Int(center.x + statsAtRange.atDistance, center.y + statsAtRange.atDistance));
-            }
-            if (center.y - statsAtRange.atDistance >= 0)
-            {
-                if (center.x - statsAtRange.atDistance >= 0 && battleMap[center.x - statsAtRange.atDistance, (mapSizeY - 1) - (center.y - statsAtRange.atDistance)] != (int)BattleTiles.Impassable)
-                    attackSpots.Add(new Vector2Int(center.x - statsAtRange.atDistance, center.y - statsAtRange.atDistance));
-                if (center.x + statsAtRange.atDistance < mapSizeX && battleMap[center.x + statsAtRange.atDistance, (mapSizeY - 1) - (center.y - statsAtRange.atDistance)] != (int)BattleTiles.Impassable)
-                    attackSpots.Add(new Vector2Int(center.x + statsAtRange.atDistance, center.y - statsAtRange.atDistance));
+                bool validUpLeftTile = true;
+                bool validUpRightTile = true;
+                bool validDownLeftTile = true;
+                bool validDownRightTile = true;
+                //Checks to see if the attack's paths is unobstructed
+                for (int dist = 1; dist <= statsAtRange.atDistance && (validUpLeftTile || validUpRightTile || validDownLeftTile || validDownRightTile); dist++)
+                {
+                    if (validUpLeftTile && (center.x - statsAtRange.atDistance < 0 || center.y + statsAtRange.atDistance >= mapSizeY ||
+                        (!statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x - dist, (center.y - statsAtRange.atDistance)]].blocksMeleeAttacks ||
+                        statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x - dist, (center.y - statsAtRange.atDistance)]].blocksRangedAttacks)))
+                    {
+                        validUpLeftTile = false;
+                    }
+
+                    if (validUpRightTile && (center.x + statsAtRange.atDistance >= mapSizeX || center.y + statsAtRange.atDistance >= mapSizeY ||
+                        (!statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x + dist, (center.y - statsAtRange.atDistance)]].blocksMeleeAttacks ||
+                        statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x + dist, (center.y - statsAtRange.atDistance)]].blocksRangedAttacks)))
+                    {
+                        validUpRightTile = false;
+                    }
+
+                    if (validDownLeftTile && (center.x - statsAtRange.atDistance < 0 || center.y + statsAtRange.atDistance < 0 ||
+                        (!statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x - dist, (center.y + dist)]].blocksMeleeAttacks ||
+                        statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x - dist, (center.y + dist)]].blocksRangedAttacks)))
+                    {
+                        validDownLeftTile = false;
+                    }
+
+                    if (validDownRightTile && (center.x + statsAtRange.atDistance >= mapSizeX || center.y + statsAtRange.atDistance < 0 ||
+                        (!statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x + dist, (center.y + dist)]].blocksMeleeAttacks ||
+                        statsAtRange.ranged && Registry.TileTypeRegistry[battleMap[center.x + dist, (center.y + dist)]].blocksRangedAttacks)))
+                    {
+                        validDownRightTile = false;
+                    }
+                }
+                if (validUpLeftTile)
+                    attackSpots.Add(new Vector2Int(center.x - statsAtRange.atDistance, (center.y - statsAtRange.atDistance)));
+                if (validUpRightTile)
+                    attackSpots.Add(new Vector2Int(center.x + statsAtRange.atDistance, (center.y - statsAtRange.atDistance)));
+                if (validDownLeftTile)
+                    attackSpots.Add(new Vector2Int(center.x - statsAtRange.atDistance, (center.y + statsAtRange.atDistance)));
+                if (validDownRightTile)
+                    attackSpots.Add(new Vector2Int(center.x + statsAtRange.atDistance, (center.y + statsAtRange.atDistance)));
             }
         }
         return attackSpots;
@@ -1355,14 +1408,15 @@ public class Battle : MonoBehaviour
     /// <param name="trigger">The type of effects to trigger</param>
     private void TriggerTileEffects(BattlePawnBase pawn, MoveTriggers trigger)
     {
-        List<TileEffects> effects = new List<TileEffects>();
-        if (Registry.DefaultTileEffects.ContainsKey(battleMap[pawn.tempStats.position.x, pawn.tempStats.position.y]) && Registry.DefaultTileEffects[battleMap[pawn.tempStats.position.x, pawn.tempStats.position.y]].Contains(trigger))
-            effects.Add(Registry.DefaultTileEffects[battleMap[pawn.tempStats.position.x, pawn.tempStats.position.y]]);
-        effects.AddRange(temporaryTileEffects.GetTileEffects(pawn.tempStats.position, trigger));
-        foreach (TileEffects effect in effects)
+        List<TileType> effects = new List<TileType>();
+        if (Registry.TileTypeRegistry[battleMap[pawn.tempStats.position.x, pawn.tempStats.position.y]].Contains(trigger))
+            effects.Add(Registry.TileTypeRegistry[battleMap[pawn.tempStats.position.x, pawn.tempStats.position.y]]);
+        effects.AddRange(temporaryTileType.GetTileType(pawn.tempStats.position, trigger));
+        foreach (TileType effect in effects)
         {
-            effect.effects[trigger].target = pawn;
-            eventQueue.Insert(effect.effects[trigger]);
+            ExecuteEffectEvent copiedEffect = effect[trigger];
+            copiedEffect.target = pawn;
+            eventQueue.Insert(copiedEffect);
         }
     }
 
@@ -1432,10 +1486,10 @@ public class Battle : MonoBehaviour
                     mod *= (caster.GetEffectiveStat(Stats.SpellDamageEffectiveness) / 100.0f) * (target.GetEffectiveStat(Stats.SpellDamageReceptiveness) / 100.0f);
                 }
                 int damage = target.Damage(Mathf.RoundToInt(trueEffect.flatDamage * mod));
-                damage += target.Damage(Mathf.RoundToInt((trueEffect.damage * mod *
-                    (trueEffect.damageType == DamageType.Physical ? caster.GetEffectiveStat(Stats.Attack) : caster.GetEffectiveStat(Stats.MagicAttack)) * 3.0f) /
-                    (trueEffect.damageType == DamageType.Physical ? caster.GetEffectiveStat(Stats.Defense) : caster.GetEffectiveStat(Stats.MagicDefense))));
-                damage += target.Damage((int)(target.cHealth * trueEffect.remainingHpPercent * mod / 100.0f));
+                damage += target.Damage(Mathf.RoundToInt(trueEffect.damage * mod *
+                    (trueEffect.damageType == DamageType.Physical ? caster.GetEffectiveStat(Stats.Attack) * 3.0f / (target.GetEffectiveStat(Stats.Defense) * ((100 - caster.GetEffectiveStat(Stats.PercentArmorPierce)) / 100.0f) - caster.GetEffectiveStat(Stats.FlatArmorPierce)) : 
+                    caster.GetEffectiveStat(Stats.MagicAttack) * 3.0f / (target.GetEffectiveStat(Stats.MagicDefense) * ((100 - caster.GetEffectiveStat(Stats.PercentMArmorPierce)) / 100.0f) - caster.GetEffectiveStat(Stats.FlatMArmorPierce)))));
+                damage += target.Damage((int)((target.GetEffectiveStat(Stats.MaxHealth) - target.cHealth) * 1.0f / target.GetEffectiveStat(Stats.MaxHealth) * trueEffect.missingHpPercent * mod / 100.0f));
                 damage += target.Damage((int)(target.GetEffectiveStat(Stats.MaxHealth) * trueEffect.maxHpPercent * mod / 100.0f));
                 eventQueue.Insert(new TextEvent(target.name + " takes " + damage + " damage!"));
                 //Keeps effects from stacking on top of each other by a looped damage call
@@ -1501,15 +1555,15 @@ public class Battle : MonoBehaviour
             else if (effect is StatChangePart)
             {
                 StatChangePart trueEffect = effect as StatChangePart;
-                if(trueEffect.StatMod.flatMod < 0)
-                    eventQueue.Insert(new TextEvent(target.name + "'s " + GameStorage.StatToString(trueEffect.StatMod.affectedStat) + " was decreased by " + trueEffect.StatMod.flatMod + "!"));
-                else if(trueEffect.StatMod.flatMod > 0)
-                    eventQueue.Insert(new TextEvent(target.name + "'s " + GameStorage.StatToString(trueEffect.StatMod.affectedStat) + " was increased by " + trueEffect.StatMod.flatMod + "!"));
-                if (trueEffect.StatMod.multMod < 1)
-                    eventQueue.Insert(new TextEvent(target.name + "'s " + GameStorage.StatToString(trueEffect.StatMod.affectedStat) + " was decreased by " + ((1 - trueEffect.StatMod.flatMod) * 100) + "%!"));
-                else if (trueEffect.StatMod.multMod > 1)
-                    eventQueue.Insert(new TextEvent(target.name + "'s " + GameStorage.StatToString(trueEffect.StatMod.affectedStat) + " was increased by " + ((trueEffect.StatMod.flatMod - 1) * 100) + "%!"));
-                target.tempStats.AddMod(trueEffect.StatMod);
+                if (trueEffect.statMod.flatChange < 0)
+                    eventQueue.Insert(new TextEvent(target.name + "'s " + GameStorage.StatToString(trueEffect.statMod.affectedStat) + " was decreased by " + trueEffect.statMod.flatChange + "!"));
+                else if (trueEffect.statMod.flatChange > 0)
+                    eventQueue.Insert(new TextEvent(target.name + "'s " + GameStorage.StatToString(trueEffect.statMod.affectedStat) + " was increased by " + trueEffect.statMod.flatChange + "!"));
+                if (trueEffect.statMod.multiplier < 1)
+                    eventQueue.Insert(new TextEvent(target.name + "'s " + GameStorage.StatToString(trueEffect.statMod.affectedStat) + " was decreased by " + ((1 - trueEffect.statMod.flatChange) * 100) + "%!"));
+                else if (trueEffect.statMod.multiplier > 1)
+                    eventQueue.Insert(new TextEvent(target.name + "'s " + GameStorage.StatToString(trueEffect.statMod.affectedStat) + " was increased by " + ((trueEffect.statMod.flatChange - 1) * 100) + "%!"));
+                target.tempStats.AddMod(trueEffect.statMod);
             }
 
             //Adds or removes status effects
@@ -1570,13 +1624,13 @@ public class Battle : MonoBehaviour
                     for (int i = 1; i <= trueEffect.amount; i++)
                     {
                         if (target.ValidMoveTile(battleMap[target.tempStats.position.x, target.tempStats.position.y + i * dir]))
-                            eventQueue.Insert(new MovementEvent(participantModels[target], 0.1f, 
-                                participantModels[target].transform.position + new Vector3Int(0, 0, i - 1) * dir, 
+                            eventQueue.Insert(new MovementEvent(participantModels[target], 0.1f,
+                                participantModels[target].transform.position + new Vector3Int(0, 0, i - 1) * dir,
                                 participantModels[target].transform.position + new Vector3Int(0, 0, i) * dir));
                         else
                         {
                             //If the pawn hits a spot where they can't move any further, stun them for a turn
-                            eventQueue.Insert(new ExecuteEffectEvent(new StatusEffectPart(TargettingType.AllInRange, Statuses.Stun, false), caster, target));
+                            eventQueue.Insert(new ExecuteEffectEvent(new StatusEffectPart(TargettingType.AllInRange, "Stun", false), caster, target));
                             return;
                         }
                     }
@@ -1588,13 +1642,13 @@ public class Battle : MonoBehaviour
                     for (int i = 1; i <= trueEffect.amount; i++)
                     {
                         if (target.ValidMoveTile(battleMap[target.tempStats.position.x + i * dir, target.tempStats.position.y]))
-                            eventQueue.Insert(new MovementEvent(participantModels[target], 0.1f, 
-                                participantModels[target].transform.position + new Vector3Int(i - 1, 0, 0) * dir, 
+                            eventQueue.Insert(new MovementEvent(participantModels[target], 0.1f,
+                                participantModels[target].transform.position + new Vector3Int(i - 1, 0, 0) * dir,
                                 participantModels[target].transform.position + new Vector3Int(i, 0, 0) * dir));
                         else
                         {
                             //If the pawn hits a spot where they can't move any further, stun them for a turn
-                            eventQueue.Insert(new ExecuteEffectEvent(new StatusEffectPart(TargettingType.AllInRange, Statuses.Stun, false), caster, target));
+                            eventQueue.Insert(new ExecuteEffectEvent(new StatusEffectPart(TargettingType.AllInRange, "Stun", false), caster, target));
                             return;
                         }
                     }
@@ -1733,7 +1787,7 @@ public class Battle : MonoBehaviour
         if (selectedMoveSpot.x != -1)
             ConfirmPlayerMove();
         //Figures out what skill the player wants to cast
-        Skill displaySkill = GameStorage.skillTreeList[players[selectedPlayer].skillQuickList[selectedSpell - 1].x][players[selectedPlayer].skillQuickList[selectedSpell - 1].y];
+        Skill displaySkill = Registry.SpellTreeRegistry[players[selectedPlayer].skillQuickList[selectedSpell].x][players[selectedPlayer].skillQuickList[selectedSpell].y];
         CastSkill(displaySkill, spellCastPosition.x, spellCastPosition.y, players[selectedPlayer]);
         eventQueue.Insert(new FunctionEvent(FinishedMovingPawn));
         selectedSpell = -1;

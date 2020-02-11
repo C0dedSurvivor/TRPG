@@ -102,7 +102,8 @@ public class EquipInventory : GridInventoryGUI
         //Checks to see if max health was affected and modifies current health accordingly
         GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].CheckHealthChange(previousHealth);
         //Updates the equipped item and stat display for the player
-        GetComponentInParent<PauseGUI>().UpdatePlayerEquipped();
+        GameObject.Find("GUI Controller").GetComponent<PauseGUI>().UpdatePlayerEquipped();
+        
         selectedItem = -1;
         equipButton.SetActive(false);
         discardButton.SetActive(false);
@@ -124,7 +125,7 @@ public class EquipInventory : GridInventoryGUI
         //Checks to see if max health was affected and modifies current health accordingly
         GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].CheckHealthChange(previousHealth);
         //Updates the equipped item and stat display for the player
-        GetComponentInParent<PauseGUI>().UpdatePlayerEquipped();
+        GameObject.Find("GUI Controller").GetComponent<PauseGUI>().UpdatePlayerEquipped();
         selectedItem = -1;
         equipButton.SetActive(false);
         discardButton.SetActive(false);

@@ -3,26 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 
-public enum BattleTiles
-{
-    Impassable,
-    Normal,
-    //Limits movement of some units
-    Forest,
-    //Only some movement types can pass over this
-    Water,
-    //Damage pawns that pass over and end their turn on this tile
-    Burning,
-    //Impassable normally, but can be broken to make it passable
-    Breakable,
-    //Moves any pawns that end their turns on these in a set direction
-    MoveUp,
-    MoveLeft,
-    MoveDown,
-    MoveRight,
-    MoveRandom
-}
-
 public class GameStorage : MonoBehaviour {
 
     /*
@@ -56,17 +36,21 @@ public class GameStorage : MonoBehaviour {
     //Test wall
     public static GameObject testWall;
 
-    //List of all skill trees
-    public static Dictionary<int, Dictionary<int, Skill>> skillTreeList = new Dictionary<int, Dictionary<int, Skill>>();
+    void Awake()
+    {
+        Registry.FillRegistry();
+        FillStorage();
+        LoadSaveData(-1);
+    }
 
     // Use this for initialization
     public static void FillStorage()
     {
         Debug.Log("Initializing storage");
 
-        PopulateSkillTree();
-
         testWall = Resources.Load<GameObject>("Prefabs/Map/TestWall");
+
+        Inventory.LoadInventory(1000);
         /*
         //Instantiate the map and aEther maps with base values
         for (int x = 0; x < mapXsize; x++)
@@ -82,11 +66,14 @@ public class GameStorage : MonoBehaviour {
 
     public static void LoadSaveData(int slot)
     {
-        //Load players
-        string[] playerFiles = Directory.GetFiles("Assets/Resources/Storage/Slot" + slot + "/Players");
-        foreach(string playerData in playerFiles)
+        if (slot != -1)
         {
-            playerMasterList.Add(new Player(playerData));
+            //Load players
+            string[] playerFiles = Directory.GetFiles("Assets/Resources/Storage/Slot" + slot + "/Players");
+            foreach (string playerData in playerFiles)
+            {
+                playerMasterList.Add(new Player(playerData));
+            }
         }
 
         playerMasterList.Add(new Player("falsetemppath", "Player1"));
@@ -99,15 +86,17 @@ public class GameStorage : MonoBehaviour {
         {
             for (int y = 0; y < mapYsize; y++)
             {
-                map[x, y] = (int)BattleTiles.Normal;
+                //Normal Tiles in the base library
+                map[x, y] = 1;
                 baseaEtherMap[x, y, 0] = x + y;
                 baseaEtherMap[x, y, 1] = x + y + 1;
             }
         }
-        map[5, 190] = (int)BattleTiles.Impassable;
-        map[6, 189] = (int)BattleTiles.Impassable;
-        map[4, 195] = (int)BattleTiles.Impassable;
-        map[5, 194] = (int)BattleTiles.Impassable;
+        //Completely impassable tiles
+        map[5, 190] = 0;
+        map[6, 189] = 0;
+        map[4, 195] = 0;
+        map[5, 194] = 0;
     }
 
     /// <summary>
@@ -136,7 +125,7 @@ public class GameStorage : MonoBehaviour {
         Debug.Log(trueBX + " " + trueBY);
 
         //Copies the corresponding values from the main map to the battlemap
-        int tileCount = 0;
+        //int tileCount = 0;
         for (int x = 0; x < xSize; x++)
         {
             for (int y = 0; y < ySize; y++)
@@ -144,11 +133,13 @@ public class GameStorage : MonoBehaviour {
                 //Debug.Log((x - ((int)Mathf.Ceil(xSize / 2.0f) - 1) + centerX) + " | " + (mapYsize - trueBY - (ySize - y)));
                 //Debug.Log(x + " - (" + (int)Mathf.Ceil(xSize / 2.0f) + " - 1) + " + centerX + " | " + mapYsize + " - (" + ySize + " - (" + trueBY + " - " + y + "))");
                 bMap[x, y] = map[x - ((int)Mathf.Ceil(xSize / 2.0f) - 1) + centerX, mapYsize - trueBY - (ySize - y)];
-                if (IsGenericPassableTile(bMap[x, y]))
-                    tileCount++;
+                //if (IsGenericPassableTile(bMap[x, y]))
+                   //tileCount++;
             }
         }
 
+        /* Need a different way to check submap usability, may not be possible with modular setup
+         
         //If there are less that 75 normally usable (not locked by movement type) tiles on the map the map will be moved until a suitable place is found
         if (tileCount < (xSize * ySize * 3) / 8)
         {
@@ -195,16 +186,8 @@ public class GameStorage : MonoBehaviour {
                 bMap = GrabBattleMap(centerX, centerY + 1, xSize, ySize);
             }
         }
+        */
         return bMap;
-    }
-
-    /// <summary>
-    /// Checks if the given int represents a tile passable by the basic movement type
-    /// </summary>
-    /// <param name="tile">The int to check</param>
-    public static bool IsGenericPassableTile(int tile)
-    {
-        return Registry.MovementRegistry[2].passableTiles.ContainsKey((BattleTiles)tile);
     }
     
     /// <summary>
@@ -226,138 +209,6 @@ public class GameStorage : MonoBehaviour {
     }
 
     /// <summary>
-    /// Populates all of the skill trees with their corresponding skills and adds them to the master list
-    /// </summary>
-    public static void PopulateSkillTree()
-    {
-        Dictionary<int, Skill> testSkillTree = new Dictionary<int, Skill>();
-
-        //Skill fireball = new Skill("Fireball", 2, 1, 7, 1, 1, 0, 1);
-        //fireball.AddDamagePart(2, 5, 5, 0, 0);
-        //testSkillTree.Add(1, fireball);
-
-        //Adds all of the skills to the trees
-
-        //test skill to test damage, healing and stat changes
-        Skill holyHandGrenade = new Skill("Holy Hand Grenade", TargettingType.AllInRange, 1, 7, 5, 5, 0, 0);
-        holyHandGrenade.AddDamagePart(TargettingType.Enemy, DamageType.Magical, 3, 3, 0, 0);
-        holyHandGrenade.AddHealPart(TargettingType.Ally, 3, 3, 0, 0);
-        holyHandGrenade.AddStatPart(TargettingType.Ally, Stats.Attack, 5, 1, 3);
-        testSkillTree.Add(1, holyHandGrenade);
-
-        Skill firewall = new Skill("Firewall", TargettingType.AllInRange, 4, 7, 1, 3, 1, 1);
-        firewall.AddDamagePart(TargettingType.Enemy, DamageType.Magical, 3, 5, 0, 0);
-        firewall.AddDependency(1);
-        testSkillTree.Add(2, firewall);
-
-        Skill conflagration = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        conflagration.AddDamagePart(TargettingType.Enemy, DamageType.Magical, 10, 0, 0, 0);
-        conflagration.AddStatPart(TargettingType.Enemy, Stats.Attack, 0, 0.75f, 3);
-        conflagration.AddDependency(1);
-        testSkillTree.Add(3, conflagration);
-
-        Skill testSkill1 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill1.AddDependency(3);
-        testSkillTree.Add(4, testSkill1);
-
-        Skill testSkill2 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill2.AddDependency(4);
-        testSkill2.AddDependency(1);
-        testSkillTree.Add(5, testSkill2);
-
-        Skill testSkill3 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill3.AddDependency(4);
-        testSkillTree.Add(6, testSkill3);
-
-        Skill testSkill4 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill4.AddDependency(5);
-        testSkillTree.Add(7, testSkill4);
-
-        Skill testSkill5 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill5.AddDependency(5);
-        testSkillTree.Add(8, testSkill5);
-
-        Skill testSkill6 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill6.AddDependency(7);
-        testSkillTree.Add(9, testSkill6);
-
-        Skill testSkill7 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill7.AddDependency(7);
-        testSkill7.AddDependency(2);
-        testSkillTree.Add(10, testSkill7);
-
-        Skill testSkill8 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill8.AddDependency(7);
-        testSkillTree.Add(11, testSkill8);
-
-        Skill testSkill9 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill9.AddDependency(10);
-        testSkillTree.Add(12, testSkill9);
-
-
-        Dictionary<int, Skill> testSkillTree2 = new Dictionary<int, Skill>();
-        testSkillTree2.Add(1, holyHandGrenade);
-
-        Dictionary<int, Skill> testSkillTree3 = new Dictionary<int, Skill>();
-        testSkillTree3.Add(1, holyHandGrenade);
-        testSkillTree3.Add(2, firewall);
-        testSkillTree3.Add(3, conflagration);
-
-        Dictionary<int, Skill> testSkillTree4 = new Dictionary<int, Skill>();
-        testSkillTree4.Add(1, holyHandGrenade);
-        testSkillTree4.Add(2, firewall);
-        testSkillTree4.Add(3, conflagration);
-        Skill testSkill21 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill21.AddDependency(1);
-        testSkillTree4.Add(4, testSkill21);
-
-        Skill testSkill22 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill22.AddDependency(2);
-        testSkillTree4.Add(5, testSkill22);
-        Skill testSkill23 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill23.AddDependency(2);
-        testSkillTree4.Add(6, testSkill23);
-        Skill testSkill24 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill24.AddDependency(2);
-        testSkillTree4.Add(7, testSkill24);
-        Skill testSkill25 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill25.AddDependency(2);
-        testSkillTree4.Add(8, testSkill25);
-
-        Skill testSkill26 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill26.AddDependency(3);
-        testSkillTree4.Add(9, testSkill26);
-        Skill testSkill27 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill27.AddDependency(3);
-        testSkillTree4.Add(10, testSkill27);
-        Skill testSkill28 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill28.AddDependency(3);
-        testSkillTree4.Add(11, testSkill28);
-        Skill testSkill29 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill29.AddDependency(3);
-        testSkillTree4.Add(12, testSkill29);
-
-        Skill testSkill210 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill210.AddDependency(4);
-        testSkillTree4.Add(13, testSkill210);
-        Skill testSkill211 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill211.AddDependency(4);
-        testSkillTree4.Add(14, testSkill211);
-        Skill testSkill212 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill212.AddDependency(4);
-        testSkillTree4.Add(15, testSkill212);
-        Skill testSkill213 = new Skill("Conflagration", TargettingType.Enemy, 2, 7, 4, 4, 1, 1);
-        testSkill213.AddDependency(4);
-        testSkillTree4.Add(16, testSkill213);
-
-        //Adds all of the trees to the master list
-        skillTreeList.Add(1, testSkillTree);
-        skillTreeList.Add(2, testSkillTree2);
-        skillTreeList.Add(3, testSkillTree3);
-        skillTreeList.Add(4, testSkillTree4);
-    }
-
-    /// <summary>
     /// Returns the ID of all skill trees a given pawn should have access to
     /// </summary>
     /// <param name="name">The name of the pawn</param>
@@ -368,28 +219,28 @@ public class GameStorage : MonoBehaviour {
         switch (name)
         {
             case "Player1":
+                playerSkillTrees.Add(0);
                 playerSkillTrees.Add(1);
                 playerSkillTrees.Add(2);
                 playerSkillTrees.Add(3);
-                playerSkillTrees.Add(4);
                 break;
             case "Player2":
+                playerSkillTrees.Add(0);
                 playerSkillTrees.Add(1);
                 playerSkillTrees.Add(2);
                 playerSkillTrees.Add(3);
-                playerSkillTrees.Add(4);
                 break;
             case "Player3":
+                playerSkillTrees.Add(0);
                 playerSkillTrees.Add(1);
                 playerSkillTrees.Add(2);
                 playerSkillTrees.Add(3);
-                playerSkillTrees.Add(4);
                 break;
             case "Player4":
+                playerSkillTrees.Add(0);
                 playerSkillTrees.Add(1);
                 playerSkillTrees.Add(2);
                 playerSkillTrees.Add(3);
-                playerSkillTrees.Add(4);
                 break;
         }
         return playerSkillTrees;

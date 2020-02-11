@@ -12,6 +12,8 @@ public class AddTriggerPart : SkillPartBase
     //The amount of turns this trigger exists for. -1 if there is no limit
     public int maxActiveTurns;
 
+    public AddTriggerPart() { }
+
     public AddTriggerPart(TargettingType target, TriggeredEffect effect, int maxTimesThisBattle = -1, int turnCooldown = -1, int maxActiveTurns = -1, int chance = 100) : base(target, chance)
     {
         this.effect = effect;

@@ -10,6 +10,8 @@ public class HealingPart : SkillPartBase{
     //How much these values should be changed by an extraneous value, 0 if not at all
     public float modifiedByValue;
 
+    public HealingPart() { }
+
     /// <summary>
     /// Creates a new damage part with the corresponding damage values
     /// </summary>

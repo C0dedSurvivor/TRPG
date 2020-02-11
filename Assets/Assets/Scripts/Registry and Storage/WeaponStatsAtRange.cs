@@ -11,6 +11,8 @@ public class WeaponStatsAtRange
     public DamageType damageType;
     //At what distance the wepon gets these effects
     public int atDistance;
+    //Can it deal damage
+    public bool damages;
     //Does it heal
     public bool heals;
     //Is the weapon ranged. If it is, attack spaces don't depend on whether the previous space is passable

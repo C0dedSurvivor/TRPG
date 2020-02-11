@@ -15,6 +15,7 @@ public enum CountdownType
 /// </summary>
 public struct StatusEffectDefinition
 {
+    public string name { get; set; }
     //What limit there is on this effect, if any
     public CountdownType limit;
     //Does this effect persist between battles
@@ -24,8 +25,9 @@ public struct StatusEffectDefinition
     //If getting this effect stops you from being able to move the turn you get it
     public bool freezeOnAffliction;
 
-    public StatusEffectDefinition(CountdownType limit, bool persists, bool freezeOnAffliction, float endOfTurnRemoveChance = 0)
+    public StatusEffectDefinition(string name, CountdownType limit, bool persists, bool freezeOnAffliction, float endOfTurnRemoveChance = 0)
     {
+        this.name = name;
         this.limit = limit;
         this.persists = persists;
         this.endOfTurnRemoveChance = endOfTurnRemoveChance;

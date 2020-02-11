@@ -40,10 +40,10 @@ public class BattleOnlyStats
         {
             if (i != null)
             {
-                foreach (Pair<TriggeredEffect, TemporaryEffectData> effect in ((EquippableBase)Registry.ItemRegistry[i.Name]).effects)
+                foreach (AddTriggerPart effect in ((EquippableBase)Registry.ItemRegistry[i.Name]).effects)
                 {
-                    temporaryEffectList.Add(new Pair<TriggeredEffect, TemporaryEffectData>(effect.First,
-                        new TemporaryEffectData(effect.Second.maxTimesThisBattle, effect.Second.turnCooldown, effect.Second.maxActiveTurns)));
+                    temporaryEffectList.Add(new Pair<TriggeredEffect, TemporaryEffectData>(effect.effect,
+                        new TemporaryEffectData(effect.maxTimesThisBattle, effect.turnCooldown, effect.maxActiveTurns)));
                 }
             }
         }
@@ -62,11 +62,11 @@ public class BattleOnlyStats
         {
             if (s.affectedStat == affectedStat)
             {
-                statMod.flatMod += s.flatMod;
-                statMod.multMod += s.multMod - 1;
+                statMod.flatChange += s.flatChange;
+                statMod.multiplier += s.multiplier - 1;
             }
         }
-        statMod.multMod += 1;
+        statMod.multiplier += 1;
 
         return statMod;
     }

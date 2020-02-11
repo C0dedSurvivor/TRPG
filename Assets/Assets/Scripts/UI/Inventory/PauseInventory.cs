@@ -24,6 +24,8 @@ public class PauseInventory : GearInventoryGUI {
         sorting.gameObject.SetActive(true);
         filter.gameObject.SetActive(true);
         sortAndFilter.gameObject.SetActive(true);
+        amtToDiscard.gameObject.SetActive(false);
+        discard.gameObject.SetActive(false);
     }
 
     /// <summary>
@@ -35,6 +37,8 @@ public class PauseInventory : GearInventoryGUI {
         sorting.gameObject.SetActive(false);
         filter.gameObject.SetActive(false);
         sortAndFilter.gameObject.SetActive(false);
+        amtToDiscard.gameObject.SetActive(false);
+        discard.gameObject.SetActive(false);
     }
 
     /// <summary>
@@ -44,6 +48,9 @@ public class PauseInventory : GearInventoryGUI {
     public override void MoveToButton(int button)
     {
         base.MoveToButton(button);
+        sorting.gameObject.SetActive(false);
+        filter.gameObject.SetActive(false);
+        sortAndFilter.gameObject.SetActive(false);
         amtToDiscard.ClearOptions();
         if (Registry.ItemRegistry[itemList[selectedItem].Name] is EquippableBase)
         {
@@ -84,6 +91,9 @@ public class PauseInventory : GearInventoryGUI {
             amtToDiscard.gameObject.SetActive(false);
             amtToDiscard.value = 0;
             discard.gameObject.SetActive(false);
+            sorting.gameObject.SetActive(true);
+            filter.gameObject.SetActive(true);
+            sortAndFilter.gameObject.SetActive(true);
         }
         else
         {

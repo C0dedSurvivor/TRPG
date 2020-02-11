@@ -162,15 +162,15 @@ public class SkillTreeGUI : MonoBehaviour {
         float maxY = float.MinValue;
         int xPos = 0;
         Dictionary<int, Vector2> madeButtons = new Dictionary<int, Vector2>();
-        while (madeButtons.Count < GameStorage.skillTreeList[skillTree].Count) {
+        while (madeButtons.Count < Registry.SpellTreeRegistry[skillTree].spells.Count) {
             //Makes a list of all buttons that need to be generated this round
             List<int> halfMadeButtons = new List<int>();
-            for (int i = 1; i <= GameStorage.skillTreeList[skillTree].Count; i++)
+            for (int i = 0; i < Registry.SpellTreeRegistry[skillTree].spells.Count; i++)
             {
                 if(!madeButtons.ContainsKey(i))
                 {
                     bool valid = true;
-                    foreach(int j in GameStorage.skillTreeList[skillTree][i].dependencies)
+                    foreach(int j in Registry.SpellTreeRegistry[skillTree][i].dependencies)
                     {
                         if (!madeButtons.ContainsKey(j))
                             valid = false;
@@ -184,14 +184,14 @@ public class SkillTreeGUI : MonoBehaviour {
             foreach(int i in halfMadeButtons)
             {
                 float pos = 0;
-                foreach(int j in GameStorage.skillTreeList[skillTree][i].dependencies)
+                foreach(int j in Registry.SpellTreeRegistry[skillTree][i].dependencies)
                 {
                     pos += madeButtons[j].y;
                 }
-                Debug.Log(pos + " Depends " + GameStorage.skillTreeList[skillTree][i].dependencies.Count);
-                if (GameStorage.skillTreeList[skillTree][i].dependencies.Count > 1)
+                Debug.Log(pos + " Depends " + Registry.SpellTreeRegistry[skillTree][i].dependencies.Count);
+                if (Registry.SpellTreeRegistry[skillTree][i].dependencies.Count > 1)
                 {
-                    pos /= GameStorage.skillTreeList[skillTree][i].dependencies.Count;
+                    pos /= Registry.SpellTreeRegistry[skillTree][i].dependencies.Count;
                 }
                 Debug.Log(pos);
                 //Normalizes the position of skills that have multiple dependencies
@@ -230,14 +230,14 @@ public class SkillTreeGUI : MonoBehaviour {
                             if (madeButtons[key] == new Vector2(xPos, pos + displacement))
                                 impactedSkill = key;
                         }
-                        if (!CompareLists(GameStorage.skillTreeList[skillTree][impactedSkill].dependencies, GameStorage.skillTreeList[skillTree][i].dependencies))
+                        if (!CompareLists(Registry.SpellTreeRegistry[skillTree][impactedSkill].dependencies, Registry.SpellTreeRegistry[skillTree][i].dependencies))
                         {
                             foreach (int key in madeButtons.Keys)
                             {
                                 if (madeButtons[key] == new Vector2(xPos, pos - displacement))
                                     impactedSkill = key;
                             }
-                            if (!madeButtons.ContainsValue(new Vector2(xPos, pos - displacement)) || !CompareLists(GameStorage.skillTreeList[skillTree][impactedSkill].dependencies, GameStorage.skillTreeList[skillTree][i].dependencies))
+                            if (!madeButtons.ContainsValue(new Vector2(xPos, pos - displacement)) || !CompareLists(Registry.SpellTreeRegistry[skillTree][impactedSkill].dependencies, Registry.SpellTreeRegistry[skillTree][i].dependencies))
                             {
                                 conflictionSwitch = false;
                                 displacement *= -1;
@@ -271,7 +271,7 @@ public class SkillTreeGUI : MonoBehaviour {
             else
             {
                 bool unlockable = true;
-                foreach (int toCheck in GameStorage.skillTreeList[skillTree][id].dependencies)
+                foreach (int toCheck in Registry.SpellTreeRegistry[skillTree][id].dependencies)
                 {
                     if (!GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[skillTree][toCheck].unlocked)
                     {
@@ -287,14 +287,14 @@ public class SkillTreeGUI : MonoBehaviour {
                     skillButtons[skillButtons.Count - 1].image.color = Color.green;
                 }
             }
-            skillButtons[skillButtons.Count - 1].image.sprite = Resources.Load<Sprite>("Images/SkillIcons/" + GameStorage.skillTreeList[skillTree][id].name);
-            skillButtons[skillButtons.Count - 1].image.overrideSprite = Resources.Load<Sprite>("Images/SkillIcons/" + GameStorage.skillTreeList[skillTree][id].name);
+            skillButtons[skillButtons.Count - 1].image.sprite = Resources.Load<Sprite>("Images/SkillIcons/" + Registry.SpellTreeRegistry[skillTree][id].name);
+            skillButtons[skillButtons.Count - 1].image.overrideSprite = Resources.Load<Sprite>("Images/SkillIcons/" + Registry.SpellTreeRegistry[skillTree][id].name);
             //Debug.Log(skillButtons[skillButtons.Count - 1].transform.position + "|" + skillWindow.transform.position + "|" + displayWindow.transform.position);
         }
         //Renders the dependency lines between the skills
         foreach (int key in madeButtons.Keys)
         {
-            foreach (int j in GameStorage.skillTreeList[skillTree][key].dependencies)
+            foreach (int j in Registry.SpellTreeRegistry[skillTree][key].dependencies)
             {
                 Vector3 differenceVector = (madeButtons[key] - madeButtons[j]) * (new Vector2(1920.0f / Screen.width, 1080.0f / Screen.height));
 
@@ -324,45 +324,45 @@ public class SkillTreeGUI : MonoBehaviour {
         skillInfo.transform.position = Input.mousePosition + new Vector3(2, -2, 0);
         //if (skillInfo.transform.localPosition.y < 0 && Mathf.Abs(skillInfo.transform.localPosition.y) + skillInfo.GetComponent<VerticalLayoutGroup>().preferredHeight > Screen.height / 2)
         //    skillInfo.transform.position = new Vector3(skillInfo.transform.position.x, Screen.height / 2 - skillInfo.GetComponent<VerticalLayoutGroup>().preferredHeight / 2, skillInfo.transform.position.z);
-        skillInfo.transform.GetChild(0).GetComponent<Text>().text = GameStorage.skillTreeList[currentSkillTree][skill].name;
+        skillInfo.transform.GetChild(0).GetComponent<Text>().text = Registry.SpellTreeRegistry[currentSkillTree][skill].name;
         string type = "";
-        if (GameStorage.skillTreeList[currentSkillTree][skill].partList.OfType<DamagePart>().FirstOrDefault() != null)
+        if (Registry.SpellTreeRegistry[currentSkillTree][skill].partList.OfType<DamagePart>().FirstOrDefault() != null)
             type += "Damage";
-        if (GameStorage.skillTreeList[currentSkillTree][skill].partList.OfType<HealingPart>().FirstOrDefault() != null) {
+        if (Registry.SpellTreeRegistry[currentSkillTree][skill].partList.OfType<HealingPart>().FirstOrDefault() != null) {
             if (type != "")
                 type += ", ";
             type += "Heal";
         }
-        if (GameStorage.skillTreeList[currentSkillTree][skill].partList.OfType<StatChangePart>().FirstOrDefault() != null)
+        if (Registry.SpellTreeRegistry[currentSkillTree][skill].partList.OfType<StatChangePart>().FirstOrDefault() != null)
         {
             if (type != "")
                 type += ", ";
             type += "Stat Change";
         }
-        if (GameStorage.skillTreeList[currentSkillTree][skill].partList.OfType<StatusEffectPart>().FirstOrDefault() != null)
+        if (Registry.SpellTreeRegistry[currentSkillTree][skill].partList.OfType<StatusEffectPart>().FirstOrDefault() != null)
         {
             if (type != "")
                 type += ", ";
             type += "Status Effect";
         }
         skillInfo.transform.GetChild(1).GetComponent<Text>().text = "Skill Type: " + type;
-        skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nRange: " + GameStorage.skillTreeList[currentSkillTree][skill].targettingRange;
+        skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nRange: " + Registry.SpellTreeRegistry[currentSkillTree][skill].targettingRange;
         //1 = self, 2 = enemy, 3 = ally, 4 = passive, 5 = anywhere
-        if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.Self)
+        if (Registry.SpellTreeRegistry[currentSkillTree][skill].targetType == TargettingType.Self)
             skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: Caster";
-        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.Ally)
+        else if (Registry.SpellTreeRegistry[currentSkillTree][skill].targetType == TargettingType.Ally)
             skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: Ally";
-        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.Enemy)
+        else if (Registry.SpellTreeRegistry[currentSkillTree][skill].targetType == TargettingType.Enemy)
             skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: Enemy";
-        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.AllAllies)
+        else if (Registry.SpellTreeRegistry[currentSkillTree][skill].targetType == TargettingType.AllAllies)
             skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: All Allies";
-        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.AllEnemies)
+        else if (Registry.SpellTreeRegistry[currentSkillTree][skill].targetType == TargettingType.AllEnemies)
             skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: All Enemies";
-        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.AllAlliesNotSelf)
+        else if (Registry.SpellTreeRegistry[currentSkillTree][skill].targetType == TargettingType.AllAlliesNotSelf)
             skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: All Allies not including Caster";
-        else if (GameStorage.skillTreeList[currentSkillTree][skill].targetType == TargettingType.AllInRange)
+        else if (Registry.SpellTreeRegistry[currentSkillTree][skill].targetType == TargettingType.AllInRange)
             skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nTarget Type: Anywhere";
-        skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nAOE: " + GameStorage.skillTreeList[currentSkillTree][skill].xRange + "x" + GameStorage.skillTreeList[currentSkillTree][skill].yRange;
+        skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nAOE: " + Registry.SpellTreeRegistry[currentSkillTree][skill].xRange + "x" + Registry.SpellTreeRegistry[currentSkillTree][skill].yRange;
         if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][skill].unlocked)
         {
             skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nUnlocked";
@@ -371,7 +371,7 @@ public class SkillTreeGUI : MonoBehaviour {
         {
             bool unlockable = true;
             List<int> needed = new List<int>();
-            foreach (int toCheck in GameStorage.skillTreeList[currentSkillTree][skill].dependencies)
+            foreach (int toCheck in Registry.SpellTreeRegistry[currentSkillTree][skill].dependencies)
             {
                 if (!GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][toCheck].unlocked)
                 {
@@ -381,7 +381,7 @@ public class SkillTreeGUI : MonoBehaviour {
             }
             if (unlockable)
             {
-                skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nUnlockable\nUnlock cost: " + GameStorage.skillTreeList[currentSkillTree][skill].unlockCost;
+                skillInfo.transform.GetChild(1).GetComponent<Text>().text += "\nUnlockable\nUnlock cost: " + Registry.SpellTreeRegistry[currentSkillTree][skill].unlockCost;
             }
             else
             {
@@ -433,7 +433,7 @@ public class SkillTreeGUI : MonoBehaviour {
         {
             selectedSkill = skillID;
             quickSkillSwitcher.SetActive(true);
-            quickSkillSwitcher.GetComponentInChildren<Text>().text = "Equip " + GameStorage.skillTreeList[currentSkillTree][skillID].name + " for battle?";
+            quickSkillSwitcher.GetComponentInChildren<Text>().text = "Equip " + Registry.SpellTreeRegistry[currentSkillTree][skillID].name + " for battle?";
         }
         //If not, try to unlock it
         else
@@ -452,7 +452,7 @@ public class SkillTreeGUI : MonoBehaviour {
         bool unlockable = true;
         List<int> needed = new List<int>();
         //Checks to make sure all of the dependencies for that skill have been unlocked
-        foreach (int toCheck in GameStorage.skillTreeList[currentSkillTree][skillID].dependencies)
+        foreach (int toCheck in Registry.SpellTreeRegistry[currentSkillTree][skillID].dependencies)
         {
             if (!GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][toCheck].unlocked)
             {
@@ -473,7 +473,7 @@ public class SkillTreeGUI : MonoBehaviour {
         }
         errorMessage += " first.";
         //If it cannot be unlocked due to a lack of skill points, notifies the player
-        if (unlockable && GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].SkillPoints < GameStorage.skillTreeList[currentSkillTree][skillID].unlockCost)
+        if (unlockable && GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].SkillPoints < Registry.SpellTreeRegistry[currentSkillTree][skillID].unlockCost)
         {
             errorMessage = "You do not have enough skill points to unlock this skill.";
             unlockable = false;
@@ -491,7 +491,7 @@ public class SkillTreeGUI : MonoBehaviour {
                 else
                 {
                     unlockable = true;
-                    foreach (int toCheck in GameStorage.skillTreeList[currentSkillTree][b.GetComponent<SkillUnlockButton>().skillID].dependencies)
+                    foreach (int toCheck in Registry.SpellTreeRegistry[currentSkillTree][b.GetComponent<SkillUnlockButton>().skillID].dependencies)
                     {
                         if (!GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][toCheck].unlocked)
                         {

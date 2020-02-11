@@ -59,7 +59,7 @@ public class Skill {
         partList.Add(new StatChangePart(target, affectedStat, flat, multiplier, duration, chance));
     }
 
-    public void AddStatusPart(TargettingType target, Statuses status, bool remove, int chance = 100)
+    public void AddStatusPart(TargettingType target, string status, bool remove, int chance = 100)
     {
         partList.Add(new StatusEffectPart(target, status, remove, chance));
     }

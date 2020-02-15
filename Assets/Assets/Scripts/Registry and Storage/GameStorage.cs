@@ -38,9 +38,14 @@ public class GameStorage : MonoBehaviour {
 
     void Awake()
     {
-        Registry.FillRegistry();
-        FillStorage();
-        LoadSaveData(-1);
+        //If the registry hasn't already been filled
+        //Only for testing game while bypassing title screen
+        if (Registry.MovementRegistry.Count == 0)
+        {
+            Registry.FillRegistry();
+            FillStorage();
+            LoadSaveData(-1);
+        }
     }
 
     // Use this for initialization

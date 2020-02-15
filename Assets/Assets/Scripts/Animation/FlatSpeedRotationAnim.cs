@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
-class FlatSpeedRotationAnim : DecceleratingRotationAnim
+class FlatSpeedRotationAnim : RotationAnimBase
 {
     private Quaternion initialRotation;
     private float percent = 0;
 
-    public FlatSpeedRotationAnim(GameObject target, float speed, Quaternion initialRot, Quaternion finalRot, bool concurrent = false) : base(target, speed, finalRot, concurrent)
+    public FlatSpeedRotationAnim(GameObject target, float speed, Quaternion initialRot, Quaternion finalRot, bool concurrent = false) : 
+        base(target, speed, finalRot, concurrent)
     {
         initialRotation = initialRot;
     }

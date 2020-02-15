@@ -1,20 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class FlatSpeedScaleAnim : DecceleratingScaleAnim
+public class FlatSpeedScaleAnim : ScaleAnimBase
 {
     public Vector3 initialScale;
     private float percent = 0;
 
-    public FlatSpeedScaleAnim(GameObject target, float speed, Vector3 initialScale, float uniformFinalScale, bool concurrent = false) : base(target, speed, uniformFinalScale, concurrent)
+    public FlatSpeedScaleAnim(GameObject target, float speed, Vector3 initialScale, float uniformFinalScale, bool concurrent = false) : 
+        base(target, speed, uniformFinalScale, concurrent)
     {
         this.initialScale = initialScale;
     }
 
-    public FlatSpeedScaleAnim(GameObject target, float speed, Vector3 initialScale, Vector3 finalScale, bool concurrent = false) : base(target, speed, finalScale, concurrent)
+    public FlatSpeedScaleAnim(GameObject target, float speed, Vector3 initialScale, Vector3 finalScale, bool concurrent = false) : 
+        base(target, speed, finalScale, concurrent)
     {
         this.initialScale = initialScale;
     }

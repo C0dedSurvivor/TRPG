@@ -12,13 +12,13 @@ public class MovementEvent : BattleEventBase
 
     public MovementEvent(GameObject target, float speed, Vector3 finalPos, bool concurrent = false, bool forced = false)
     {
-        animation = new DecceleratingMovementAnim(target, speed, finalPos, concurrent);
+        animation = new DeceleratingMovementAnim(target, speed, finalPos, concurrent);
         this.forced = forced;
     }
 
     public MovementEvent(GameObject target, float speed, Quaternion finalRot, bool concurrent = false, bool forced = false)
     {
-        animation = new DecceleratingRotationAnim(target, speed, finalRot, concurrent);
+        animation = new DeceleratingRotationAnim(target, speed, finalRot, concurrent);
         this.forced = forced;
     }
 

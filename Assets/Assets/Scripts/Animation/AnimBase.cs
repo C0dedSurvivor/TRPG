@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class AnimBase
+public abstract class AnimBase
 {
     public bool concurrent;
     public GameObject mover;
@@ -15,7 +11,15 @@ public class AnimBase
         this.concurrent = concurrent;
     }
 
+    /// <summary>
+    /// Called in update, moves the object one frame in the animation
+    /// </summary>
     public virtual void StepAnimation() { }
+
     public virtual bool IsDone() { return false; }
+
+    /// <summary>
+    /// Called when animation is finished, makes sure everything ends where it should
+    /// </summary>
     public virtual void FinalizeAnim() { }
 }

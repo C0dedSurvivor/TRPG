@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
-class FlatSpeedMovementAnim : DecceleratingMovementAnim
+public class FlatSpeedMovementAnim : MovementAnimBase
 {
     private Vector3 initialPosition;
     private float percent = 0;
-    
-    public Vector3 Difference { get { return initialPosition - finalPosition; } }
+   
+    public Vector3 Difference => initialPosition - finalPosition;
 
-    public FlatSpeedMovementAnim(GameObject target, float speed, Vector3 initialPos, Vector3 finalPos, bool concurrent = false) : base(target, speed, finalPos, concurrent)
+    public FlatSpeedMovementAnim(GameObject target, float speed, Vector3 initialPos, Vector3 finalPos, bool concurrent = false) : 
+        base(target, speed, finalPos, concurrent)
     {
         initialPosition = initialPos;
     }

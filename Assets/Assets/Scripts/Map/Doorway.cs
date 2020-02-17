@@ -1,15 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// When attached to a gameobject, teleports the player if they press 'r' while facing it
 /// </summary>
-public class Doorway : MonoBehaviour {
+public class Doorway : MonoBehaviour, IMapInteractable
+{
     //Where to teleport the player to on interaction
-    public Vector3 position;
+    public Vector3 exitPosition;
     //What the direction the player should face post-movement
-    public Vector3 rotation;
+    public Vector3 exitRotation;
 
     /// <summary>
     /// Triggered when the player presses 'r' while facing this object
@@ -18,6 +17,6 @@ public class Doorway : MonoBehaviour {
     public void PlayerInteraction(GameObject player)
     {
         //Teleports the player
-        player.transform.SetPositionAndRotation(position, Quaternion.Euler(rotation));
+        player.transform.SetPositionAndRotation(exitPosition, Quaternion.Euler(exitRotation));
     }
 }

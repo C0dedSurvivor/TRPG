@@ -1,69 +1,70 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class MapPlayerScript : MonoBehaviour {
+public class MapPlayerScript : MonoBehaviour
+{
 
     public int walkingSpeed = 8;
     public int sprintSpeed = 16;
     public int turningSpeed = 75;
+    public int jumpStrength = 300;
 
     const double CAMERA_ADJUST_SPEED = 1.5f;
     const int MAX_CAMERA_DISTANCE = 10;
     const int MIN_CAMERA_DISTANCE = 4;
 
-    public GameObject mapCamera;
+    private Rigidbody rigidbody;
+
+    public Camera mapCamera;
     public Battle battleController;
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start()
+    {
         //Locks and hides the cursor on startup
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        rigidbody = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
-    void Update () {
+    void Update()
+    {
         if (!PauseGUI.paused && !battleController.IsBattling)
         {
             //Interacts with any objects directly in front of the player that have a PlayerInteraction method
             if (Input.GetKeyDown("r"))
             {
                 RaycastHit hit;
-                if (Physics.Raycast(transform.position, transform.forward, out hit, 5.0f))
+                IMapInteractable interactable;
+                if (Physics.Raycast(transform.position, transform.forward, out hit, 5.0f) &&
+                    (interactable = hit.collider.gameObject.GetComponent<IMapInteractable>()) != null)
                 {
-                    hit.collider.gameObject.BroadcastMessage("PlayerInteraction", gameObject);
+                    interactable.PlayerInteraction(gameObject);
                 }
             }
 
             //Movement
-            if (Input.GetKey("w") && !Input.GetKey("s"))
-            {
-                transform.Translate(Vector3.forward * walkingSpeed * Time.deltaTime);
-            }
-            if (Input.GetKey("s") && !Input.GetKey("w"))
-            {
-                transform.Translate(Vector3.back * walkingSpeed * Time.deltaTime);
-            }
-            if (Input.GetKey("a") && !Input.GetKey("d"))
-            {
-                transform.Translate(Vector3.left * walkingSpeed * Time.deltaTime);
-            }
-            if (Input.GetKey("d") && !Input.GetKey("a"))
-            {
-                transform.Translate(Vector3.right * walkingSpeed * Time.deltaTime);
-            }
+            Vector3 movement = Vector3.zero;
+            movement += Input.GetKey(KeyCode.W) ? Vector3.forward : Vector3.zero;
+            movement += Input.GetKey(KeyCode.S) ? Vector3.back : Vector3.zero;
+            movement += Input.GetKey(KeyCode.A) ? Vector3.left : Vector3.zero;
+            movement += Input.GetKey(KeyCode.D) ? Vector3.right : Vector3.zero;
+            transform.Translate(movement.normalized * walkingSpeed * Time.deltaTime);
+
             //Jumping
-            if(Input.GetKeyDown(KeyCode.Space) && Physics.Raycast(transform.position + Vector3.down, Vector3.down, 0.001f))
+            if (Input.GetKeyDown(KeyCode.Space) && Physics.Raycast(transform.position + Vector3.down, Vector3.down, 0.001f))
             {
                 Debug.Log("jumping");
-                GetComponent<Rigidbody>().AddForce(Vector3.up * 300.0f);
+                rigidbody.AddForce(Vector3.up * jumpStrength);
             }
+
             //Camera controls
             if (Input.GetKey(KeyCode.LeftControl))
             {
+                //Make sure the camera stays within bounds
                 float change = Input.GetAxis("Mouse ScrollWheel");
-                if ((change > 0 && Vector3.Distance(mapCamera.transform.position, transform.position) > MIN_CAMERA_DISTANCE) || (change < 0 && Vector3.Distance(mapCamera.transform.position, transform.position) < MAX_CAMERA_DISTANCE))
+                if ((change > 0 && Vector3.Distance(mapCamera.transform.position, transform.position) > MIN_CAMERA_DISTANCE) ||
+                    (change < 0 && Vector3.Distance(mapCamera.transform.position, transform.position) < MAX_CAMERA_DISTANCE))
                     mapCamera.transform.Translate(Vector3.forward * change);
             }
 

@@ -1,24 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// When attached to a gameobject, starts a battle if the player presses 'r' while facing it
 ///Is a temporary test implementation
 /// </summary>
-public class BattleTrigger : MonoBehaviour {
+public class BattleTrigger : MonoBehaviour, IMapInteractable
+{
 
-    public Battle battleStuff;
-
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+    public Battle battleController;
 
     /// <summary>
     /// Triggered when the player presses 'r' while facing this object
@@ -27,11 +16,11 @@ public class BattleTrigger : MonoBehaviour {
     public void PlayerInteraction(GameObject player)
     {
         //starts the battle at this object's position
-        battleStuff.StartBattle(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.z), Camera.main.transform);
+        battleController.StartBattle(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.z), 
+            player.GetComponent<MapPlayerScript>().mapCamera.transform);
         //Stops the player from moving, being rendered or interacted with
         player.SetActive(false);
         //Stops this gameObject from being rendered or interacted with
         gameObject.SetActive(false);
     }
 }
- 

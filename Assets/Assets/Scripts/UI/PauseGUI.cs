@@ -135,6 +135,7 @@ public class PauseGUI : MonoBehaviour
 
     /// <summary>
     /// Grabs the updated stats of the currently selected pawn
+    /// <see cref="BattlePawnBase"/>
     /// </summary>
     public void UpdatePlayerStatDisplay()
     {

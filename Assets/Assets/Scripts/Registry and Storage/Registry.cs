@@ -32,7 +32,7 @@ public class Registry
 
     public static void FillRegistry()
     {
-        using (StreamReader reader = new StreamReader("Definitions.json"))
+        using (StreamReader reader = new StreamReader(StorageDirectory.DefintionsPath))
         {
             var dataDumpType = new
             {

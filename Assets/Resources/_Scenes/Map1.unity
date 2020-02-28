@@ -16855,7 +16855,8 @@ MonoBehaviour:
   walkingSpeed: 8
   sprintSpeed: 16
   turningSpeed: 75
-  mapCamera: {fileID: 409583622}
+  jumpStrength: 300
+  mapCamera: {fileID: 409583626}
   battleController: {fileID: 1970206861}
 --- !u!54 &1990799083
 Rigidbody:

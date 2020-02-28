@@ -166,6 +166,7 @@ public class BattleUI : MonoBehaviour
 
     /// <summary>
     /// Updates the given stat display with the stats of the selected pawn
+    /// <see cref="BattlePawnBase"/>
     /// </summary>
     private void UpdateStats(BattlePawnBase pawn, Text[] statDisplays)
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 
 /// <summary>
-/// Some weapons have different stats or effects based on how far away the pawn being hit is
+/// Some weapons have different stats or effects based on how far away the target is
 /// </summary>
 public class WeaponStatsAtRange
 {

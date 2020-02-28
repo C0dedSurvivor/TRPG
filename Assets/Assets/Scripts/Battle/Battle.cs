@@ -935,7 +935,7 @@ public class Battle : MonoBehaviour
     /// </summary>
     /// <param name="attacker">The pawn doing the attacking</param>
     /// <param name="target">The pawn getting attacked</param>
-    /// <returns>The first value is the amount of damage, the second is the damage type and whether or not the weapon is ranged</returns>
+    /// <returns>The first value is the amount of damage, the second is the damage type</returns>
     public Pair<int, DamageType> GetDamageValues(BattlePawnBase attacker, BattlePawnBase target)
     {
         //Gets the distance between the player and enemy

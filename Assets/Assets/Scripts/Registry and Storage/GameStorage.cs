@@ -215,6 +215,7 @@ public class GameStorage : MonoBehaviour {
 
     /// <summary>
     /// Returns the ID of all skill trees a given pawn should have access to
+    /// <see cref="BattlePawnBase"/>
     /// </summary>
     /// <param name="name">The name of the pawn</param>
     /// <returns>A list of skill tree IDs</returns>

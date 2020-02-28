@@ -98,7 +98,7 @@ public class EquipInventory : GridInventoryGUI
             GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].EquipItem(itemList[selectedItem] as Equippable, invSlot);
         //Removes the item to be equipped from the inventory and sorts it
         Inventory.RemoveItem(itemList[selectedItem].Name, 1);
-        Inventory.SortInventory((int)Inventory.sortingType);
+        Inventory.SortInventory(Inventory.sortingType);
         //Checks to see if max health was affected and modifies current health accordingly
         GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].CheckHealthChange(previousHealth);
         //Updates the equipped item and stat display for the player
@@ -120,7 +120,7 @@ public class EquipInventory : GridInventoryGUI
         int previousHealth = GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEffectiveStat(Stats.MaxHealth);
         //Adds the item back to the inventory and sorts it
         Inventory.AddItem(GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].EquipItem(null, invSlot));
-        Inventory.SortInventory((int)Inventory.sortingType);
+        Inventory.SortInventory(Inventory.sortingType);
         //Debug.Log(GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].GetEquipped(invSlot));
         //Checks to see if max health was affected and modifies current health accordingly
         GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].CheckHealthChange(previousHealth);
@@ -185,31 +185,7 @@ public class EquipInventory : GridInventoryGUI
     private void UpdateBaseInfo(Text[] textList, string item)
     {
         textList[0].text = item;
-        textList[1].text = "Equipment type: ";
-        switch (((EquippableBase)Registry.ItemRegistry[item]).equipSlot)
-        {
-            case 0:
-                textList[1].text += "Weapon";
-                break;
-            case 1:
-                textList[1].text += "Helmet";
-                break;
-            case 2:
-                textList[1].text += "Chestplate";
-                break;
-            case 3:
-                textList[1].text += "Legs";
-                break;
-            case 4:
-                textList[1].text += "Boots";
-                break;
-            case 5:
-                textList[1].text += "Hands";
-                break;
-            case 6:
-                textList[1].text += "Accessory";
-                break;
-        }
+        textList[1].text = "Equipment type: " + ((EquippableBase)Registry.ItemRegistry[item]).equipSlot.ToString();
     }
 
     /// <summary>

@@ -10,6 +10,10 @@ public enum FacingDirection
     West
 }
 
+/// <summary>
+/// All stats given to a pawn that are only relevant for the duration of a battle
+/// <see cref="BattlePawnBase"/>
+/// </summary>
 public class BattleOnlyStats
 {
     public List<StatMod> modifierList;

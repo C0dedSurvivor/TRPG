@@ -117,7 +117,7 @@ public class PauseInventory : GearInventoryGUI {
     /// </summary>
     public void SortAndChangeFilter()
     {
-        Inventory.SortInventory(sorting.value);
+        Inventory.SortInventory((SortingType)sorting.value);
         ChangeInventory(filter.value - 1);
     }
 
@@ -136,31 +136,7 @@ public class PauseInventory : GearInventoryGUI {
         if (Registry.ItemRegistry[itemList[index].Name] is EquippableBase)
         {
             EquippableBase item = ((EquippableBase)Registry.ItemRegistry[itemList[index].Name]);
-            children[1].text = "Equipment type: ";
-            switch (item.equipSlot)
-            {
-                case 0:
-                    children[1].text += "Weapon";
-                    break;
-                case 1:
-                    children[1].text += "Helmet";
-                    break;
-                case 2:
-                    children[1].text += "Chestplate";
-                    break;
-                case 3:
-                    children[1].text += "Legs";
-                    break;
-                case 4:
-                    children[1].text += "Boots";
-                    break;
-                case 5:
-                    children[1].text += "Hands";
-                    break;
-                case 6:
-                    children[1].text += "Accessory";
-                    break;
-            }
+            children[1].text = "Equipment type: " + item.equipSlot.ToString();
             foreach (Stats stat in (Stats[])Enum.GetValues(typeof(Stats)))
             {
                 if (item.stats.ContainsKey(stat))

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using Newtonsoft.Json;
 
 public enum SortingType
 {
@@ -11,136 +12,19 @@ public enum SortingType
     AmountIncreasing,
 }
 
-public class StoredItem
+public enum Filter
 {
-    protected string name;
-    public int amount;
-
-    public string Name
-    {
-        get
-        {
-            return name;
-        }
-    }
-
-    public StoredItem(string name, int amt = 1)
-    {
-        this.name = name;
-        amount = amt;
-    }
-
-    /// <summary>
-    /// Compares two item, used when sorting the inventory
-    /// Sorting order:
-    /// Materials (sorted by amount then name if same amount) -> Battle Item (sorted by amount then name if same amount) -> Equippable (sorted by slot then total strength)
-    /// </summary>
-    /// <param name="other">The item to compare this one to</param>
-    /// <returns>1 if the other item is higher up in order, -1 if this item is higher up in order</returns>
-    public int CompareTo(StoredItem other)
-    {
-        if (Registry.ItemRegistry[name] is EquippableBase)
-        {
-            EquippableBase item1 = ((EquippableBase)Registry.ItemRegistry[name]);
-            if (Registry.ItemRegistry[other.name] is EquippableBase)
-            {
-                EquippableBase item2 = ((EquippableBase)Registry.ItemRegistry[other.name]);
-                if (item1.equipSlot > item2.equipSlot)
-                {
-                    return 1;
-                }
-                else if (item1.equipSlot < item2.equipSlot)
-                {
-                    return -1;
-                }
-                else
-                {
-                    if (item1.subType > item2.subType)
-                    {
-                        return 1;
-                    }
-                    else if (item1.subType < item2.subType)
-                    {
-                        return -1;
-                    }
-                    if (item1.TotalStats > item2.TotalStats)
-                    {
-                        return -1;
-                    }
-                    else if (item1.TotalStats < item2.TotalStats)
-                    {
-                        return 1;
-                    }
-                    else
-                    {
-                        return name.CompareTo(other.name);
-                    }
-                }
-            }
-            else if (Registry.ItemRegistry[other.name] is BattleItemBase)
-            {
-                return 1;
-            }
-            else
-            {
-                return 1;
-            }
-        }
-        else if (Registry.ItemRegistry[name] is BattleItemBase)
-        {
-            if (Registry.ItemRegistry[other.name] is EquippableBase)
-            {
-                return -1;
-            }
-            else if (Registry.ItemRegistry[other.name] is BattleItemBase)
-            {
-                if (amount > other.amount)
-                {
-                    return -1;
-                }
-                else if (amount < other.amount)
-                {
-                    return 1;
-                }
-                else
-                {
-                    //for now just sorting by name, might sort by effect at a later junction
-                    return name.CompareTo(other.name);
-                }
-            }
-            else
-            {
-                return 1;
-            }
-        }
-        else
-        {
-
-            if (Registry.ItemRegistry[other.name] is EquippableBase)
-            {
-                return -1;
-            }
-            else if (Registry.ItemRegistry[other.name] is BattleItemBase)
-            {
-                return -1;
-            }
-            else
-            {
-                if (amount > other.amount)
-                {
-                    return -1;
-                }
-                else if (amount < other.amount)
-                {
-                    return 1;
-                }
-                else
-                {
-                    return name.CompareTo(other.name);
-                }
-            }
-        }
-    }
+    All = -1,
+    Weapon,
+    Helmet,
+    Chestplate,
+    Legs,
+    Boots,
+    Gloves,
+    Accessory,
+    Equippables,
+    BattleItems,
+    Materials
 }
 
 public class Inventory
@@ -153,14 +37,10 @@ public class Inventory
     {
         if (File.Exists("Assets/Resources/Storage/Slot" + slot + "/Inventory.data"))
         {
-            Stream inStream = File.OpenRead("Assets/Resources/Storage/Slot" + slot + "/Inventory.data");
-            BinaryReader file = new BinaryReader(inStream);
-            int amt = file.ReadInt32();
-            for(int i = 0; i < amt; i++)
+            using (StreamReader reader = new StreamReader(StorageDirectory.SaveFilePath + slot + StorageDirectory.InventoryExtension))
             {
-                itemList.Add(new StoredItem(file.ReadString(), file.ReadInt32()));
+                itemList.AddRange(JsonConvert.DeserializeObject<StoredItem[]>(reader.ReadToEnd()));
             }
-            file.Close();
         }
         else
         {
@@ -206,7 +86,7 @@ public class Inventory
             Debug.Log(AddItem(new Equippable("Priest Necklace")));
         }
 
-        SortInventory((int)sortingType);
+        SortInventory(sortingType);
     }
 
     /// <summary>
@@ -215,70 +95,75 @@ public class Inventory
     /// <param slot="slot">The save slot to save to</param>
     public static void SaveInventory(int slot)
     {
-        Stream outStream = File.OpenWrite("Assets/Resources/Storage/Slot" + slot + "/Inventory.data");
-        BinaryWriter file = new BinaryWriter(outStream);
-        file.Write(itemList.Count);
-        foreach(StoredItem item in itemList)
+        using (StreamWriter writer = new StreamWriter(StorageDirectory.SaveFilePath + slot + StorageDirectory.InventoryExtension))
         {
-            file.Write(item.Name);
-            file.Write(item.amount);
+            writer.Write(JsonConvert.SerializeObject(itemList));
         }
-        file.Close();
     }
 
     /// <summary>
     /// Returns a list of items from the inventory filtered in a specified way
     /// </summary>
-    /// <param name="filter">Way to filter the returned list.
-    ///                      -1 = no filter, 0-6 grabs equippables by the slot they belong in, 7 = all equippables, 8 = all battle items, 9 = all materials</param>
+    /// <param name="filter">
+    /// Way to filter the returned list.
+    /// -1 = no filter, 0-6 grabs equippables by the slot they belong in, 7 = all equippables, 8 = all battle items, 9 = all materials
+    /// </param>
     /// <returns>List of all requested items</returns>
     public static List<StoredItem> GetItemList(int filter)
     {
         List<StoredItem> returnedList = new List<StoredItem>();
-        switch (filter)
+        switch ((Filter)filter)
         {
-            case -1:
+            case Filter.All:
                 foreach (StoredItem i in itemList)
                 {
                     returnedList.Add(Copy(i));
                 }
                 break;
             //If only grabbing equippables for a certain slot
-            case 0:
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-            case 6:
+            case Filter.Weapon:
+            case Filter.Helmet:
+            case Filter.Chestplate:
+            case Filter.Legs:
+            case Filter.Boots:
+            case Filter.Gloves:
+            case Filter.Accessory:
                 foreach (StoredItem i in itemList)
                 {
-                    if (Registry.ItemRegistry[i.Name] is EquippableBase && ((EquippableBase)Registry.ItemRegistry[i.Name]).equipSlot == filter)
+                    if (Registry.ItemRegistry[i.Name] is EquippableBase && ((EquippableBase)Registry.ItemRegistry[i.Name]).equipSlot == (EquipSlot)filter)
+                    {
                         returnedList.Add(Copy(i));
+                    }
                 }
                 break;
             //all equippables
-            case 7:
+            case Filter.Equippables:
                 foreach (StoredItem i in itemList)
                 {
                     if (Registry.ItemRegistry[i.Name] is EquippableBase)
+                    {
                         returnedList.Add(Copy(i));
+                    }
                 }
                 break;
             //all battle items
-            case 8:
+            case Filter.BattleItems:
                 foreach (StoredItem i in itemList)
                 {
                     if (Registry.ItemRegistry[i.Name] is BattleItemBase)
+                    {
                         returnedList.Add(Copy(i));
+                    }
                 }
                 break;
             //all materials
-            case 9:
+            case Filter.Materials:
                 foreach (StoredItem i in itemList)
                 {
                     if (!(Registry.ItemRegistry[i.Name] is EquippableBase || Registry.ItemRegistry[i.Name] is BattleItemBase))
+                    {
                         returnedList.Add(Copy(i));
+                    }
                 }
                 break;
         }
@@ -359,7 +244,9 @@ public class Inventory
             foreach (StoredItem s in itemList)
             {
                 if (s.Name == itemName)
+                {
                     amt++;
+                }
             }
             return amt;
         }
@@ -368,7 +255,9 @@ public class Inventory
             foreach (StoredItem s in itemList)
             {
                 if (s.Name == itemName)
+                {
                     return s.amount;
+                }
             }
         }
         return 0;
@@ -381,18 +270,22 @@ public class Inventory
     /// <returns>A deep copy of the given item</returns>
     private static StoredItem Copy(StoredItem item)
     {
-        return item is Equippable ? new Equippable(item.Name) : new StoredItem(item.Name, item.amount);
+        return item is Equippable ? new Equippable((Equippable)item) : new StoredItem(item);
     }
-    
+
     /// <summary>
     /// Sorts the inventory
     /// </summary>
     /// <param name="sorting">How to sort the inventory</param>
-    public static void SortInventory(int sorting)
+    public static void SortInventory(SortingType sorting)
     {
-        itemList.Sort((x, y) => x.CompareTo(y));
-        sortingType = (SortingType)sorting;
-        if (sortingType == SortingType.AmountIncreasing)
-            itemList.Reverse();
+        if (sorting == SortingType.AmountDecreasing)
+        {
+            itemList.Sort((x, y) => x.CompareTo(y));
+        }
+        else
+        {
+            itemList.Sort((x, y) => y.CompareTo(x));
+        }
     }
 }

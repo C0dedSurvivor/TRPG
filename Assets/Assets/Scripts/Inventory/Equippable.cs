@@ -9,4 +9,6 @@ using UnityEngine;
 public class Equippable : StoredItem
 {
     public Equippable(string name) : base(name, 1) { }
+
+    public Equippable(Equippable other) : base(other.name, 1) { }
 }

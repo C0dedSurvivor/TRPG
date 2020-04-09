@@ -33,4 +33,10 @@ public class MovementEvent : BattleEventBase
         animation = new FlatSpeedRotationAnim(target, speed, initialRot, finalRot, concurrent);
         this.forced = forced;
     }
+
+    public MovementEvent(GameObject target, float speed, List<Vector3> positions, bool concurrent = false, bool forced = false)
+    {
+        animation = new StitchedFlatSpeedMovementAnim(target, speed, positions, concurrent);
+        this.forced = forced;
+    }
 }

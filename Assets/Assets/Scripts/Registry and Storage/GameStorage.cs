@@ -24,6 +24,7 @@ public class GameStorage : MonoBehaviour {
 
     const int mapXsize = 200;
     const int mapYsize = 200;
+    public static Terrain mapTerrain;
 
     //final top left coords chosen for the current battle map (please replace asap with something less roundabout)
     public static int trueBX;
@@ -38,6 +39,8 @@ public class GameStorage : MonoBehaviour {
 
     void Awake()
     {
+        mapTerrain = GameObject.FindGameObjectWithTag("Ground").GetComponent<Terrain>();
+
         //If the registry hasn't already been filled
         //Only for testing game while bypassing title screen
         if (Registry.MovementRegistry.Count == 0)

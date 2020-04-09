@@ -3408,7 +3408,7 @@ GameObject:
   - component: {fileID: 370240661}
   m_Layer: 0
   m_Name: Main Floor
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -3465,7 +3465,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 370240660}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 0.5, z: -0.5}
+  m_LocalPosition: {x: -0.5, y: 0, z: -0.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -6991,7 +6991,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1970206861}
+      - m_Target: {fileID: 1525748443}
         m_MethodName: ToggleDangerArea
         m_Mode: 1
         m_Arguments:
@@ -8288,7 +8288,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1970206861}
+      - m_Target: {fileID: 1525748443}
         m_MethodName: ToggleaEtherView
         m_Mode: 1
         m_Arguments:
@@ -12011,6 +12011,104 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1505463262}
   m_CullTransparentMesh: 0
+--- !u!1 &1525748439
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1525748442}
+  - component: {fileID: 1525748441}
+  - component: {fileID: 1525748440}
+  - component: {fileID: 1525748443}
+  m_Layer: 8
+  m_Name: BattleMap
+  m_TagString: BattleTile
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 4294967294
+  m_IsActive: 1
+--- !u!154 &1525748440
+TerrainCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1525748439}
+  m_Material: {fileID: 0}
+  m_Enabled: 1
+  m_TerrainData: {fileID: 15600000, guid: 5c4c00696a27e934c94e7672292f229e, type: 2}
+  m_EnableTreeColliders: 0
+--- !u!218 &1525748441
+Terrain:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1525748439}
+  m_Enabled: 1
+  serializedVersion: 6
+  m_TerrainData: {fileID: 15600000, guid: 5c4c00696a27e934c94e7672292f229e, type: 2}
+  m_TreeDistance: 0
+  m_TreeBillboardDistance: 5
+  m_TreeCrossFadeLength: 0
+  m_TreeMaximumFullLODCount: 50
+  m_DetailObjectDistance: 0
+  m_DetailObjectDensity: 0
+  m_HeightmapPixelError: 5
+  m_SplatMapDistance: 1000
+  m_HeightmapMaximumLOD: 0
+  m_ShadowCastingMode: 0
+  m_DrawHeightmap: 1
+  m_DrawInstanced: 0
+  m_DrawTreesAndFoliage: 0
+  m_ReflectionProbeUsage: 0
+  m_MaterialTemplate: {fileID: 10652, guid: 0000000000000000f000000000000000, type: 0}
+  m_BakeLightProbesForTrees: 0
+  m_PreserveTreePrototypeLayers: 0
+  m_DeringLightProbesForTrees: 1
+  m_ScaleInLightmap: 0.0256
+  m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
+  m_GroupingID: 0
+  m_RenderingLayerMask: 1
+  m_AllowAutoConnect: 1
+--- !u!4 &1525748442
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1525748439}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.5, y: 0.01, z: -0.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 13
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1525748443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1525748439}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7b2c79bc1a768e4ab07ed82f6148de6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MoveMarkerPrefab: {fileID: 1261110841027062, guid: 6a952fac86e94ca4ebe186689a99a8c9,
+    type: 3}
+  aEtherMarkerPrefab: {fileID: 3197035525311176022, guid: 7814d18916c6fc64eb7738e96ae19de6,
+    type: 3}
+  showDanger: 0
+  showaEther: 0
+  map: {fileID: 0}
+  battle: {fileID: 1970206861}
+  moveMarker: {fileID: 0}
 --- !u!1 &1533249926
 GameObject:
   m_ObjectHideFlags: 0
@@ -15730,7 +15828,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1845311586}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 70.5, y: 2, z: 30}
+  m_LocalPosition: {x: 70.5, y: 1, z: 30}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -16626,21 +16724,19 @@ MonoBehaviour:
     type: 3}
   PlayerBattleModelPrefab: {fileID: 1563666206489330, guid: 7e7deb977fb458a45a490dadab463962,
     type: 3}
-  MoveMarkerPrefab: {fileID: 1261110841027062, guid: 6a952fac86e94ca4ebe186689a99a8c9,
-    type: 3}
   CameraPrefab: {fileID: 1501565722295194, guid: a5b05d43bfa9f8b479d366a0b76ce541,
     type: 3}
-  battleTile: {fileID: 1989779521470732, guid: 83099bdfb30a5394db45568605854775, type: 3}
   skillCastConfirmMenu: {fileID: 1591088126}
-  showDanger: 0
-  showaEther: 0
   canSwap: 0
+  updateTilesThisFrame: 0
+  graphicalBattleMap: {fileID: 1525748443}
   mapPlayer: {fileID: 1990799077}
   selectedPlayer: -1
   selectedEnemy: -1
   hoveredSpell: -1
   selectedSpell: -1
-  moveMarker: {fileID: 0}
+  selectedMoveSpot: {x: -1, y: -1}
+  skillLegitTarget: 0
   ui: {fileID: 1289096162}
   littleInfoSys: {fileID: 674435494}
 --- !u!4 &1970206862
@@ -17624,7 +17720,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2130374611}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

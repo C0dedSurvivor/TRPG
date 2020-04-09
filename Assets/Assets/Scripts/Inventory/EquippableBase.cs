@@ -46,7 +46,7 @@ public class EquippableBase : ItemBase
         }
     }
 
-    public EquippableBase(EquipSlot slot, int subtype, int sellPrice, string flavor, Dictionary<Stats, int> stats) : base(1, sellPrice, flavor)
+    public EquippableBase(EquipSlot slot, int subtype, int sellPrice, string flavorText, Dictionary<Stats, int> stats) : base(1, sellPrice, flavorText)
     {
         equipSlot = slot;
         subType = subtype;

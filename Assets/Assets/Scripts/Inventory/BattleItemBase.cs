@@ -12,7 +12,7 @@ public class BattleItemBase : ItemBase
 
     public List<SkillPartBase> partList = new List<SkillPartBase>();
 
-    public BattleItemBase(TargettingType targetType, bool outOfBattleUse, List<SkillPartBase> effects, int maxStack, int sellPrice, string flavor = "") : base(maxStack, sellPrice, flavor)
+    public BattleItemBase(TargettingType targetType, bool outOfBattleUse, List<SkillPartBase> effects, int maxStack, int sellPrice, string flavorText = "") : base(maxStack, sellPrice, flavorText)
     {
         this.targetType = targetType;
         usableOutOfBattle = outOfBattleUse;

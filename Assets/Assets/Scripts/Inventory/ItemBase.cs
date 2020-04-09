@@ -35,10 +35,10 @@ public class ItemBase
         }
     }
 
-    public ItemBase(int maxstack, int sell, string flavor = "")
+    public ItemBase(int maxstack, int sell, string flavorText = "")
     {
         maxStack = maxstack;
         sellAmount = sell;
-        flavorText = flavor;
+        this.flavorText = flavorText;
     }
 }

@@ -83,6 +83,7 @@ public class Battle : MonoBehaviour
     //This is a camera
     private GameObject battleCamera;
     public GameObject mapPlayer;
+    public float pawnMoveSpeed = 4.0f;
 
     //-1 means nothing selected
     public int selectedPlayer = -1;
@@ -487,9 +488,9 @@ public class Battle : MonoBehaviour
             Debug.Log(diff);
 
             List<List<Vector3>> path = graphicalBattleMap.GetPath(
-                diff, 
-                new Vector2Int(players[selectedPlayer].tempStats.position.x, players[selectedPlayer].tempStats.position.y), 
-                1, 
+                diff,
+                new Vector2Int(players[selectedPlayer].tempStats.position.x, players[selectedPlayer].tempStats.position.y),
+                1,
                 CanMoveYFirst(players[selectedPlayer], diff)
             );
 
@@ -508,8 +509,8 @@ public class Battle : MonoBehaviour
                 {
                     pointList[i] += new Vector3(topLeft.x, 0, topLeft.y + BattleMap.mapSizeY - 2 * players[selectedPlayer].tempStats.position.y - 1);
                 }
-                
-                eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], 4f, pointList));
+
+                eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], pawnMoveSpeed, pointList));
             }
 
             selectedMoveSpot = new Vector2Int(-1, -1);
@@ -691,7 +692,7 @@ public class Battle : MonoBehaviour
                 pointList[i] += new Vector3(topLeft.x, 0, topLeft.y + BattleMap.mapSizeY - 2 * enemies[ID].tempStats.position.y - 1);
             }
 
-            eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], 4f, pointList));
+            eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], pawnMoveSpeed, pointList));
         }
         enemies[ID].tempStats.moved = true;
         if (possibleMoves[0].attackPosition.x != -1)
@@ -1477,9 +1478,9 @@ public class Battle : MonoBehaviour
                     for (int i = 1; i <= trueEffect.amount; i++)
                     {
                         if (target.ValidMoveTile(battleMap[target.tempStats.position.x, target.tempStats.position.y + i * dir].tileType))
-                            eventQueue.Insert(new MovementEvent(participantModels[target], 0.1f,
-                                participantModels[target].transform.position + new Vector3Int(0, 0, i - 1) * dir,
-                                participantModels[target].transform.position + new Vector3Int(0, 0, i) * dir));
+                            eventQueue.Insert(new MovementEvent(participantModels[target], pawnMoveSpeed,
+                                new List<Vector3>{ participantModels[target].transform.position + new Vector3Int(0, 0, i - 1) * dir,
+                                participantModels[target].transform.position + new Vector3Int(0, 0, i) * dir }));
                         else
                         {
                             //If the pawn hits a spot where they can't move any further, stun them for a turn
@@ -1495,9 +1496,9 @@ public class Battle : MonoBehaviour
                     for (int i = 1; i <= trueEffect.amount; i++)
                     {
                         if (target.ValidMoveTile(battleMap[target.tempStats.position.x + i * dir, target.tempStats.position.y].tileType))
-                            eventQueue.Insert(new MovementEvent(participantModels[target], 0.1f,
-                                participantModels[target].transform.position + new Vector3Int(i - 1, 0, 0) * dir,
-                                participantModels[target].transform.position + new Vector3Int(i, 0, 0) * dir));
+                            eventQueue.Insert(new MovementEvent(participantModels[target], pawnMoveSpeed,
+                                new List<Vector3>{ participantModels[target].transform.position + new Vector3Int(i - 1, 0, 0) * dir,
+                                participantModels[target].transform.position + new Vector3Int(i, 0, 0) * dir }));
                         else
                         {
                             //If the pawn hits a spot where they can't move any further, stun them for a turn

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class MovementEvent : BattleEventBase
@@ -19,12 +18,6 @@ public class MovementEvent : BattleEventBase
     public MovementEvent(GameObject target, float speed, Quaternion finalRot, bool concurrent = false, bool forced = false)
     {
         animation = new DeceleratingRotationAnim(target, speed, finalRot, concurrent);
-        this.forced = forced;
-    }
-
-    public MovementEvent(GameObject target, float speed, Vector3 initialPos, Vector3 finalPos, bool concurrent = false, bool forced = false)
-    {
-        animation = new FlatSpeedMovementAnim(target, speed, initialPos, finalPos, concurrent);
         this.forced = forced;
     }
 

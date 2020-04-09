@@ -14,7 +14,7 @@ public class StitchedFlatSpeedMovementAnim : MovementAnimBase
     {
         this.positions = new List<Pair<Vector3, float>>();
 
-        for(int i = 0; i < positions.Count; i++)
+        for (int i = 0; i < positions.Count; i++)
         {
             this.positions.Add(new Pair<Vector3, float>(positions[i], i == 0 ? 0 : Vector3.Distance(positions[i], positions[i - 1]) + this.positions[i - 1].Second));
         }
@@ -29,7 +29,7 @@ public class StitchedFlatSpeedMovementAnim : MovementAnimBase
         int secondPosition = 1;
         for (int i = 0; i < positions.Count; i++)
         {
-            if(positions[i].Second >= newDistance)
+            if (positions[i].Second >= newDistance)
             {
                 firstPosition = i - 1;
                 secondPosition = i;
@@ -39,8 +39,8 @@ public class StitchedFlatSpeedMovementAnim : MovementAnimBase
 
         float subPercent = (newDistance - positions[firstPosition].Second) / (positions[secondPosition].Second - positions[firstPosition].Second);
         mover.transform.position = Vector3.Lerp(
-            positions[firstPosition].First, 
-            positions[secondPosition].First, 
+            positions[firstPosition].First,
+            positions[secondPosition].First,
             subPercent
         );
     }

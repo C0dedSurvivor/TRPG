@@ -43,6 +43,10 @@ public class BattleMap : MonoBehaviour
     //This displays how the pawn would move when a move is selected
     public GameObject moveMarker;
 
+    //How many positions should be generated along a unit length of path
+    public float subdivisionsPerUnit = 10.0f;
+    public float subdivisionIncrement => 1.0f / subdivisionsPerUnit;
+
     public void Start()
     {
         map = GetComponent<Terrain>();
@@ -52,6 +56,9 @@ public class BattleMap : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+    /// <summary>
+    /// Checks for the player clicking on the battle map
+    /// </summary>
     void Update()
     {
         if (Input.GetMouseButtonDown(0))
@@ -68,12 +75,22 @@ public class BattleMap : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Get where the player clicked in battle coordinates
+    /// </summary>
+    /// <param name="hitPoint">Hit position in world coordinates</param>
+    /// <returns>Coordinates that were clicked on</returns>
     public Vector2Int GetInteractionPos(Vector3 hitPoint)
     {
         Vector3 localHitPos = hitPoint - transform.position;
         return new Vector2Int((int)localHitPos.x, mapSizeY - (int)localHitPos.z - 1);
     }
 
+    /// <summary>
+    /// Grabs the appropriate heightmap and clears the texture of the battle map for the start of the battle
+    /// </summary>
+    /// <param name="xPos">X position of the map</param>
+    /// <param name="yPos">Y position of the map</param>
     public void StartOfBattle(int xPos, int yPos)
     {
         transform.position = new Vector3(xPos - 0.5f, 0.01f, yPos - 0.5f);
@@ -123,6 +140,9 @@ public class BattleMap : MonoBehaviour
         UpdateVisuals();
     }
 
+    /// <summary>
+    /// Destroys the aEther map and hides battle map and move marker at the end of a battle
+    /// </summary>
     public void EndOfBattle()
     {
         gameObject.SetActive(false);
@@ -138,6 +158,9 @@ public class BattleMap : MonoBehaviour
         aEtherMap = null;
     }
 
+    /// <summary>
+    /// Updates the textures of any tiles changed between last render and this one
+    /// </summary>
     public void UpdateVisuals()
     {
         TerrainData terrainData = map.terrainData;
@@ -193,6 +216,14 @@ public class BattleMap : MonoBehaviour
         terrainData.SetAlphamaps(0, 0, alphas);
     }
 
+    /// <summary>
+    /// Updates the image for a single tile's worth of area on the battle map
+    /// </summary>
+    /// <param name="xPos">X position in battle coordinates</param>
+    /// <param name="yPos">Y position in battle coordinates</param>
+    /// <param name="alphas">Alpha map to update each point with</param>
+    /// <param name="color">What new tile type to show</param>
+    /// <param name="previousColor">What old tile type to wipe it of</param>
     private void UpdateSingleTile(int xPos, int yPos, float[,,] alphas, TileColors color, TileColors previousColor)
     {
         for (int x = xPos * tileSize + 2; x < (xPos + 1) * tileSize + 2; x++)
@@ -206,6 +237,9 @@ public class BattleMap : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Updates the aEther map with the current aEther levels to be rendered
+    /// </summary>
     private void UpdateaEtherMap()
     {
         //Updates the aEther viewer
@@ -220,6 +254,12 @@ public class BattleMap : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Shows the move marker with a line going from it to the BattlePawn along the path the BattlePawn would take
+    /// </summary>
+    /// <param name="moveDifference">The path lengths to follow</param>
+    /// <param name="markerPos">The ending position in battle coordinates (Where the marker is)</param>
+    /// <param name="verticalFirst">Whether the path should do vertical or horizontal first</param>
     public void ShowMoveMarker(Vector2Int moveDifference, Vector2Int markerPos, bool verticalFirst)
     {
         moveMarker.transform.position = new Vector3(markerPos.x, 1, markerPos.y);
@@ -247,6 +287,14 @@ public class BattleMap : MonoBehaviour
         path.SetPositions(linePath.ToArray());
     }
 
+    /// <summary>
+    /// Generates a path from a position following an offset
+    /// </summary>
+    /// <param name="difference">The path lengths to follow</param>
+    /// <param name="startingPos">The starting position in battle coordinates</param>
+    /// <param name="verticalOffset">The initial vertical offset of the object following the path</param>
+    /// <param name="verticalFirst">Whether the path should do vertical or horizontal first</param>
+    /// <returns></returns>
     public List<List<Vector3>> GetPath(Vector2Int difference, Vector2Int startingPos, float verticalOffset, bool verticalFirst)
     {
         List<List<Vector3>> movementList = new List<List<Vector3>>();
@@ -256,7 +304,7 @@ public class BattleMap : MonoBehaviour
             for (int y = 0; y < Mathf.Abs(difference.y); y++)
             {
                 List<Vector3> positionList = new List<Vector3>();
-                for (float ySlice = y; ySlice <= y + 1.05f; ySlice += 0.1f)
+                for (float ySlice = y; ySlice <= y + 1 + subdivisionIncrement / 2; ySlice += subdivisionIncrement)
                 {
                     float zPos = ySlice * Mathf.Sign(difference.y) + startingPos.y;
                     positionList.Add(new Vector3(startingPos.x, verticalOffset + map.SampleHeight(new Vector3(startingPos.x, 0, zPos)), zPos));
@@ -267,7 +315,7 @@ public class BattleMap : MonoBehaviour
             {
                 List<Vector3> positionList = new List<Vector3>();
                 float zPos = difference.y + startingPos.y;
-                for (float xSlice = x; xSlice <= x + 1.05f; xSlice += 0.1f)
+                for (float xSlice = x; xSlice <= x + 1 + subdivisionIncrement / 2; xSlice += subdivisionIncrement)
                 {
                     float xPos = xSlice * Mathf.Sign(difference.x) + startingPos.x;
                     positionList.Add(new Vector3(xPos, verticalOffset + map.SampleHeight(new Vector3(xPos, 0, zPos)), zPos));
@@ -280,7 +328,7 @@ public class BattleMap : MonoBehaviour
             for(int x = 0; x < Mathf.Abs(difference.x); x++)
             {
                 List<Vector3> positionList = new List<Vector3>();
-                for (float xSlice = x; xSlice <= x + 1.05f; xSlice += 0.1f)
+                for (float xSlice = x; xSlice <= x + 1 + subdivisionIncrement / 2; xSlice += subdivisionIncrement)
                 {
                     float xPos = xSlice * Mathf.Sign(difference.x) + startingPos.x;
                     positionList.Add(new Vector3(xPos, verticalOffset + map.SampleHeight(new Vector3(xPos, 0, startingPos.y)), startingPos.y));
@@ -291,7 +339,7 @@ public class BattleMap : MonoBehaviour
             {
                 List<Vector3> positionList = new List<Vector3>();
                 float xPos = difference.x + startingPos.x;
-                for (float ySlice = y; ySlice <= y + 1.05f; ySlice += 0.1f)
+                for (float ySlice = y; ySlice <= y + 1 + subdivisionIncrement / 2; ySlice += subdivisionIncrement)
                 {
                     float zPos = ySlice * Mathf.Sign(difference.y) + startingPos.y;
                     positionList.Add(new Vector3(xPos, verticalOffset + map.SampleHeight(new Vector3(xPos, 0, zPos)), zPos));
@@ -303,6 +351,9 @@ public class BattleMap : MonoBehaviour
         return movementList;
     }
 
+    /// <summary>
+    /// Hides the move marker once a move is deselected or completed
+    /// </summary>
     public void HideMoveMarker()
     {
         moveMarker.SetActive(false);

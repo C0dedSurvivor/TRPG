@@ -201,7 +201,7 @@ public class GameStorage : MonoBehaviour {
     /// <summary>
     /// Passes the correct aEther level information to the battlemap
     /// </summary>
-    public static int[,,] GrabaEtherMap(int topLeftX, int topLeftY, int xSize, int ySize)
+    public static int[,,] GrabaEtherMap(int bottomLeftX, int bottomLeftY, int xSize, int ySize)
     {
         int[,,] aMap = new int[xSize, ySize, 2];
         //Copies the corresponding values from the main map to the battlemap
@@ -209,8 +209,8 @@ public class GameStorage : MonoBehaviour {
         {
             for (int y = 0; y < ySize; y++)
             {
-                aMap[x, y, 0] = baseaEtherMap[topLeftX + x, topLeftY + y, 0];
-                aMap[x, y, 1] = baseaEtherMap[topLeftX + x, topLeftY + y, 1];
+                aMap[x, y, 0] = baseaEtherMap[bottomLeftX + x, bottomLeftY + y, 0];
+                aMap[x, y, 1] = baseaEtherMap[bottomLeftX + x, bottomLeftY + y, 1];
             }
         }
         return aMap;

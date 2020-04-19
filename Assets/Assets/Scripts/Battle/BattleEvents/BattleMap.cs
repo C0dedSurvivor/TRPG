@@ -280,9 +280,9 @@ public class BattleMap : MonoBehaviour
         LineRenderer path = moveMarker.GetComponent<LineRenderer>();
         
         moveMarker.transform.position = new Vector3(
-            markerPos.x + battle.topLeft.x, 
-            1 + GetHeightAtGlobalPos(new Vector3(markerPos.x + battle.topLeft.x, 0, markerPos.y + battle.topLeft.y)), 
-            markerPos.y + battle.topLeft.y
+            markerPos.x + battle.bottomLeft.x, 
+            1 + GetHeightAtGlobalPos(new Vector3(markerPos.x + battle.bottomLeft.x, 0, markerPos.y + battle.bottomLeft.y)),
+            markerPos.y + battle.bottomLeft.y
         );
 
         List<List<Vector3>> linePositions = GetPath(-moveDifference, markerPos, 0, !verticalFirst);

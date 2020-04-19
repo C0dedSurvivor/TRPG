@@ -55,7 +55,7 @@ public class Battle : MonoBehaviour
 
     public GameObject skillCastConfirmMenu;
 
-    public Vector2Int topLeft;
+    public Vector2Int bottomLeft;
 
     //Battle state for the finite state machine
     public static BattleState battleState = BattleState.None;
@@ -139,11 +139,11 @@ public class Battle : MonoBehaviour
             }
         }
         //Finds the top left corner of the current map
-        topLeft = new Vector2Int(GameStorage.trueBX, GameStorage.trueBY);
+        bottomLeft = new Vector2Int(GameStorage.trueBX, GameStorage.trueBY);
         //Generates the visible tile map
-        graphicalBattleMap.StartOfBattle(topLeft.x, topLeft.y);
+        graphicalBattleMap.StartOfBattle(bottomLeft.x, bottomLeft.y);
         //Grabs the aEther map
-        aEtherMap = GameStorage.GrabaEtherMap(topLeft.x, topLeft.y, xSize, ySize);
+        aEtherMap = GameStorage.GrabaEtherMap(bottomLeft.x, bottomLeft.y, xSize, ySize);
         //Make the camera
         battleCamera = Instantiate(CameraPrefab);
         skillCastConfirmMenu.SetActive(false);
@@ -151,7 +151,7 @@ public class Battle : MonoBehaviour
         Cursor.visible = true;
         canSwap = true;
         //Sets up the opening camera animation
-        eventQueue.Insert(new MovementEvent(battleCamera, 4f, new Vector3(topLeft.x + (xSize / 2) - 0.5f, 25, topLeft.y + (ySize / 2) - 1.5f), true));
+        eventQueue.Insert(new MovementEvent(battleCamera, 4f, new Vector3(bottomLeft.x + (xSize / 2) - 0.5f, 25, bottomLeft.y + (ySize / 2) - 1.5f), true));
         eventQueue.Insert(new MovementEvent(battleCamera, 4f, battleCamera.transform.rotation, true));
         battleCamera.transform.SetPositionAndRotation(mainCamera.position, mainCamera.rotation);
         eventQueue.Insert(new FunctionEvent(ToMatch));
@@ -165,9 +165,9 @@ public class Battle : MonoBehaviour
             CheckEventTriggers(players[i], EffectTriggers.StartOfTurn);
             participantModels.Add(players[i], Instantiate(PlayerBattleModelPrefab));
             participantModels[players[i]].transform.position = new Vector3(
-                players[i].tempStats.position.x + topLeft.x,
-                1 + graphicalBattleMap.GetHeightAtGlobalPos(new Vector3(players[i].tempStats.position.x + topLeft.x, 0, players[i].tempStats.position.y + topLeft.y)),
-                players[i].tempStats.position.y + topLeft.y
+                players[i].tempStats.position.x + bottomLeft.x,
+                1 + graphicalBattleMap.GetHeightAtGlobalPos(new Vector3(players[i].tempStats.position.x + bottomLeft.x, 0, players[i].tempStats.position.y + bottomLeft.y)),
+                players[i].tempStats.position.y + bottomLeft.y
                 );
         }
         //Generates enemies
@@ -182,9 +182,9 @@ public class Battle : MonoBehaviour
             CheckEventTriggers(e, EffectTriggers.StartOfTurn);
             participantModels.Add(e, Instantiate(EnemyBattleModelPrefab));
             participantModels[e].transform.position = new Vector3(
-                e.tempStats.position.x + topLeft.x,
-                1 + graphicalBattleMap.GetHeightAtGlobalPos(new Vector3(e.tempStats.position.x + topLeft.x, 0, e.tempStats.position.y + topLeft.y)),
-                e.tempStats.position.y + topLeft.y
+                e.tempStats.position.x + bottomLeft.x,
+                1 + graphicalBattleMap.GetHeightAtGlobalPos(new Vector3(e.tempStats.position.x + bottomLeft.x, 0, e.tempStats.position.y + bottomLeft.y)),
+                e.tempStats.position.y + bottomLeft.y
                 );
         }
         eventQueue.Insert(new FunctionEvent(ui.StartBattle));
@@ -345,16 +345,16 @@ public class Battle : MonoBehaviour
                         {
                             players[n].tempStats.position = players[selectedPlayer].tempStats.position;
                             players[selectedPlayer].tempStats.position = pos;
-                            participantModels[players[n]].transform.position = new Vector3(players[n].tempStats.position.x + topLeft.x, 1, players[n].tempStats.position.y + topLeft.y);
+                            participantModels[players[n]].transform.position = new Vector3(players[n].tempStats.position.x + bottomLeft.x, 1, players[n].tempStats.position.y + bottomLeft.y);
                             participantModels[players[selectedPlayer]].transform.position = new Vector3(
-                                players[selectedPlayer].tempStats.position.x + topLeft.x,
+                                players[selectedPlayer].tempStats.position.x + bottomLeft.x,
                                 1 + graphicalBattleMap.GetHeightAtGlobalPos(
                                     new Vector3(
-                                        players[selectedPlayer].tempStats.position.x + topLeft.x,
+                                        players[selectedPlayer].tempStats.position.x + bottomLeft.x,
                                         0,
-                                        players[selectedPlayer].tempStats.position.y + topLeft.y)
+                                        players[selectedPlayer].tempStats.position.y + bottomLeft.y)
                                     ),
-                                players[selectedPlayer].tempStats.position.y + topLeft.y
+                                players[selectedPlayer].tempStats.position.y + bottomLeft.y
                             );
                             actionTaken = true;
                         }
@@ -504,9 +504,9 @@ public class Battle : MonoBehaviour
                 players[selectedPlayer].tempStats.position,
                 1 + graphicalBattleMap.GetHeightAtGlobalPos(
                     new Vector3(
-                        players[selectedPlayer].tempStats.position.x + topLeft.x,
+                        players[selectedPlayer].tempStats.position.x + bottomLeft.x,
                         0,
-                        players[selectedPlayer].tempStats.position.y + topLeft.y)
+                        players[selectedPlayer].tempStats.position.y + bottomLeft.y)
                     ),
                 CanMoveYFirst(players[selectedPlayer], diff)
             );
@@ -524,7 +524,7 @@ public class Battle : MonoBehaviour
 
                 for (int i = 0; i < pointList.Count; i++)
                 {
-                    pointList[i] += new Vector3(topLeft.x, 0, topLeft.y);
+                    pointList[i] += new Vector3(bottomLeft.x, 0, bottomLeft.y);
                 }
 
                 eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], pawnMoveSpeed, pointList));
@@ -690,9 +690,9 @@ public class Battle : MonoBehaviour
                 enemies[ID].tempStats.position,
                 1 + graphicalBattleMap.GetHeightAtGlobalPos(
                     new Vector3(
-                        enemies[ID].tempStats.position.x + topLeft.x,
+                        enemies[ID].tempStats.position.x + bottomLeft.x,
                         0,
-                        enemies[ID].tempStats.position.y + topLeft.y)
+                        enemies[ID].tempStats.position.y + bottomLeft.y)
                     ),
                 CanMoveYFirst(enemies[ID], diff)
             );
@@ -710,7 +710,7 @@ public class Battle : MonoBehaviour
 
             for (int i = 0; i < pointList.Count; i++)
             {
-                pointList[i] += new Vector3(topLeft.x, 0, topLeft.y);
+                pointList[i] += new Vector3(bottomLeft.x, 0, bottomLeft.y);
             }
 
             eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], pawnMoveSpeed, pointList));

@@ -11990,7 +11990,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1525748439}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 0.01, z: -0.5}
+  m_LocalPosition: {x: -0.5, y: 0.05, z: -0.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -12017,6 +12017,7 @@ MonoBehaviour:
   map: {fileID: 0}
   battle: {fileID: 1970206861}
   moveMarker: {fileID: 0}
+  subdivisionsPerUnit: 10
 --- !u!1 &1533249926
 GameObject:
   m_ObjectHideFlags: 0
@@ -16640,6 +16641,7 @@ MonoBehaviour:
   updateTilesThisFrame: 0
   graphicalBattleMap: {fileID: 1525748443}
   mapPlayer: {fileID: 1990799077}
+  pawnMoveSpeed: 4
   selectedPlayer: -1
   selectedEnemy: -1
   hoveredSpell: -1

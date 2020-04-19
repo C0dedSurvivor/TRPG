@@ -9,6 +9,13 @@ public class StitchedFlatSpeedMovementAnim : MovementAnimBase
     public Vector3 difference => positions[0].First - positions[positions.Count - 1].First;
     public float totalDistance => positions[positions.Count - 1].Second;
 
+    /// <summary>
+    /// Populates the positions list with the given points and how far each point is from the start along the path
+    /// </summary>
+    /// <param name="target">What is moving</param>
+    /// <param name="speed">The speed at which to move</param>
+    /// <param name="positions">What positions to go to over the course of the movement</param>
+    /// <param name="concurrent">Whether this effect can run at the same time as another animation</param>
     public StitchedFlatSpeedMovementAnim(GameObject target, float speed, List<Vector3> positions, bool concurrent = false) :
         base(target, speed, positions[positions.Count - 1], concurrent)
     {
@@ -20,6 +27,9 @@ public class StitchedFlatSpeedMovementAnim : MovementAnimBase
         }
     }
 
+    /// <summary>
+    /// Steps the animation forwards one frame
+    /// </summary>
     public override void StepAnimation()
     {
         totalPercent += speed * Time.deltaTime;
@@ -45,6 +55,10 @@ public class StitchedFlatSpeedMovementAnim : MovementAnimBase
         );
     }
 
+    /// <summary>
+    /// Checks whether the mover has reached the 
+    /// </summary>
+    /// <returns></returns>
     public override bool IsDone()
     {
         return totalPercent >= 1.0;

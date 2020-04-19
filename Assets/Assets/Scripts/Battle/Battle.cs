@@ -160,24 +160,32 @@ public class Battle : MonoBehaviour
         for (int i = 0; i < GameStorage.activePlayerList.Count; i++)
         {
             players.Add(GameStorage.playerMasterList[GameStorage.activePlayerList[i]]);
-            players[i].tempStats = new BattleOnlyStats(6 + 2 * i, 10 + i % 2, players[i]);
+            players[i].tempStats = new BattleOnlyStats(6 + 2 * i, 5 + i % 2, players[i]);
             CheckEventTriggers(players[i], EffectTriggers.StartOfMatch);
             CheckEventTriggers(players[i], EffectTriggers.StartOfTurn);
             participantModels.Add(players[i], Instantiate(PlayerBattleModelPrefab));
-            participantModels[players[i]].transform.position = new Vector3(players[i].tempStats.position.x + topLeft.x, 1, (BattleMap.mapSizeY - 1) - players[i].tempStats.position.y + topLeft.y);
+            participantModels[players[i]].transform.position = new Vector3(
+                players[i].tempStats.position.x + topLeft.x,
+                1 + graphicalBattleMap.GetHeightAtGlobalPos(new Vector3(players[i].tempStats.position.x + topLeft.x, 0, players[i].tempStats.position.y + topLeft.y)),
+                players[i].tempStats.position.y + topLeft.y
+                );
         }
         //Generates enemies
         enemies = new List<Enemy>();
-        enemies.Add(new Enemy("Enemy1", 5, 5, 2, 5, 5));
-        enemies.Add(new Enemy("Enemy2", 10, 5, 1, 5, 5));
-        enemies.Add(new Enemy("Enemy3", 12, 5, 1, 5, 5));
-        enemies.Add(new Enemy("Enemy4", 14, 5, 4, 5, 5));
+        enemies.Add(new Enemy("Enemy1", 5, 11, 2, 5, 5));
+        enemies.Add(new Enemy("Enemy2", 10, 11, 1, 5, 5));
+        enemies.Add(new Enemy("Enemy3", 12, 11, 1, 5, 5));
+        enemies.Add(new Enemy("Enemy4", 14, 11, 4, 5, 5));
         foreach (Enemy e in enemies)
         {
             CheckEventTriggers(e, EffectTriggers.StartOfMatch);
             CheckEventTriggers(e, EffectTriggers.StartOfTurn);
             participantModels.Add(e, Instantiate(EnemyBattleModelPrefab));
-            participantModels[e].transform.position = new Vector3(e.tempStats.position.x + topLeft.x, 1, (BattleMap.mapSizeY - 1) - e.tempStats.position.y + topLeft.y);
+            participantModels[e].transform.position = new Vector3(
+                e.tempStats.position.x + topLeft.x,
+                1 + graphicalBattleMap.GetHeightAtGlobalPos(new Vector3(e.tempStats.position.x + topLeft.x, 0, e.tempStats.position.y + topLeft.y)),
+                e.tempStats.position.y + topLeft.y
+                );
         }
         eventQueue.Insert(new FunctionEvent(ui.StartBattle));
     }
@@ -217,7 +225,7 @@ public class Battle : MonoBehaviour
                                     pawn = e;
                             }
                             Vector3 diff = ((StitchedFlatSpeedMovementAnim)currentAnimations[i]).difference;
-                            pawn.tempStats.position -= new Vector2Int(Mathf.RoundToInt(diff.x), -Mathf.RoundToInt(diff.z));
+                            pawn.tempStats.position -= new Vector2Int(Mathf.RoundToInt(diff.x), Mathf.RoundToInt(diff.z));
 
                             //Triggers the tile effects that should activate from this movement
                             TriggerTileEffects(pawn, eventQueue.StillMoving(currentAnimations[i].mover) ? MoveTriggers.PassOver : MoveTriggers.StopOnTile);
@@ -337,8 +345,17 @@ public class Battle : MonoBehaviour
                         {
                             players[n].tempStats.position = players[selectedPlayer].tempStats.position;
                             players[selectedPlayer].tempStats.position = pos;
-                            participantModels[players[n]].transform.position = new Vector3(players[n].tempStats.position.x + topLeft.x, 1, (BattleMap.mapSizeY - 1) - players[n].tempStats.position.y + topLeft.y);
-                            participantModels[players[selectedPlayer]].transform.position = new Vector3(players[selectedPlayer].tempStats.position.x + topLeft.x, 1, (BattleMap.mapSizeY - 1) - players[selectedPlayer].tempStats.position.y + topLeft.y);
+                            participantModels[players[n]].transform.position = new Vector3(players[n].tempStats.position.x + topLeft.x, 1, players[n].tempStats.position.y + topLeft.y);
+                            participantModels[players[selectedPlayer]].transform.position = new Vector3(
+                                players[selectedPlayer].tempStats.position.x + topLeft.x,
+                                1 + graphicalBattleMap.GetHeightAtGlobalPos(
+                                    new Vector3(
+                                        players[selectedPlayer].tempStats.position.x + topLeft.x,
+                                        0,
+                                        players[selectedPlayer].tempStats.position.y + topLeft.y)
+                                    ),
+                                players[selectedPlayer].tempStats.position.y + topLeft.y
+                            );
                             actionTaken = true;
                         }
                         selectedPlayer = -1;
@@ -347,16 +364,11 @@ public class Battle : MonoBehaviour
                     break;
                 case BattleState.Player:
                     //If player is trying to move a pawn
-                    if (battleMap[pos.x, (BattleMap.mapSizeY - 1) - pos.y].playerMoveRange && !players[selectedPlayer].tempStats.moved)
+                    if (battleMap[pos.x, pos.y].playerMoveRange && !players[selectedPlayer].tempStats.moved)
                     {
                         selectedMoveSpot.Set(pos.x, pos.y);
-                        Vector2Int moveDifference = new Vector2Int(selectedMoveSpot.x - players[selectedPlayer].tempStats.position.x, selectedMoveSpot.y - players[selectedPlayer].tempStats.position.y);
-
-                        graphicalBattleMap.ShowMoveMarker(
-                            moveDifference,
-                            new Vector2Int(pos.x + topLeft.x, (BattleMap.mapSizeY - 1) - pos.y + topLeft.y),
-                            CanMoveYFirst(players[selectedPlayer], moveDifference)
-                            );
+                        Vector2Int moveDifference = pos - players[selectedPlayer].tempStats.position;
+                        graphicalBattleMap.ShowMoveMarker(moveDifference, pos, CanMoveYFirst(players[selectedPlayer], moveDifference));
                         actionTaken = true;
                     }
                     break;
@@ -388,12 +400,12 @@ public class Battle : MonoBehaviour
                     selectedSpell = -1;
                 }
 
-                if (battleState != BattleState.Attack || battleMap[pos.x, (BattleMap.mapSizeY - 1) - pos.y].playerAttackRange)
+                if (battleState != BattleState.Attack || battleMap[pos.x, pos.y].playerAttackRange)
                 {
                     //Selecting an enemy
                     selectedEnemy = EnemyAtPos(pos.x, pos.y);
                     //If actually targetting another player for a healing attack
-                    if (selectedEnemy == -1 && battleMap[pos.x, (BattleMap.mapSizeY - 1) - pos.y].playerAttackRange && battleState == BattleState.Attack && selectedSpell == -1)
+                    if (selectedEnemy == -1 && battleMap[pos.x, pos.y].playerAttackRange && battleState == BattleState.Attack && selectedSpell == -1)
                         selectedEnemy = enemies.Count + PlayerAtPos(pos.x, pos.y);
                 }
             }
@@ -484,13 +496,18 @@ public class Battle : MonoBehaviour
     {
         if (selectedMoveSpot.x != -1)
         {
-            Vector2Int diff = new Vector2Int(selectedMoveSpot.x - players[selectedPlayer].tempStats.position.x, players[selectedPlayer].tempStats.position.y - selectedMoveSpot.y);
+            Vector2Int diff = selectedMoveSpot - players[selectedPlayer].tempStats.position;
             Debug.Log(diff);
 
             List<List<Vector3>> path = graphicalBattleMap.GetPath(
                 diff,
-                new Vector2Int(players[selectedPlayer].tempStats.position.x, players[selectedPlayer].tempStats.position.y),
-                1,
+                players[selectedPlayer].tempStats.position,
+                1 + graphicalBattleMap.GetHeightAtGlobalPos(
+                    new Vector3(
+                        players[selectedPlayer].tempStats.position.x + topLeft.x,
+                        0,
+                        players[selectedPlayer].tempStats.position.y + topLeft.y)
+                    ),
                 CanMoveYFirst(players[selectedPlayer], diff)
             );
 
@@ -507,7 +524,7 @@ public class Battle : MonoBehaviour
 
                 for (int i = 0; i < pointList.Count; i++)
                 {
-                    pointList[i] += new Vector3(topLeft.x, 0, topLeft.y + BattleMap.mapSizeY - 2 * players[selectedPlayer].tempStats.position.y - 1);
+                    pointList[i] += new Vector3(topLeft.x, 0, topLeft.y);
                 }
 
                 eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], pawnMoveSpeed, pointList));
@@ -667,12 +684,16 @@ public class Battle : MonoBehaviour
 
         //Sets up the animations for moving the enemy
         Vector2Int diff = possibleMoves[0].movePosition - enemies[ID].tempStats.position;
-        diff.y = -diff.y;
 
         List<List<Vector3>> path = graphicalBattleMap.GetPath(
                 diff,
-                new Vector2Int(enemies[ID].tempStats.position.x, enemies[ID].tempStats.position.y),
-                1,
+                enemies[ID].tempStats.position,
+                1 + graphicalBattleMap.GetHeightAtGlobalPos(
+                    new Vector3(
+                        enemies[ID].tempStats.position.x + topLeft.x,
+                        0,
+                        enemies[ID].tempStats.position.y + topLeft.y)
+                    ),
                 CanMoveYFirst(enemies[ID], diff)
             );
 
@@ -689,7 +710,7 @@ public class Battle : MonoBehaviour
 
             for (int i = 0; i < pointList.Count; i++)
             {
-                pointList[i] += new Vector3(topLeft.x, 0, topLeft.y + BattleMap.mapSizeY - 2 * enemies[ID].tempStats.position.y - 1);
+                pointList[i] += new Vector3(topLeft.x, 0, topLeft.y);
             }
 
             eventQueue.Insert(new MovementEvent(participantModels[enemies[ID]], pawnMoveSpeed, pointList));
@@ -931,11 +952,11 @@ public class Battle : MonoBehaviour
         {
             foreach (Player p in players)
             {
-                battleMap[p.tempStats.position.x, (BattleMap.mapSizeY - 1) - p.tempStats.position.y].playerMoveRange = true;
-                battleMap[p.tempStats.position.x, (BattleMap.mapSizeY - 1) - p.tempStats.position.y].enemyDanger = true;
+                battleMap[p.tempStats.position.x, p.tempStats.position.y].playerMoveRange = true;
+                battleMap[p.tempStats.position.x, p.tempStats.position.y].enemyDanger = true;
             }
             if (selectedPlayer != -1)
-                battleMap[players[selectedPlayer].tempStats.position.x, (BattleMap.mapSizeY - 1) - players[selectedPlayer].tempStats.position.y].enemyDanger = false;
+                battleMap[players[selectedPlayer].tempStats.position.x, players[selectedPlayer].tempStats.position.y].enemyDanger = false;
         }
 
         //Shows skill range and what is targettable within that range if a spell is selected or hovered
@@ -951,7 +972,7 @@ public class Battle : MonoBehaviour
 
             if (displaySkill.targetType == TargettingType.Self)
             {
-                battleMap[skillPos.x, (BattleMap.mapSizeY - 1) - skillPos.y].skillTargettable = true;
+                battleMap[skillPos.x, skillPos.y].skillTargettable = true;
             }
             else
             {
@@ -962,9 +983,9 @@ public class Battle : MonoBehaviour
                         if (Mathf.Abs(x) + Mathf.Abs(y) <= displaySkill.targettingRange && x + skillPos.x >= 0 && x + skillPos.x < BattleMap.mapSizeX && y + skillPos.y >= 0 && y + skillPos.y < BattleMap.mapSizeY)
                         {
                             if (displaySkill.targetType == TargettingType.AllInRange || displaySkill.targetType == TargettingType.Ally && PlayerAtPos(x + skillPos.x, y + skillPos.y) != -1 || displaySkill.targetType == TargettingType.Enemy && EnemyAtPos(x + skillPos.x, y + skillPos.y) != -1)
-                                battleMap[x + skillPos.x, (BattleMap.mapSizeY - 1) - (y + skillPos.y)].skillTargettable = true;
+                                battleMap[x + skillPos.x, y + skillPos.y].skillTargettable = true;
                             else
-                                battleMap[x + skillPos.x, (BattleMap.mapSizeY - 1) - (y + skillPos.y)].skillRange = true;
+                                battleMap[x + skillPos.x, y + skillPos.y].skillRange = true;
                         }
                     }
                 }
@@ -978,7 +999,6 @@ public class Battle : MonoBehaviour
                 if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
                 {
                     Vector2Int pos = graphicalBattleMap.GetInteractionPos(hit.point);
-                    pos.y = BattleMap.mapSizeY - pos.y - 1;
                     skillLegitTarget = battleMap[pos.x, pos.y].skillTargettable;
 
                     Debug.Log(pos);
@@ -1005,7 +1025,7 @@ public class Battle : MonoBehaviour
             {
                 //If the player can attack an enemy or heal an ally at that position
                 if (EnemyAtPos(attackPos.x, attackPos.y) != -1 || (PlayerAtPos(attackPos.x, attackPos.y) != -1 && weapon.GetStatsAtRange(attackPos - players[selectedPlayer].tempStats.position).heals))
-                    battleMap[attackPos.x, (BattleMap.mapSizeY - 1) - attackPos.y].playerAttackRange = true;
+                    battleMap[attackPos.x, attackPos.y].playerAttackRange = true;
             }
         }
 
@@ -1018,11 +1038,11 @@ public class Battle : MonoBehaviour
                 WeaponType weapon = Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[players[selectedPlayer].equippedWeapon.Name]).subType];
                 foreach (Vector2Int pos in moveSpots)
                 {
-                    battleMap[pos.x, (BattleMap.mapSizeY - 1) - pos.y].playerMoveRange = true;
+                    battleMap[pos.x, pos.y].playerMoveRange = true;
                     List<Vector2Int> attackSpots = GetViableAttackSpaces(weapon, pos);
                     foreach (Vector2Int attackPos in attackSpots)
                     {
-                        battleMap[attackPos.x, (BattleMap.mapSizeY - 1) - attackPos.y].playerAttackRange = true;
+                        battleMap[attackPos.x, attackPos.y].playerAttackRange = true;
                     }
                 }
             }
@@ -1032,11 +1052,11 @@ public class Battle : MonoBehaviour
                 List<Vector2Int> moveSpots = GetViableMovements(enemies[selectedEnemy]);
                 foreach (Vector2Int pos in moveSpots)
                 {
-                    battleMap[pos.x, (BattleMap.mapSizeY - 1) - pos.y].enemyDanger = true;
+                    battleMap[pos.x, pos.y].enemyDanger = true;
                     List<Vector2Int> attackSpots = GetViableAttackSpaces(Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[enemies[selectedEnemy].equippedWeapon.Name]).subType], pos);
                     foreach (Vector2Int attackPos in attackSpots)
                     {
-                        battleMap[attackPos.x, (BattleMap.mapSizeY - 1) - attackPos.y].enemyDanger = true;
+                        battleMap[attackPos.x, attackPos.y].enemyDanger = true;
                     }
                 }
             }
@@ -1048,11 +1068,11 @@ public class Battle : MonoBehaviour
             List<Vector2Int> moveSpots = GetViableMovements(e);
             foreach (Vector2Int pos in moveSpots)
             {
-                battleMap[pos.x, (BattleMap.mapSizeY - 1) - pos.y].enemyDanger = true;
+                battleMap[pos.x, pos.y].enemyDanger = true;
                 List<Vector2Int> attackSpots = GetViableAttackSpaces(Registry.WeaponTypeRegistry[((EquippableBase)Registry.ItemRegistry[e.equippedWeapon.Name]).subType], pos);
                 foreach (Vector2Int attackPos in attackSpots)
                 {
-                    battleMap[attackPos.x, (BattleMap.mapSizeY - 1) - attackPos.y].enemyDanger = true;
+                    battleMap[attackPos.x, attackPos.y].enemyDanger = true;
                 }
             }
         }

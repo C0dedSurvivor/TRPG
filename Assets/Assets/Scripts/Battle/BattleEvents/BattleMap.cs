@@ -27,6 +27,7 @@ public class BattleMap : MonoBehaviour
     //Default is 20x20, camera will not change view to accomodate larger currently
     public const int mapSizeX = 20;
     public const int mapSizeY = 20;
+    public float mapVertOffset => transform.position.y;
 
     //The length of one tile on the map
     const int tileSize = 51;
@@ -47,6 +48,9 @@ public class BattleMap : MonoBehaviour
     public float subdivisionsPerUnit = 10.0f;
     public float subdivisionIncrement => 1.0f / subdivisionsPerUnit;
 
+    /// <summary>
+    /// Instantiates the movement marker and hides all battle-related objects
+    /// </summary>
     public void Start()
     {
         map = GetComponent<Terrain>();
@@ -83,7 +87,7 @@ public class BattleMap : MonoBehaviour
     public Vector2Int GetInteractionPos(Vector3 hitPoint)
     {
         Vector3 localHitPos = hitPoint - transform.position;
-        return new Vector2Int((int)localHitPos.x, mapSizeY - (int)localHitPos.z - 1);
+        return new Vector2Int((int)localHitPos.x, (int)localHitPos.z);
     }
 
     /// <summary>
@@ -93,17 +97,25 @@ public class BattleMap : MonoBehaviour
     /// <param name="yPos">Y position of the map</param>
     public void StartOfBattle(int xPos, int yPos)
     {
-        transform.position = new Vector3(xPos - 0.5f, 0.01f, yPos - 0.5f);
+        transform.position = new Vector3(xPos - 0.5f, 0.2f, yPos - 0.5f);
         gameObject.SetActive(true);
+        TerrainData terrainData = map.terrainData;
+        
+        float[,] sourceHeights = new float[terrainData.heightmapResolution, terrainData.heightmapResolution];
 
-        float mapSizeRatio = map.terrainData.size.x / GameStorage.mapTerrain.terrainData.size.x;
-        float[,] sourceHeights = GameStorage.mapTerrain.terrainData.GetHeights(xPos, yPos, Mathf.RoundToInt(GameStorage.mapTerrain.terrainData.heightmapResolution * mapSizeRatio), Mathf.RoundToInt(GameStorage.mapTerrain.terrainData.heightmapResolution * mapSizeRatio));
+        for(int x = 0; x < mapSizeX * tileSize; x++)
+        {
+            for (int y = 0; y < mapSizeY * tileSize; y++)
+            {
+                sourceHeights[y, x] = (GameStorage.mapTerrain.SampleHeight(transform.position + new Vector3(x / 51.0f, 0, y / 51.0f)) - GameStorage.mapTerrain.transform.position.y)
+                    / GameStorage.mapTerrain.terrainData.heightmapScale.y;
+            }
+        }
         map.terrainData.SetHeights(0, 0, sourceHeights);
-
+        
         currentVisuals = new TileColors[mapSizeX, mapSizeY];
 
         //Resets the initial battle visuals
-        TerrainData terrainData = map.terrainData;
         //get current paint mask
         float[,,] alphas = terrainData.GetAlphamaps(0, 0, terrainData.alphamapWidth, terrainData.alphamapHeight);
 
@@ -130,7 +142,7 @@ public class BattleMap : MonoBehaviour
 
                 //Creates the aEther map visuals
                 aEtherMap[x, y] = Instantiate(aEtherMarkerPrefab);
-                aEtherMap[x, y].transform.position = new Vector3(xPos + x + 0.5f, GameStorage.mapTerrain.terrainData.GetHeight(x, y) + 0.5f, yPos + (mapSizeY - y - 0.5f));
+                aEtherMap[x, y].transform.position = new Vector3(xPos + x + 0.5f, GetHeightAtGlobalPos(new Vector3(x + transform.position.x, 0.2f, y + transform.position.z)) + 0.5f, yPos + y + 0.5f);
                 aEtherMap[x, y].SetActive(false);
             }
         }
@@ -262,29 +274,42 @@ public class BattleMap : MonoBehaviour
     /// <param name="verticalFirst">Whether the path should do vertical or horizontal first</param>
     public void ShowMoveMarker(Vector2Int moveDifference, Vector2Int markerPos, bool verticalFirst)
     {
-        moveMarker.transform.position = new Vector3(markerPos.x, 1, markerPos.y);
         moveMarker.SetActive(true);
 
         //Update the line renderer
-        
         LineRenderer path = moveMarker.GetComponent<LineRenderer>();
+        
+        moveMarker.transform.position = new Vector3(
+            markerPos.x + battle.topLeft.x, 
+            1 + GetHeightAtGlobalPos(new Vector3(markerPos.x + battle.topLeft.x, 0, markerPos.y + battle.topLeft.y)), 
+            markerPos.y + battle.topLeft.y
+        );
 
-        Vector2Int flatOffset = markerPos - battle.topLeft;
-        Vector3 fullOffset = new Vector3(flatOffset.x, 0, flatOffset.y);
-        List<List<Vector3>> linePositions = GetPath(new Vector2Int(-moveDifference.x, moveDifference.y), flatOffset, -map.SampleHeight(fullOffset), !verticalFirst);
+        List<List<Vector3>> linePositions = GetPath(-moveDifference, markerPos, 0, !verticalFirst);
         List<Vector3> linePath = new List<Vector3>();
         foreach(List<Vector3> pointList in linePositions)
         {
             foreach(Vector3 point in pointList)
             {
-                Vector3 scaledPathPos = point - fullOffset;
+                Vector3 scaledPathPos = point - new Vector3(markerPos.x, moveMarker.transform.position.y - 1, markerPos.y);
                 scaledPathPos.x *= 1.0f / moveMarker.transform.lossyScale.x;
+                scaledPathPos.y *= 1.0f / moveMarker.transform.lossyScale.y;
                 scaledPathPos.z *= 1.0f / moveMarker.transform.lossyScale.z;
                 linePath.Add(scaledPathPos);
             }
         }
         path.positionCount = linePath.Count;
         path.SetPositions(linePath.ToArray());
+    }
+
+    /// <summary>
+    /// Gets the global height of a position on the battle map's heightmap
+    /// </summary>
+    /// <param name="pos">Position in global coordinates</param>
+    /// <returns>Global height of the point on the battle map heightmap</returns>
+    public float GetHeightAtGlobalPos(Vector3 pos)
+    {
+        return map.SampleHeight(pos);
     }
 
     /// <summary>
@@ -307,7 +332,7 @@ public class BattleMap : MonoBehaviour
                 for (float ySlice = y; ySlice <= y + 1 + subdivisionIncrement / 2; ySlice += subdivisionIncrement)
                 {
                     float zPos = ySlice * Mathf.Sign(difference.y) + startingPos.y;
-                    positionList.Add(new Vector3(startingPos.x, verticalOffset + map.SampleHeight(new Vector3(startingPos.x, 0, zPos)), zPos));
+                    positionList.Add(new Vector3(startingPos.x, verticalOffset + GetHeightAtGlobalPos(new Vector3(startingPos.x + transform.position.x + 0.5f, 0, transform.position.z + zPos + 0.5f)), zPos));
                 }
                 movementList.Add(positionList);
             }
@@ -318,7 +343,7 @@ public class BattleMap : MonoBehaviour
                 for (float xSlice = x; xSlice <= x + 1 + subdivisionIncrement / 2; xSlice += subdivisionIncrement)
                 {
                     float xPos = xSlice * Mathf.Sign(difference.x) + startingPos.x;
-                    positionList.Add(new Vector3(xPos, verticalOffset + map.SampleHeight(new Vector3(xPos, 0, zPos)), zPos));
+                    positionList.Add(new Vector3(xPos, verticalOffset + GetHeightAtGlobalPos(new Vector3(xPos + transform.position.x + 0.5f, 0, transform.position.z + zPos + 0.5f)), zPos));
                 }
                 movementList.Add(positionList);
             }
@@ -331,7 +356,7 @@ public class BattleMap : MonoBehaviour
                 for (float xSlice = x; xSlice <= x + 1 + subdivisionIncrement / 2; xSlice += subdivisionIncrement)
                 {
                     float xPos = xSlice * Mathf.Sign(difference.x) + startingPos.x;
-                    positionList.Add(new Vector3(xPos, verticalOffset + map.SampleHeight(new Vector3(xPos, 0, startingPos.y)), startingPos.y));
+                    positionList.Add(new Vector3(xPos, verticalOffset + GetHeightAtGlobalPos(new Vector3(xPos + transform.position.x + 0.5f, 0, transform.position.z + startingPos.y + 0.5f)), startingPos.y));
                 }
                 movementList.Add(positionList);
             }
@@ -342,7 +367,7 @@ public class BattleMap : MonoBehaviour
                 for (float ySlice = y; ySlice <= y + 1 + subdivisionIncrement / 2; ySlice += subdivisionIncrement)
                 {
                     float zPos = ySlice * Mathf.Sign(difference.y) + startingPos.y;
-                    positionList.Add(new Vector3(xPos, verticalOffset + map.SampleHeight(new Vector3(xPos, 0, zPos)), zPos));
+                    positionList.Add(new Vector3(xPos, verticalOffset + GetHeightAtGlobalPos(new Vector3(xPos + transform.position.x + 0.5f, 0, transform.position.z + zPos + 0.5f)), zPos));
                 }
                 movementList.Add(positionList);
             }

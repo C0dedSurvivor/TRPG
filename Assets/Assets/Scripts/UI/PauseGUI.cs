@@ -1,18 +1,28 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class PauseGUI : MonoBehaviour
 {
+    private enum PauseMenuState
+    {
+        Closed,
+        LandingPage,
+        PlayerInspector,
+        SkillTreeScreen
+    }
+
     //Where the player first ends up when they enter the pause menu, the navigation hub
     public GameObject pauseLandingScreen;
+    //Displays the full inventory on the pause menu landing page
+    public PauseInventory pauseInventory;
     //Displays information about a selected pawn, allows for equipping and de-equipping of items and access of that pawn's skill tree
     public GameObject playerInfoScreen;
     //Displays the skill trees for a given pawn
     public GameObject playerSkillScreen;
-    //
+    //Displays the items able to be equipped to a given slot for a player
     public GridInventoryGUI equipInv;
+    //The smaller gear on the landing screen, used for primary menu selection
+    public GearTurner innerGear;
     //The larger gear on the landing screen, used for secondary menu displays
     public GearTurner outerGear;
     public GameObject[] playerButtons = new GameObject[4];
@@ -22,46 +32,171 @@ public class PauseGUI : MonoBehaviour
     public Image[] playerEquipment = new Image[8];
 
     public static bool paused = false;
-    
+
     /// <summary>
     /// The ID of the player whose information is currently displayed
     /// Only applicable in the player section of the pause menu
     /// </summary>
     public static int playerID;
-    //0 = none, 1 = landing, 2 = player, 3 = skills, 4 = inventory
-    private int loadedMenu = 0;
+    private PauseMenuState loadedMenu = PauseMenuState.Closed;
 
-    // Update is called once per frame
+    /// <summary>
+    /// Checks for key presses that would transition between menu states
+    /// </summary>
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape) && Battle.battleState == BattleState.None)
+        if (Battle.battleState == BattleState.None)
         {
+            //If the player wants to open the inventory screen
+            if (InputManager.BoundKeyPressed(PlayerKeybinds.UIOpenInventory) &&
+                (loadedMenu == PauseMenuState.Closed || loadedMenu == PauseMenuState.LandingPage || loadedMenu == PauseMenuState.PlayerInspector ||
+                (loadedMenu == PauseMenuState.SkillTreeScreen && !playerSkillScreen.GetComponent<SkillTreeGUI>().holdingFocus)))
+            {
+                OpenPauseInventory();
+            }
+
+            //If the player wants to open the team screen
+            if (InputManager.BoundKeyPressed(PlayerKeybinds.UIOpenTeamPage) &&
+                (loadedMenu == PauseMenuState.Closed || loadedMenu == PauseMenuState.LandingPage || loadedMenu == PauseMenuState.PlayerInspector ||
+                (loadedMenu == PauseMenuState.SkillTreeScreen && !playerSkillScreen.GetComponent<SkillTreeGUI>().holdingFocus)))
+            {
+                ToPlayerSelection();
+            }
+
             //If the player wants to enter the pause menu
-            if (loadedMenu == 0)
+            if (InputManager.BoundKeyPressed(PlayerKeybinds.UIOpenPause) && loadedMenu == PauseMenuState.Closed)
             {
-                loadedMenu = 1;
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-                pauseLandingScreen.SetActive(true);
-                paused = true;
+                OpenPauseMenu();
             }
-            //If the player wants to exit the pause menu
-            else if (loadedMenu == 1)
+            else if (InputManager.BoundKeyPressed(PlayerKeybinds.UIBack))
             {
-                BackToGame();
-            }
-            //If the player wants to return to the landing page
-            else if (loadedMenu == 2 || loadedMenu == 4)
-            {
-                BackToLanding();
-                equipInv.Close();
-            }
-            //If the player wants to go back to the player info screen
-            else if (loadedMenu == 3 && playerSkillScreen.GetComponent<SkillTreeGUI>().failedSkillUnlock.activeSelf != true)
-            {
-                BackToPlayer();
+                //If the player wants to exit the pause menu
+                if (loadedMenu == PauseMenuState.LandingPage)
+                {
+                    BackToGame();
+                }
+                //If the player wants to return to the landing page
+                else if (loadedMenu == PauseMenuState.PlayerInspector)
+                {
+                    BackToLanding();
+                }
+                //If the player wants to go back to the player info screen
+                else if (loadedMenu == PauseMenuState.SkillTreeScreen && !playerSkillScreen.GetComponent<SkillTreeGUI>().holdingFocus)
+                {
+                    ToPlayerScreen(playerID);
+                }
             }
         }
+    }
+
+    /// <summary>
+    /// Shows the pause menu landing screen and unlocks the cursor
+    /// </summary>
+    public void OpenPauseMenu()
+    {
+        loadedMenu = PauseMenuState.LandingPage;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        pauseLandingScreen.SetActive(true);
+        paused = true;
+    }
+
+    /// <summary>
+    /// Shows the pause inventory and associated controls and generates the initial view of items
+    /// </summary>
+    public void OpenPauseInventory()
+    {
+        if (loadedMenu == PauseMenuState.Closed)
+            OpenPauseMenu();
+        else if (loadedMenu == PauseMenuState.PlayerInspector)
+            BackToLanding();
+        else if (loadedMenu == PauseMenuState.SkillTreeScreen)
+        {
+            playerSkillScreen.SetActive(false);
+            BackToLanding();
+        }
+        loadedMenu = PauseMenuState.LandingPage;
+        ClosePlayerSelection();
+        innerGear.moveToButton(2);
+        pauseInventory.SortAndChangeFilter();
+    }
+
+    /// <summary>
+    /// Shows the buttons that allow the player to open the player info screen for a specified pawn
+    /// </summary>
+    public void ToPlayerSelection()
+    {
+        if (loadedMenu == PauseMenuState.Closed)
+            OpenPauseMenu();
+        else if (loadedMenu == PauseMenuState.PlayerInspector)
+            BackToLanding();
+        else if (loadedMenu == PauseMenuState.SkillTreeScreen)
+        {
+            playerSkillScreen.SetActive(false);
+            BackToLanding();
+        }
+        loadedMenu = PauseMenuState.LandingPage;
+        pauseInventory.Close();
+        foreach (GameObject p in playerButtons)
+        {
+            p.SetActive(true);
+        }
+        innerGear.moveToButton(1);
+        outerGear.frozen = true;
+    }
+
+    /// <summary>
+    /// Opens the player info screen
+    /// </summary>
+    /// <param name="playerID">What Player ID to grab the info of</param>
+    public void ToPlayerScreen(int playerID)
+    {
+        PauseGUI.playerID = playerID;
+        playerSkillScreen.SetActive(false);
+        playerInfoScreen.SetActive(true);
+        loadedMenu = PauseMenuState.PlayerInspector;
+        UpdatePlayerEquipped();
+    }
+
+    /// <summary>
+    /// Opens the map in large view
+    /// </summary>
+    public void ToMap()
+    {
+        innerGear.moveToButton(3);
+        ClosePlayerSelection();
+        pauseInventory.Close();
+    }
+
+    /// <summary>
+    /// Opens the enemy dictionary
+    /// </summary>
+    public void ToEnemyDict()
+    {
+        innerGear.moveToButton(4);
+        ClosePlayerSelection();
+        pauseInventory.Close();
+    }
+
+    /// <summary>
+    /// Turns the gear to the save option and saves
+    /// </summary>
+    public void ToSave()
+    {
+        innerGear.moveToButton(5);
+        ClosePlayerSelection();
+        pauseInventory.Close();
+        GameStorage.SaveAll(0);
+    }
+
+    /// <summary>
+    /// Opens the settings menu
+    /// </summary>
+    public void ToSettings()
+    {
+        innerGear.moveToButton(6);
+        ClosePlayerSelection();
+        pauseInventory.Close();
     }
 
     /// <summary>
@@ -69,12 +204,12 @@ public class PauseGUI : MonoBehaviour
     /// </summary>
     public void BackToGame()
     {
-        loadedMenu = 0;
+        loadedMenu = PauseMenuState.Closed;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         ClosePlayerSelection();
         outerGear.GetComponent<PauseInventory>().Close();
-        GameObject.Find("Pause Inner Wheel").GetComponent<GearTurner>().moveToButton(3);
+        innerGear.moveToButton(3);
         pauseLandingScreen.SetActive(false);
         paused = false;
     }
@@ -84,20 +219,10 @@ public class PauseGUI : MonoBehaviour
     /// </summary>
     public void BackToLanding()
     {
-        loadedMenu = 1;
+        loadedMenu = PauseMenuState.LandingPage;
         playerInfoScreen.SetActive(false);
-    }
-
-    /// <summary>
-    /// Shows the buttons that allow the player to open the player info screen for a specified pawn
-    /// </summary>
-    public void ToPlayerSelection()
-    {
-        foreach(GameObject p in playerButtons)
-        {
-            p.SetActive(true);
-        }
-        outerGear.frozen = true;
+        if (equipInv.gameObject.activeSelf)
+            equipInv.Close();
     }
 
     /// <summary>
@@ -109,28 +234,6 @@ public class PauseGUI : MonoBehaviour
         {
             p.SetActive(false);
         }
-    }
-
-    /// <summary>
-    /// Returns to the player info screen
-    /// </summary>
-    public void BackToPlayer()
-    {
-        loadedMenu = 2;
-        UpdatePlayerEquipped();
-        playerSkillScreen.SetActive(false);
-    }
-
-    /// <summary>
-    /// Opens the player info screen
-    /// </summary>
-    /// <param name="playerID">What Player ID to grab the info of</param>
-    public void OpenPlayerScreen(int playerID)
-    {
-        loadedMenu = 2;
-        PauseGUI.playerID = playerID;
-        playerInfoScreen.SetActive(true);
-        UpdatePlayerEquipped();
     }
 
     /// <summary>
@@ -171,7 +274,7 @@ public class PauseGUI : MonoBehaviour
     /// </summary>
     public void OpenSkillScreen()
     {
-        loadedMenu = 3;
+        loadedMenu = PauseMenuState.SkillTreeScreen;
         playerSkillScreen.SetActive(true);
         playerSkillScreen.GetComponent<SkillTreeGUI>().OpenSkillMenu(playerID);
     }

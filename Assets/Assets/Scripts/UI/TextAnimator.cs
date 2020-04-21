@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,6 +12,9 @@ public class TextAnimator : MonoBehaviour
     private float timer = 0;
     private Text text;
 
+    /// <summary>
+    /// Is true if the text animator is done displaying all text from the queue
+    /// </summary>
     public bool Done { get { return currentAnim == null && toAnimate.Count == 0; } }
 
     void Start()
@@ -20,10 +22,12 @@ public class TextAnimator : MonoBehaviour
         text = GetComponent<Text>();
     }
 
-    // Update is called once per frame
+    /// <summary>
+    /// Steps the animation every time the timer reaches a certain delay and checks for input to go to the next line
+    /// </summary>
     void Update()
     {
-        if(currentAnim != null)
+        if (currentAnim != null)
         {
             if (timer >= delay)
             {
@@ -32,24 +36,27 @@ public class TextAnimator : MonoBehaviour
             }
             else
                 timer += Time.deltaTime;
-            if (Input.GetKeyDown(KeyCode.Return))
+            if (InputManager.BoundKeyPressed(PlayerKeybinds.UIContinueText) && currentAnim.text == text.text)
             {
-                if (currentAnim.text == text.text)
-                {
-                    currentAnim = null;
-                    text.text = "";
-                }
-                else
-                    text.text = currentAnim.text;
+                currentAnim = null;
+                text.text = "";
+            }
+            else if (InputManager.BoundKeyPressed(PlayerKeybinds.UISkipText))
+            {
+                text.text = currentAnim.text;
             }
         }
-        else if(toAnimate.Count > 0)
+        else if (toAnimate.Count > 0)
         {
             text.text = "";
             currentAnim = toAnimate.Dequeue();
         }
     }
 
+    /// <summary>
+    /// Adds a text event to the queue of text to show
+    /// </summary>
+    /// <param name="animation">The string to display</param>
     public void Enqueue(TextEvent animation)
     {
         toAnimate.Enqueue(animation);

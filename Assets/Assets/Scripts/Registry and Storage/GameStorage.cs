@@ -133,68 +133,13 @@ public class GameStorage : MonoBehaviour {
         Debug.Log(trueBX + " " + trueBY);
 
         //Copies the corresponding values from the main map to the battlemap
-        //int tileCount = 0;
         for (int x = 0; x < xSize; x++)
         {
             for (int y = 0; y < ySize; y++)
             {
-                //Debug.Log((x - ((int)Mathf.Ceil(xSize / 2.0f) - 1) + centerX) + " | " + (mapYsize - trueBY - (ySize - y)));
-                //Debug.Log(x + " - (" + (int)Mathf.Ceil(xSize / 2.0f) + " - 1) + " + centerX + " | " + mapYsize + " - (" + ySize + " - (" + trueBY + " - " + y + "))");
                 bMap[x, y] = map[x - ((int)Mathf.Ceil(xSize / 2.0f) - 1) + centerX, mapYsize - trueBY - (ySize - y)];
-                //if (IsGenericPassableTile(bMap[x, y]))
-                   //tileCount++;
             }
         }
-
-        /* Need a different way to check submap usability, may not be possible with modular setup
-         
-        //If there are less that 75 normally usable (not locked by movement type) tiles on the map the map will be moved until a suitable place is found
-        if (tileCount < (xSize * ySize * 3) / 8)
-        {
-            int up = 0;
-            int down = 0;
-            int left = 0;
-            int right = 0;
-            for (int i = 0; i < xSize; i++)
-            {
-                if (IsGenericPassableTile(bMap[i, 0]))
-                {
-                    up++;
-                }
-                if (IsGenericPassableTile(bMap[i, ySize - 1]))
-                {
-                    down++;
-                }
-            }
-            for (int i = 0; i < ySize; i++)
-            {
-                if (IsGenericPassableTile(bMap[0, i]))
-                {
-                    left++;
-                }
-                if (IsGenericPassableTile(bMap[xSize - 1, i]))
-                {
-                    right++;
-                }
-            }
-            if (up >= down && up >= left && up >= right)
-            {
-                bMap = GrabBattleMap(centerX, centerY - 1, xSize, ySize);
-            }
-            else if (left >= down && left >= right)
-            {
-                bMap = GrabBattleMap(centerX - 1, centerY, xSize, ySize);
-            }
-            else if (right >= down)
-            {
-                bMap = GrabBattleMap(centerX + 1, centerY, xSize, ySize);
-            }
-            else
-            {
-                bMap = GrabBattleMap(centerX, centerY + 1, xSize, ySize);
-            }
-        }
-        */
         return bMap;
     }
     
@@ -256,20 +201,10 @@ public class GameStorage : MonoBehaviour {
     }
 
     /// <summary>
-    /// Allows saving from the map instance of this class
-    /// Is a workaround to allow a button press to call this function
-    /// </summary>
-    /// <param slot="slot">The save slot to save to</param>
-    public void Save(int slot)
-    {
-        SaveAll(slot);
-    }
-
-    /// <summary>
     /// Saves all of the important data across the game
     /// </summary>
     /// <param slot="slot">The save slot to save to</param>
-    private static void SaveAll(int slot)
+    public static void SaveAll(int slot)
     {
         //Saves each pawn's stats and gear
         foreach(Player p in playerMasterList)

@@ -44,6 +44,9 @@ public class SkillTreeGUI : MonoBehaviour {
     PointerEventData m_PointerEventData;
     EventSystem m_EventSystem;
 
+    //If this window cannot be traversed out of
+    public bool holdingFocus => failedSkillUnlock.activeSelf || quickSkillSwitcher.activeSelf;
+
     // Use this for initialization
     void Start () {
         //Fetch the Raycaster from the GameObject (the Canvas)
@@ -77,9 +80,9 @@ public class SkillTreeGUI : MonoBehaviour {
         }
         if (!overSkill)
             MouseLeaveSkill();
-        if (Input.GetKeyDown(KeyCode.Escape) && GetComponentInParent<SkillTreeGUI>().failedSkillUnlock.activeSelf == true)
+        if ((InputManager.BoundKeyPressed(PlayerKeybinds.UIConfirm) || InputManager.BoundKeyPressed(PlayerKeybinds.UIBack)) && GetComponentInParent<SkillTreeGUI>().failedSkillUnlock.activeSelf == true)
             AcknowledgeFailedSkillUnlock();
-        if (Input.GetKeyDown(KeyCode.Escape) && GetComponentInParent<SkillTreeGUI>().failedSkillUnlock.activeSelf == true)
+        if (InputManager.BoundKeyPressed(PlayerKeybinds.UIBack) && GetComponentInParent<SkillTreeGUI>().quickSkillSwitcher.activeSelf == true)
             CancelQuickSwitch();
     }
 

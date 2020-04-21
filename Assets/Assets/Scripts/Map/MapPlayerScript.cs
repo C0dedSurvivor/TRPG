@@ -45,21 +45,21 @@ public class MapPlayerScript : MonoBehaviour
 
             //Movement
             Vector3 movement = Vector3.zero;
-            movement += InputManager.BoundKeyDown(PlayerKeybinds.MapMoveForward) ? Vector3.forward : Vector3.zero;
-            movement += InputManager.BoundKeyDown(PlayerKeybinds.MapMoveBack) ? Vector3.back : Vector3.zero;
-            movement += InputManager.BoundKeyDown(PlayerKeybinds.MapMoveLeft) ? Vector3.left : Vector3.zero;
-            movement += InputManager.BoundKeyDown(PlayerKeybinds.MapMoveRight) ? Vector3.right : Vector3.zero;
+            movement += InputManager.KeybindTriggered(PlayerKeybinds.MapMoveForward) ? Vector3.forward : Vector3.zero;
+            movement += InputManager.KeybindTriggered(PlayerKeybinds.MapMoveBack) ? Vector3.back : Vector3.zero;
+            movement += InputManager.KeybindTriggered(PlayerKeybinds.MapMoveLeft) ? Vector3.left : Vector3.zero;
+            movement += InputManager.KeybindTriggered(PlayerKeybinds.MapMoveRight) ? Vector3.right : Vector3.zero;
             transform.Translate(movement.normalized * walkingSpeed * Time.deltaTime);
 
             //Jumping
-            if (InputManager.BoundKeyDown(PlayerKeybinds.MapJump) && Physics.Raycast(transform.position + Vector3.down, Vector3.down, 0.001f))
+            if (InputManager.KeybindTriggered(PlayerKeybinds.MapJump) && Physics.Raycast(transform.position + Vector3.down, Vector3.down, 0.001f))
             {
                 Debug.Log("jumping");
                 rigidbody.AddForce(Vector3.up * jumpStrength);
             }
 
             //Camera controls
-            if (InputManager.BoundKeyDown(PlayerKeybinds.MapAdjustCameraDistance))
+            if (InputManager.KeybindTriggered(PlayerKeybinds.MapAdjustCameraDistance))
             {
                 //Make sure the camera stays within bounds
                 float change = Input.GetAxis("Mouse ScrollWheel");

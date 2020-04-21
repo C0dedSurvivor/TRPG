@@ -36,12 +36,12 @@ public class TextAnimator : MonoBehaviour
             }
             else
                 timer += Time.deltaTime;
-            if (InputManager.BoundKeyPressed(PlayerKeybinds.UIContinueText) && currentAnim.text == text.text)
+            if (InputManager.KeybindTriggered(PlayerKeybinds.UIContinueText) && currentAnim.text == text.text)
             {
                 currentAnim = null;
                 text.text = "";
             }
-            else if (InputManager.BoundKeyPressed(PlayerKeybinds.UISkipText))
+            else if (InputManager.KeybindTriggered(PlayerKeybinds.UISkipText))
             {
                 text.text = currentAnim.text;
             }

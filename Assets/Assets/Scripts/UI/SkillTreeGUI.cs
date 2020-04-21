@@ -80,9 +80,9 @@ public class SkillTreeGUI : MonoBehaviour {
         }
         if (!overSkill)
             MouseLeaveSkill();
-        if ((InputManager.BoundKeyPressed(PlayerKeybinds.UIConfirm) || InputManager.BoundKeyPressed(PlayerKeybinds.UIBack)) && GetComponentInParent<SkillTreeGUI>().failedSkillUnlock.activeSelf == true)
+        if ((InputManager.KeybindTriggered(PlayerKeybinds.UIConfirm) || InputManager.KeybindTriggered(PlayerKeybinds.UIBack)) && GetComponentInParent<SkillTreeGUI>().failedSkillUnlock.activeSelf == true)
             AcknowledgeFailedSkillUnlock();
-        if (InputManager.BoundKeyPressed(PlayerKeybinds.UIBack) && GetComponentInParent<SkillTreeGUI>().quickSkillSwitcher.activeSelf == true)
+        if (InputManager.KeybindTriggered(PlayerKeybinds.UIBack) && GetComponentInParent<SkillTreeGUI>().quickSkillSwitcher.activeSelf == true)
             CancelQuickSwitch();
     }
 

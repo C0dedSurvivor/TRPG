@@ -48,7 +48,7 @@ public class PauseGUI : MonoBehaviour
         if (Battle.battleState == BattleState.None)
         {
             //If the player wants to open the inventory screen
-            if (InputManager.BoundKeyPressed(PlayerKeybinds.UIOpenInventory) &&
+            if (InputManager.KeybindTriggered(PlayerKeybinds.UIOpenInventory) &&
                 (loadedMenu == PauseMenuState.Closed || loadedMenu == PauseMenuState.LandingPage || loadedMenu == PauseMenuState.PlayerInspector ||
                 (loadedMenu == PauseMenuState.SkillTreeScreen && !playerSkillScreen.GetComponent<SkillTreeGUI>().holdingFocus)))
             {
@@ -56,7 +56,7 @@ public class PauseGUI : MonoBehaviour
             }
 
             //If the player wants to open the team screen
-            if (InputManager.BoundKeyPressed(PlayerKeybinds.UIOpenTeamPage) &&
+            if (InputManager.KeybindTriggered(PlayerKeybinds.UIOpenTeamPage) &&
                 (loadedMenu == PauseMenuState.Closed || loadedMenu == PauseMenuState.LandingPage || loadedMenu == PauseMenuState.PlayerInspector ||
                 (loadedMenu == PauseMenuState.SkillTreeScreen && !playerSkillScreen.GetComponent<SkillTreeGUI>().holdingFocus)))
             {
@@ -64,11 +64,11 @@ public class PauseGUI : MonoBehaviour
             }
 
             //If the player wants to enter the pause menu
-            if (InputManager.BoundKeyPressed(PlayerKeybinds.UIOpenPause) && loadedMenu == PauseMenuState.Closed)
+            if (InputManager.KeybindTriggered(PlayerKeybinds.UIOpenPause) && loadedMenu == PauseMenuState.Closed)
             {
                 OpenPauseMenu();
             }
-            else if (InputManager.BoundKeyPressed(PlayerKeybinds.UIBack))
+            else if (InputManager.KeybindTriggered(PlayerKeybinds.UIBack))
             {
                 //If the player wants to exit the pause menu
                 if (loadedMenu == PauseMenuState.LandingPage)

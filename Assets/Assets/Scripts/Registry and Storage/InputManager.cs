@@ -26,52 +26,52 @@ class InputManager
     /// <summary>
     /// Binds the actions to the keys that trigger them
     /// </summary>
-    private static Dictionary<PlayerKeybinds, List<KeyCode>> boundActions = new Dictionary<PlayerKeybinds, List<KeyCode>>()
+    private static Dictionary<PlayerKeybinds, ComplexKeybinding> boundActions = new Dictionary<PlayerKeybinds, ComplexKeybinding>()
     {
         #region Map_Movement
-        { PlayerKeybinds.MapMoveForward, new List<KeyCode>{ KeyCode.W } },
-        { PlayerKeybinds.MapMoveBack, new List<KeyCode>{ KeyCode.S } },
-        { PlayerKeybinds.MapMoveLeft, new List<KeyCode>{ KeyCode.A } },
-        { PlayerKeybinds.MapMoveRight, new List<KeyCode>{ KeyCode.D } },
-        { PlayerKeybinds.MapJump, new List<KeyCode>{ KeyCode.Space } },
-        { PlayerKeybinds.MapAdjustCameraDistance, new List<KeyCode>{ KeyCode.LeftControl, KeyCode.RightControl } },
+        { PlayerKeybinds.MapMoveForward, new ComplexKeybinding(null, new List<KeyCode>(){ KeyCode.W }) },
+        { PlayerKeybinds.MapMoveBack, new ComplexKeybinding(null, new List<KeyCode>(){ KeyCode.S }) },
+        { PlayerKeybinds.MapMoveLeft, new ComplexKeybinding(null, new List<KeyCode>(){ KeyCode.A }) },
+        { PlayerKeybinds.MapMoveRight, new ComplexKeybinding(null, new List<KeyCode>(){ KeyCode.D }) },
+        { PlayerKeybinds.MapJump, new ComplexKeybinding(null, new List<KeyCode>(){ KeyCode.Space }) },
+        { PlayerKeybinds.MapAdjustCameraDistance, new ComplexKeybinding(null, new List<KeyCode>(){ KeyCode.LeftControl, KeyCode.RightControl }) },
         #endregion
         #region UI
-        { PlayerKeybinds.UIOpenPause, new List<KeyCode>{ KeyCode.Escape } },
-        { PlayerKeybinds.UIOpenTeamPage, new List<KeyCode>{ KeyCode.T } },
-        { PlayerKeybinds.UIOpenInventory, new List<KeyCode>{ KeyCode.I } },
-        { PlayerKeybinds.UIConfirm, new List<KeyCode>{ KeyCode.Return } },
-        { PlayerKeybinds.UIBack, new List<KeyCode>{ KeyCode.Escape } },
-        { PlayerKeybinds.UIContinueText, new List<KeyCode>{ KeyCode.Return } },
-        { PlayerKeybinds.UISkipText, new List<KeyCode>{ KeyCode.Return } },
+        { PlayerKeybinds.UIOpenPause, new ComplexKeybinding(new List<KeyCode>(){ KeyCode.Escape }) },
+        { PlayerKeybinds.UIOpenTeamPage, new ComplexKeybinding(new List<KeyCode>(){ KeyCode.T }) },
+        { PlayerKeybinds.UIOpenInventory, new ComplexKeybinding(new List<KeyCode>(){ KeyCode.I }) },
+        { PlayerKeybinds.UIConfirm, new ComplexKeybinding(new List<KeyCode>(){ KeyCode.Return }) },
+        { PlayerKeybinds.UIBack, new ComplexKeybinding(new List<KeyCode>(){ KeyCode.Escape }) },
+        { PlayerKeybinds.UIContinueText, new ComplexKeybinding(new List<KeyCode>(){ KeyCode.Return }) },
+        { PlayerKeybinds.UISkipText, new ComplexKeybinding(new List<KeyCode>(){ KeyCode.Return }) },
         #endregion
         #region Battle
         #endregion
     };
 
     /// <summary>
-    /// Checks if any of the keycodes bound to the given action were pressed this frame
+    /// Checks if the input conditions were met for a given action
     /// </summary>
     /// <param name="action">What action to check for</param>
-    /// <returns>True if any of the bound keys were pressed this turn</returns>
-    public static bool BoundKeyPressed(PlayerKeybinds action)
+    /// <returns>True if any of the trigger keys were pressed while the given conditions were met</returns>
+    public static bool KeybindTriggered(PlayerKeybinds action)
     {
-        foreach (KeyCode key in boundActions[action])
+        foreach (KeyCode key in boundActions[action].mustHaveDown)
+        {
+            if (!Input.GetKey(key))
+                return false;
+        }
+        foreach (KeyCode key in boundActions[action].mustHaveUp)
+        {
+            if (Input.GetKey(key))
+                return false;
+        }
+        foreach (KeyCode key in boundActions[action].triggerKeyPressed)
         {
             if (Input.GetKeyDown(key))
                 return true;
         }
-        return false;
-    }
-
-    /// <summary>
-    /// Checks if any of the keycodes bound to the given action are currently pressed
-    /// </summary>
-    /// <param name="action">What action to check for</param>
-    /// <returns>True if any of the bound keys are pressed</returns>
-    public static bool BoundKeyDown(PlayerKeybinds action)
-    {
-        foreach (KeyCode key in boundActions[action])
+        foreach (KeyCode key in boundActions[action].triggerKeyDown)
         {
             if (Input.GetKey(key))
                 return true;

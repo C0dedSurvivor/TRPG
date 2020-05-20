@@ -3,10 +3,12 @@
 public class DeceleratingScaleAnim : ScaleAnimBase
 {
     public DeceleratingScaleAnim(GameObject target, float speed, float uniformFinalScale, bool concurrent = false) :
-        base(target, speed, uniformFinalScale, concurrent) { }
+        base(target, speed, uniformFinalScale, concurrent)
+    { }
 
     public DeceleratingScaleAnim(GameObject target, float speed, Vector3 finalScale, bool concurrent = false) :
-        base(target, speed, finalScale, concurrent) { }
+        base(target, speed, finalScale, concurrent)
+    { }
 
     public override void StepAnimation()
     {

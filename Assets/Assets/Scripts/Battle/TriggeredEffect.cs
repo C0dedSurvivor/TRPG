@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using System.Collections.Generic;
 
 public class TriggeredEffect
 {
@@ -16,6 +14,10 @@ public class TriggeredEffect
             AddEffect(effect);
     }
 
+    /// <summary>
+    /// Adds an effect to be triggered by the given event
+    /// </summary>
+    /// <param name="effect">Effect to add</param>
     public void AddEffect(SkillPartBase effect)
     {
         effects.Add(effect);

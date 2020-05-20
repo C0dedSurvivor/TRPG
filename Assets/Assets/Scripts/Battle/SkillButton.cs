@@ -1,8 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 public class SkillButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
@@ -16,7 +13,7 @@ public class SkillButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     /// </summary>
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if(battle.selectedSpell != buttonID && battle.hoveredSpell != buttonID)
+        if (battle.selectedSpell != buttonID && battle.hoveredSpell != buttonID)
             battle.HoveringSpell(buttonID);
     }
 

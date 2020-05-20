@@ -1,6 +1,5 @@
-﻿
-public class HealingPart : SkillPartBase{
-    
+﻿public class HealingPart : SkillPartBase
+{
     //Healing value, affected by your strength
     public int healing;
     //Flat healing value

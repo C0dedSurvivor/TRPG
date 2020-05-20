@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -103,7 +101,7 @@ public class EquipInventory : GridInventoryGUI
         GameStorage.playerMasterList[GameStorage.activePlayerList[PauseGUI.playerID]].CheckHealthChange(previousHealth);
         //Updates the equipped item and stat display for the player
         GameObject.Find("GUI Controller").GetComponent<PauseGUI>().UpdatePlayerEquipped();
-        
+
         selectedItem = -1;
         equipButton.SetActive(false);
         discardButton.SetActive(false);
@@ -201,12 +199,12 @@ public class EquipInventory : GridInventoryGUI
         UpdateBaseInfo(children, name);
 
         //Removes the previous info texts
-        for(int i = 2; i < children.Length; i++)
+        for (int i = 2; i < children.Length; i++)
         {
             Destroy(itemInfo.transform.GetChild(i).gameObject);
         }
 
-        foreach(Stats stat in (Stats[])Enum.GetValues(typeof(Stats)))
+        foreach (Stats stat in (Stats[])Enum.GetValues(typeof(Stats)))
         {
             if (item.stats.ContainsKey(stat))
             {
@@ -232,7 +230,7 @@ public class EquipInventory : GridInventoryGUI
     private void UpdateComparison(EquippableBase equipped, string inInvName)
     {
         Text[] children = itemInfo.transform.GetComponentsInChildren<Text>();
-        
+
         UpdateBaseInfo(children, inInvName);
 
         EquippableBase inInv = ((EquippableBase)Registry.ItemRegistry[inInvName]);

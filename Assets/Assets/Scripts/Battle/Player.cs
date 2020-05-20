@@ -1,12 +1,12 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 
 public class Player : BattlePawnBase
 {
-	private int level;
-	private int exp;
-	/*
+    private int level;
+    private int exp;
+    /*
 	Stat growth types, determines per level gain: all growth types have a low, normal and high variants
 	Flat - same chance per level
 	Linear - chance per level increases by the same amount per level
@@ -14,10 +14,10 @@ public class Player : BattlePawnBase
 	S Curve - 
 	Reverse S Curve - 
 	*/
-	private string attackGrowthType = "TempString";
-	private string defenseGrowthType = "TempString";
-	private string mAttackGrowthType = "TempString";
-	private string mDefenseGrowthType = "TempString";
+    private string attackGrowthType = "TempString";
+    private string defenseGrowthType = "TempString";
+    private string mAttackGrowthType = "TempString";
+    private string mDefenseGrowthType = "TempString";
     private string healthGrowthType = "TempString";
 
     //Points used to unlock skills
@@ -41,7 +41,8 @@ public class Player : BattlePawnBase
     public Player(string path, string name = null) : base()
     {
         //Generates default player data if that player's file doesn't exist
-        if (!File.Exists(path)) {
+        if (!File.Exists(path))
+        {
             /*
              * This will be replaced with loading the stats from a template file based on the pawn name
              */
@@ -73,7 +74,7 @@ public class Player : BattlePawnBase
             foreach (int tree in treeList)
             {
                 skillTreeList.Add(tree, new Dictionary<int, SkillInfo>());
-                for(int skill = 0; skill < Registry.SpellTreeRegistry[tree].spells.Count; skill++)
+                for (int skill = 0; skill < Registry.SpellTreeRegistry[tree].spells.Count; skill++)
                 {
                     skillTreeList[tree].Add(skill, new SkillInfo());
                     if (Registry.SpellTreeRegistry[tree][skill].dependencies.Count == 0)
@@ -172,7 +173,7 @@ public class Player : BattlePawnBase
         file.Write(skillQuickList[2].x);
         file.Write(skillQuickList[2].y);
         file.Write(skillTreeList.Count);
-        foreach(int tree in skillTreeList.Keys)
+        foreach (int tree in skillTreeList.Keys)
         {
             file.Write(tree);
             file.Write(skillTreeList[tree].Count);
@@ -189,10 +190,11 @@ public class Player : BattlePawnBase
     /// <summary>
     /// Equips the new item, returning the old one so it can be returned to the inventory. 
     /// </summary>
-    public Equippable EquipItem(Equippable newEquippable, int slot) {
+    public Equippable EquipItem(Equippable newEquippable, int slot)
+    {
         Equippable item = equipment[slot];
         equipment[slot] = newEquippable;
-		return item;
+        return item;
     }
 
     /// <summary>
@@ -203,127 +205,143 @@ public class Player : BattlePawnBase
         return equipment[slot];
     }
 
-    public void GainExp(int e){
-		exp += e;
-		CheckForLevel();
-	}
-    
+    /// <summary>
+    /// Gains the specified amount of exp and checks to see if that causes a level up
+    /// </summary>
+    /// <param name="e">How much exp to get</param>
+    public void GainExp(int e)
+    {
+        exp += e;
+        CheckForLevel();
+    }
+
     /// <summary>
     /// Sees if you have enough EXP to level up and does the level up if so
     /// </summary>
-	private void CheckForLevel(){
-		if (exp > GetExpPerLevel ()) {
-			exp -= GetExpPerLevel ();
-			level++;
+    private void CheckForLevel()
+    {
+        if (exp > GetExpPerLevel())
+        {
+            exp -= GetExpPerLevel();
+            level++;
             skillPoints++;
 
-			float mod = 1.0f;
-			float equation = 0;
+            float mod = 1.0f;
+            float equation = 0;
 
-			//attack
-			if (attackGrowthType.Contains ("low"))
-				mod = 0.8f;
-			if (attackGrowthType.Contains ("high"))
-				mod = 1.2f;
+            //attack
+            if (attackGrowthType.Contains("low"))
+                mod = 0.8f;
+            if (attackGrowthType.Contains("high"))
+                mod = 1.2f;
 
-			if (attackGrowthType.Contains ("flat"))
-				equation = 35;
-			else if (attackGrowthType.Contains ("reverse linear"))
-				equation = 65 - level;
-			else if (attackGrowthType.Contains ("linear"))
-				equation = 25 + level;
-			else if (attackGrowthType.Contains ("reverse s curve")) {
-				equation = 45 - 20 * Mathf.Sin ((Mathf.PI * (level - 20)) / 40);
-			}
-			else if (attackGrowthType.Contains ("s curve")) {
-				equation = 45 + 20 * Mathf.Sin ((Mathf.PI * (level - 20)) / 40);
-			}
-			for(int i = 0; i < 3; i++)
-				if (Random.Range (0.0f, 100.0f) < equation * mod)
-					stats[Stats.Attack]++;
+            if (attackGrowthType.Contains("flat"))
+                equation = 35;
+            else if (attackGrowthType.Contains("reverse linear"))
+                equation = 65 - level;
+            else if (attackGrowthType.Contains("linear"))
+                equation = 25 + level;
+            else if (attackGrowthType.Contains("reverse s curve"))
+            {
+                equation = 45 - 20 * Mathf.Sin((Mathf.PI * (level - 20)) / 40);
+            }
+            else if (attackGrowthType.Contains("s curve"))
+            {
+                equation = 45 + 20 * Mathf.Sin((Mathf.PI * (level - 20)) / 40);
+            }
+            for (int i = 0; i < 3; i++)
+                if (Random.Range(0.0f, 100.0f) < equation * mod)
+                    stats[Stats.Attack]++;
 
-			//defense
-			if (defenseGrowthType.Contains ("low"))
-				mod = 0.8f;
-			else if (defenseGrowthType.Contains ("high"))
-				mod = 1.2f;
-			else
-				mod = 1.0f;
+            //defense
+            if (defenseGrowthType.Contains("low"))
+                mod = 0.8f;
+            else if (defenseGrowthType.Contains("high"))
+                mod = 1.2f;
+            else
+                mod = 1.0f;
 
-			if (defenseGrowthType.Contains ("flat"))
-				equation = 35;
-			else if (defenseGrowthType.Contains ("reverse linear"))
-				equation = 65 - level;
-			else if (defenseGrowthType.Contains ("linear"))
-				equation = 25 + level;
-			else if (defenseGrowthType.Contains ("reverse s curve")) {
-				equation = 45 - 20 * Mathf.Sin ((Mathf.PI * (level - 20)) / 40);
-			}
-			else if (defenseGrowthType.Contains ("s curve")) {
-				equation = 45 + 20 * Mathf.Sin ((Mathf.PI * (level - 20)) / 40);
-			}
-			for(int i = 0; i < 3; i++)
-				if (Random.Range (0.0f, 100.0f) < equation * mod)
+            if (defenseGrowthType.Contains("flat"))
+                equation = 35;
+            else if (defenseGrowthType.Contains("reverse linear"))
+                equation = 65 - level;
+            else if (defenseGrowthType.Contains("linear"))
+                equation = 25 + level;
+            else if (defenseGrowthType.Contains("reverse s curve"))
+            {
+                equation = 45 - 20 * Mathf.Sin((Mathf.PI * (level - 20)) / 40);
+            }
+            else if (defenseGrowthType.Contains("s curve"))
+            {
+                equation = 45 + 20 * Mathf.Sin((Mathf.PI * (level - 20)) / 40);
+            }
+            for (int i = 0; i < 3; i++)
+                if (Random.Range(0.0f, 100.0f) < equation * mod)
                     stats[Stats.Defense]++;
 
-			//magic attack
-			if (mAttackGrowthType.Contains ("low"))
-				mod = 0.8f;
-			else if (mAttackGrowthType.Contains ("high"))
-				mod = 1.2f;
-			else
-				mod = 1.0f;
+            //magic attack
+            if (mAttackGrowthType.Contains("low"))
+                mod = 0.8f;
+            else if (mAttackGrowthType.Contains("high"))
+                mod = 1.2f;
+            else
+                mod = 1.0f;
 
-			if (mAttackGrowthType.Contains ("flat"))
-				equation = 35;
-			else if (mAttackGrowthType.Contains ("reverse linear"))
-				equation = 65 - level;
-			else if (mAttackGrowthType.Contains ("linear"))
-				equation = 25 + level;
-			else if (mAttackGrowthType.Contains ("reverse s curve")) {
-				equation = 45 - 20 * Mathf.Sin ((Mathf.PI * (level - 20)) / 40);
-			}
-			else if (mAttackGrowthType.Contains ("s curve")) {
-				equation = 45 + 20 * Mathf.Sin ((Mathf.PI * (level - 20)) / 40);
-			}
-			for(int i = 0; i < 3; i++)
-				if (Random.Range (0.0f, 100.0f) < equation * mod)
+            if (mAttackGrowthType.Contains("flat"))
+                equation = 35;
+            else if (mAttackGrowthType.Contains("reverse linear"))
+                equation = 65 - level;
+            else if (mAttackGrowthType.Contains("linear"))
+                equation = 25 + level;
+            else if (mAttackGrowthType.Contains("reverse s curve"))
+            {
+                equation = 45 - 20 * Mathf.Sin((Mathf.PI * (level - 20)) / 40);
+            }
+            else if (mAttackGrowthType.Contains("s curve"))
+            {
+                equation = 45 + 20 * Mathf.Sin((Mathf.PI * (level - 20)) / 40);
+            }
+            for (int i = 0; i < 3; i++)
+                if (Random.Range(0.0f, 100.0f) < equation * mod)
                     stats[Stats.MagicAttack]++;
 
-			//magic defense
-			if (mDefenseGrowthType.Contains ("low"))
-				mod = 0.8f;
-			else if (mDefenseGrowthType.Contains ("high"))
-				mod = 1.2f;
-			else
-				mod = 1.0f;
+            //magic defense
+            if (mDefenseGrowthType.Contains("low"))
+                mod = 0.8f;
+            else if (mDefenseGrowthType.Contains("high"))
+                mod = 1.2f;
+            else
+                mod = 1.0f;
 
-			if (mDefenseGrowthType.Contains ("flat"))
-				equation = 35;
-			else if (mDefenseGrowthType.Contains ("reverse linear"))
-				equation = 65 - level;
-			else if (mDefenseGrowthType.Contains ("linear"))
-				equation = 25 + level;
-			else if (mDefenseGrowthType.Contains ("reverse s curve")) {
-				equation = 45 - 20 * Mathf.Sin ((Mathf.PI * (level - 20)) / 40);
-			}
-			else if (mDefenseGrowthType.Contains ("s curve")) {
-				equation = 45 + 20 * Mathf.Sin ((Mathf.PI * (level - 20)) / 40);
-			}
-			for(int i = 0; i < 3; i++)
-				if (Random.Range (0.0f, 100.0f) < equation * mod)
+            if (mDefenseGrowthType.Contains("flat"))
+                equation = 35;
+            else if (mDefenseGrowthType.Contains("reverse linear"))
+                equation = 65 - level;
+            else if (mDefenseGrowthType.Contains("linear"))
+                equation = 25 + level;
+            else if (mDefenseGrowthType.Contains("reverse s curve"))
+            {
+                equation = 45 - 20 * Mathf.Sin((Mathf.PI * (level - 20)) / 40);
+            }
+            else if (mDefenseGrowthType.Contains("s curve"))
+            {
+                equation = 45 + 20 * Mathf.Sin((Mathf.PI * (level - 20)) / 40);
+            }
+            for (int i = 0; i < 3; i++)
+                if (Random.Range(0.0f, 100.0f) < equation * mod)
                     stats[Stats.MagicDefense]++;
 
-			CheckForLevel();
-		}
-	}
-    
+            CheckForLevel();
+        }
+    }
+
     /// <summary>
     /// Gets how much EXP is needed to get to the next level
     /// </summary>
     /// <returns>The amount of EXP needed to level up</returns>
-	private int GetExpPerLevel(){
-		return -20 + level * 50;
+    private int GetExpPerLevel()
+    {
+        return -20 + level * 50;
     }
 
     public void EndOfMatch()
@@ -331,7 +349,7 @@ public class Player : BattlePawnBase
         tempStats = null;
         statusList.EndOfMatch();
     }
-    
+
     /// <summary>
     /// Unlocks a skill and subtracts the corresponding cost from the skill points total
     /// </summary>

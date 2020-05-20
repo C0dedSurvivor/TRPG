@@ -2,8 +2,9 @@
 
 class DeceleratingRotationAnim : RotationAnimBase
 {
-    public DeceleratingRotationAnim(GameObject target, float speed, Quaternion finalRot, bool concurrent = false) : 
-        base(target, speed, finalRot, concurrent) { }
+    public DeceleratingRotationAnim(GameObject target, float speed, Quaternion finalRot, bool concurrent = false) :
+        base(target, speed, finalRot, concurrent)
+    { }
 
     public override void StepAnimation()
     {

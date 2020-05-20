@@ -1,9 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
-public class InventoryItemButton : MonoBehaviour {
+public class InventoryItemButton : MonoBehaviour
+{
     //The index of the item this button represents
     public int item;
 

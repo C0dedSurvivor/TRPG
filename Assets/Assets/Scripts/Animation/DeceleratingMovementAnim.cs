@@ -2,8 +2,9 @@
 
 public class DeceleratingMovementAnim : MovementAnimBase
 {
-    public DeceleratingMovementAnim(GameObject target, float speed, Vector3 finalPos, bool concurrent = false) : 
-        base(target, speed, finalPos, concurrent) { }
+    public DeceleratingMovementAnim(GameObject target, float speed, Vector3 finalPos, bool concurrent = false) :
+        base(target, speed, finalPos, concurrent)
+    { }
 
     public override void StepAnimation()
     {

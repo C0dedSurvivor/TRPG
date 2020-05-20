@@ -12,6 +12,7 @@ public enum PlayerKeybinds
     MapMoveRight,
     MapJump,
     MapAdjustCameraDistance,
+    MapInteract,
     UIOpenPause,
     UIOpenTeamPage,
     UIOpenInventory,
@@ -34,6 +35,7 @@ class InputManager
         { PlayerKeybinds.MapMoveLeft, new ComplexKeybinding(null, new List<KeyCode>(){ KeyCode.A }) },
         { PlayerKeybinds.MapMoveRight, new ComplexKeybinding(null, new List<KeyCode>(){ KeyCode.D }) },
         { PlayerKeybinds.MapJump, new ComplexKeybinding(null, new List<KeyCode>(){ KeyCode.Space }) },
+        { PlayerKeybinds.MapInteract, new ComplexKeybinding(new List<KeyCode>(){ KeyCode.R }) },
         { PlayerKeybinds.MapAdjustCameraDistance, new ComplexKeybinding(null, new List<KeyCode>(){ KeyCode.LeftControl, KeyCode.RightControl }) },
         #endregion
         #region UI

@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// What directions a move event can force a pawn to move in
+/// </summary>
 public enum MoveDirection
 {
     Up,
@@ -7,6 +10,7 @@ public enum MoveDirection
     Down,
     Left,
     Random,
+    //If knockback from an effect
     FromCenter
 }
 

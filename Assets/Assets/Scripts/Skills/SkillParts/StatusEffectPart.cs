@@ -1,5 +1,5 @@
-﻿public class StatusEffectPart : SkillPartBase{
-
+﻿public class StatusEffectPart : SkillPartBase
+{
     public string status;
     //Whether this is removing or adding a status effect
     public bool remove = false;

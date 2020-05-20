@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-/// <summary>
+﻿/// <summary>
 /// Currently is just a way to store equippable items as a stored item
 /// Allows for equippables to have unique functionality as individual instances compared to the generic version
 /// </summary>

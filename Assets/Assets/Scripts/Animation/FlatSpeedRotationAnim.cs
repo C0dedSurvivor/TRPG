@@ -5,7 +5,7 @@ class FlatSpeedRotationAnim : RotationAnimBase
     private Quaternion initialRotation;
     private float percent = 0;
 
-    public FlatSpeedRotationAnim(GameObject target, float speed, Quaternion initialRot, Quaternion finalRot, bool concurrent = false) : 
+    public FlatSpeedRotationAnim(GameObject target, float speed, Quaternion initialRot, Quaternion finalRot, bool concurrent = false) :
         base(target, speed, finalRot, concurrent)
     {
         initialRotation = initialRot;

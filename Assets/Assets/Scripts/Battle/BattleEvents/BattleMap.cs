@@ -100,10 +100,10 @@ public class BattleMap : MonoBehaviour
         transform.position = new Vector3(xPos - 0.5f, 0.2f, yPos - 0.5f);
         gameObject.SetActive(true);
         TerrainData terrainData = map.terrainData;
-        
+
         float[,] sourceHeights = new float[terrainData.heightmapResolution, terrainData.heightmapResolution];
 
-        for(int x = 0; x < mapSizeX * tileSize; x++)
+        for (int x = 0; x < mapSizeX * tileSize; x++)
         {
             for (int y = 0; y < mapSizeY * tileSize; y++)
             {
@@ -112,7 +112,7 @@ public class BattleMap : MonoBehaviour
             }
         }
         map.terrainData.SetHeights(0, 0, sourceHeights);
-        
+
         currentVisuals = new TileColors[mapSizeX, mapSizeY];
 
         //Resets the initial battle visuals
@@ -278,18 +278,18 @@ public class BattleMap : MonoBehaviour
 
         //Update the line renderer
         LineRenderer path = moveMarker.GetComponent<LineRenderer>();
-        
+
         moveMarker.transform.position = new Vector3(
-            markerPos.x + battle.bottomLeft.x, 
+            markerPos.x + battle.bottomLeft.x,
             1 + GetHeightAtGlobalPos(new Vector3(markerPos.x + battle.bottomLeft.x, 0, markerPos.y + battle.bottomLeft.y)),
             markerPos.y + battle.bottomLeft.y
         );
 
         List<List<Vector3>> linePositions = GetPath(-moveDifference, markerPos, 0, !verticalFirst);
         List<Vector3> linePath = new List<Vector3>();
-        foreach(List<Vector3> pointList in linePositions)
+        foreach (List<Vector3> pointList in linePositions)
         {
-            foreach(Vector3 point in pointList)
+            foreach (Vector3 point in pointList)
             {
                 Vector3 scaledPathPos = point - new Vector3(markerPos.x, moveMarker.transform.position.y - 1, markerPos.y);
                 scaledPathPos.x *= 1.0f / moveMarker.transform.lossyScale.x;
@@ -350,7 +350,7 @@ public class BattleMap : MonoBehaviour
         }
         else
         {
-            for(int x = 0; x < Mathf.Abs(difference.x); x++)
+            for (int x = 0; x < Mathf.Abs(difference.x); x++)
             {
                 List<Vector3> positionList = new List<Vector3>();
                 for (float xSlice = x; xSlice <= x + 1 + subdivisionIncrement / 2; xSlice += subdivisionIncrement)

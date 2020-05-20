@@ -1,10 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 
-public class GameStorage : MonoBehaviour {
-
+public class GameStorage : MonoBehaviour
+{
     /*
      * 
      * Player Storage
@@ -37,6 +36,10 @@ public class GameStorage : MonoBehaviour {
     //Test wall
     public static GameObject testWall;
 
+    /// <summary>
+    /// ONLY FOR TESTING
+    /// Grabs testing map, fills registry, and loads a blank save
+    /// </summary>
     void Awake()
     {
         mapTerrain = GameObject.FindGameObjectWithTag("Ground").GetComponent<Terrain>();
@@ -46,30 +49,8 @@ public class GameStorage : MonoBehaviour {
         if (Registry.MovementRegistry.Count == 0)
         {
             Registry.FillRegistry();
-            FillStorage();
             LoadSaveData(-1);
         }
-    }
-
-    // Use this for initialization
-    public static void FillStorage()
-    {
-        Debug.Log("Initializing storage");
-
-        testWall = Resources.Load<GameObject>("Prefabs/Map/TestWall");
-
-        Inventory.LoadInventory(1000);
-        /*
-        //Instantiate the map and aEther maps with base values
-        for (int x = 0; x < mapXsize; x++)
-        {
-            for (int y = 0; y < mapYsize; y++)
-            {
-                if (map[x, y] == (int)BattleTiles.Impassable)
-                    Instantiate(testWall, new Vector3(x, 1, mapYsize - y - 1), Quaternion.Euler(0, 0, 0));
-            }
-        }
-        */
     }
 
     public static void LoadSaveData(int slot)
@@ -105,6 +86,9 @@ public class GameStorage : MonoBehaviour {
         map[6, 189] = 0;
         map[4, 195] = 0;
         map[5, 194] = 0;
+
+        //Loads inventory
+        Inventory.LoadInventory(slot);
     }
 
     /// <summary>
@@ -142,7 +126,7 @@ public class GameStorage : MonoBehaviour {
         }
         return bMap;
     }
-    
+
     /// <summary>
     /// Passes the correct aEther level information to the battlemap
     /// </summary>
@@ -207,13 +191,13 @@ public class GameStorage : MonoBehaviour {
     public static void SaveAll(int slot)
     {
         //Saves each pawn's stats and gear
-        foreach(Player p in playerMasterList)
+        foreach (Player p in playerMasterList)
         {
             p.SavePlayer(slot);
         }
         Inventory.SaveInventory(slot);
         //Saves any data not specifically in any other file
-        Stream outStream = File.OpenWrite("Assets/Resources/Storage/Slot"+ slot +"/Player.data");
+        Stream outStream = File.OpenWrite("Assets/Resources/Storage/Slot" + slot + "/Player.data");
         BinaryWriter file = new BinaryWriter(outStream);
         Transform player = GameObject.FindGameObjectWithTag("Player").transform;
         //Saves the player's position and rotation
@@ -235,7 +219,7 @@ public class GameStorage : MonoBehaviour {
         file.Write(playerCurrency);
         //Saves the current active player list (The ID's of the players set up to be used in battle)
         file.Write(activePlayerList.Count);
-        foreach(int i in activePlayerList)
+        foreach (int i in activePlayerList)
         {
             file.Write(i);
         }
@@ -261,7 +245,7 @@ public class GameStorage : MonoBehaviour {
             playerCurrency = file.ReadInt32();
             int activeAmount = file.ReadInt32();
             activePlayerList.Clear();
-            for(int i = 0; i < activeAmount; i++)
+            for (int i = 0; i < activeAmount; i++)
             {
                 activePlayerList.Add(file.ReadInt32());
             }
@@ -287,16 +271,21 @@ public class GameStorage : MonoBehaviour {
     {
         return Approximately(v1.x, v2.x) && Approximately(v1.y, v2.y) && Approximately(v1.z, v2.z);
     }
-    
+
     public static bool Approximately(Quaternion v1, Quaternion v2)
     {
         return Approximately(v1.eulerAngles, v2.eulerAngles);
     }
 
+    /// <summary>
+    /// Translates a stat enum value to a cleaner string version for textual output
+    /// </summary>
+    /// <param name="stat">Stat to translate</param>
+    /// <returns>String version of the stat. Any time an uppercase letter is encountered past the first a space is added for readability</returns>
     public static string StatToString(Stats stat)
     {
         string s = stat.ToString();
-        for(int i = 1; i < s.Length; i++)
+        for (int i = 1; i < s.Length; i++)
         {
             if (char.IsUpper(s[i]))
             {

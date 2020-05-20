@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class ExecuteEffectEvent : BattleEventBase
+﻿public class ExecuteEffectEvent : BattleEventBase
 {
     public SkillPartBase effect;
     public BattlePawnBase caster;

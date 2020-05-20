@@ -2,7 +2,9 @@
 
 public abstract class AnimBase
 {
+    //Whether ot not this animation is supposed to be run at the same time as other animations
     public bool concurrent;
+    //What object is being animated
     public GameObject mover;
 
     protected AnimBase(GameObject target, bool concurrent)
@@ -16,6 +18,10 @@ public abstract class AnimBase
     /// </summary>
     public virtual void StepAnimation() { }
 
+    /// <summary>
+    /// Returns if the object being animated has reached its ending state
+    /// </summary>
+    /// <returns></returns>
     public virtual bool IsDone() { return false; }
 
     /// <summary>

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-/// <summary>
+﻿/// <summary>
 /// Stores all of the unique, mutable data necessary to correctly active an effect during a battle
 /// </summary>
 public class TemporaryEffectData
@@ -11,7 +6,7 @@ public class TemporaryEffectData
     public int usesThisBattle = 0;
     public int turnsSinceLastUse = int.MaxValue;
     public int turnsActive = 0;
-    
+
     public int maxTimesThisBattle;
     public int turnCooldown;
     public int maxActiveTurns;
@@ -23,6 +18,9 @@ public class TemporaryEffectData
         this.maxActiveTurns = maxActiveTurns;
     }
 
+    /// <summary>
+    /// If this effect can still be triggered
+    /// </summary>
     public bool Activatable()
     {
         //If it has reached its limit of activations per battle
@@ -34,6 +32,9 @@ public class TemporaryEffectData
         return true;
     }
 
+    /// <summary>
+    /// Counts up how long it's been since the effect was last triggered at the start of each turn
+    /// </summary>
     public void StartOfTurn()
     {
         if (turnsSinceLastUse < int.MaxValue)

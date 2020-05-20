@@ -6,7 +6,6 @@
 /// </summary>
 public class BattleTrigger : MonoBehaviour, IMapInteractable
 {
-
     public Battle battleController;
 
     /// <summary>
@@ -16,7 +15,7 @@ public class BattleTrigger : MonoBehaviour, IMapInteractable
     public void PlayerInteraction(GameObject player)
     {
         //starts the battle at this object's position
-        battleController.StartBattle(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.z), 
+        battleController.StartBattle(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.z),
             player.GetComponent<MapPlayerScript>().mapCamera.transform);
         //Stops the player from moving, being rendered or interacted with
         player.SetActive(false);

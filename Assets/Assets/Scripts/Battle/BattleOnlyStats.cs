@@ -1,7 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// The cardinal directions a pawn can be facing
+/// </summary>
 public enum FacingDirection
 {
     North,
@@ -16,6 +18,7 @@ public enum FacingDirection
 /// </summary>
 public class BattleOnlyStats
 {
+    //A list of stat mods currently affecting the pawn
     public List<StatMod> modifierList;
 
     //Never do this again
@@ -26,10 +29,13 @@ public class BattleOnlyStats
     /// </summary>
     public List<Pair<TriggeredEffect, TemporaryEffectData>> temporaryEffectList;
 
+    //Whether the pawn has already moved this turn
     public bool moved;
 
+    //The position of the pawn in battle coordinates
     public Vector2Int position;
 
+    //What direction the pawn's model is facing in
     public FacingDirection facing;
 
     public BattleOnlyStats(int x, int y, BattlePawnBase pawn)
@@ -128,12 +134,22 @@ public class BattleOnlyStats
         return list;
     }
 
+    /// <summary>
+    /// Adds an effect that only exists for this battle with certain limitations on its triggering
+    /// </summary>
+    /// <param name="effect">The effect to add</param>
+    /// <param name="maxTimesThisBattle">How many times this effect can be triggered this battle</param>
+    /// <param name="turnCooldown">How long has to pass before the effect can be triggered again</param>
+    /// <param name="maxActiveTurns">After how many turns can this effect no longer be triggered</param>
     public void AddTemporaryTrigger(TriggeredEffect effect, int maxTimesThisBattle, int turnCooldown, int maxActiveTurns)
     {
         Debug.Log("Adding a temporary effect");
         temporaryEffectList.Add(new Pair<TriggeredEffect, TemporaryEffectData>(effect, new TemporaryEffectData(maxTimesThisBattle, turnCooldown, maxActiveTurns)));
     }
 
+    /// <summary>
+    /// Triggers changes that happen at the start of a new turn
+    /// </summary>
     public void StartOfTurn()
     {
         foreach (Pair<TriggeredEffect, TemporaryEffectData> effect in temporaryEffectList)

@@ -1,8 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 
 /// <summary>
 /// The base class for Gear-layout inventories
@@ -14,7 +11,7 @@ public class GearInventoryGUI : VisualInventoryBase
     private int firstActive = 0;
     //The index of the bottommost displayed item in the inventory
     private int lastActive;
-    
+
     /// <summary>
     /// Generates the initial view of the inventory with a given filter
     /// Filter: -1 = none, 1-6 signify equipment slot, 7 = all equippables, 8 = all battle items, 9 = all materials
@@ -37,7 +34,7 @@ public class GearInventoryGUI : VisualInventoryBase
         GetComponent<GearTurner>().buttonCount = itemList.Count;
         GetComponent<GearTurner>().offset = Mathf.Max(0, ((itemList.Count - 12) / 2.0f) * GetComponent<GearTurner>().buttonDifference);
         GetComponent<GearTurner>().frozen = itemList.Count == 0;
-        
+
         enabled = true;
     }
 
@@ -105,7 +102,7 @@ public class GearInventoryGUI : VisualInventoryBase
                 neededToMove = true;
             }
         }
-        if(neededToMove)
+        if (neededToMove)
             CheckForOutOfBounds();
     }
 

@@ -1,8 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 
 public class GridInventoryGUI : VisualInventoryBase
 {
@@ -45,7 +42,7 @@ public class GridInventoryGUI : VisualInventoryBase
     {
         selectedItem = item;
     }
-    
+
     /// <summary>
     /// Discards an item from the inventory and updates the visuals
     /// Only works for single item stacks

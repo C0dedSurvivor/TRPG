@@ -18,7 +18,7 @@ public enum EquipSlot
 public class EquippableBase : ItemBase
 {
     public Dictionary<Stats, int> stats = new Dictionary<Stats, int>();
-    
+
     public EquipSlot equipSlot;
 
     /// <summary>
@@ -33,6 +33,9 @@ public class EquippableBase : ItemBase
     /// </summary>
     public List<AddTriggerPart> effects = new List<AddTriggerPart>();
 
+    /// <summary>
+    /// Get the total raw stats given by equipping this item
+    /// </summary>
     public int TotalStats
     {
         get
@@ -53,6 +56,13 @@ public class EquippableBase : ItemBase
         this.stats = stats;
     }
 
+    /// <summary>
+    /// Adds a triggered effect to the effect list
+    /// </summary>
+    /// <param name="effect"></param>
+    /// <param name="maxTimesThisBattle"></param>
+    /// <param name="turnCooldown"></param>
+    /// <param name="maxActiveTurns"></param>
     public void AddEffect(TriggeredEffect effect, int maxTimesThisBattle = -1, int turnCooldown = -1, int maxActiveTurns = -1)
     {
         effects.Add(new AddTriggerPart(TargettingType.Self, effect, maxTimesThisBattle, turnCooldown, maxActiveTurns));

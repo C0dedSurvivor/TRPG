@@ -32,7 +32,7 @@ public class MapPlayerScript : MonoBehaviour
         if (!PauseGUI.paused && !battleController.IsBattling)
         {
             //Interacts with any objects directly in front of the player that have a PlayerInteraction method
-            if (Input.GetKeyDown("r"))
+            if (InputManager.KeybindTriggered(PlayerKeybinds.MapInteract))
             {
                 RaycastHit hit;
                 IMapInteractable interactable;

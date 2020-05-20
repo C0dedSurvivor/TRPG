@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
+﻿/// <summary>
+/// How a status effect gets removed
+/// </summary>
 public enum CountdownType
 {
     Turns,

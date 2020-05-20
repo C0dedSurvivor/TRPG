@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class Triple<T1, T2, T3>
+﻿public class Triple<T1, T2, T3>
 {
     public T1 First;
     public T2 Second;

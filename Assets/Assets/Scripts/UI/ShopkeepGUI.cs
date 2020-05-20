@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -210,7 +209,7 @@ public class ShopkeepGUI : GearInventoryGUI
             {
                 selected.Add(selectedItem);
             }
-            if(selected.Count == 1)
+            if (selected.Count == 1)
             {
                 amt.ClearOptions();
                 List<Dropdown.OptionData> options = new List<Dropdown.OptionData>();

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class StatusEffectList
@@ -47,7 +46,7 @@ public class StatusEffectList
         {
             inList.Second = Mathf.Max(inList.Second, limit);
         }
-        
+
     }
 
     /// <summary>
@@ -56,28 +55,31 @@ public class StatusEffectList
     /// <param name="status">Status effect to remove</param>
     public void Remove(string status)
     {
-        for(int i = 0; i < effectList.Count; i++)
+        for (int i = 0; i < effectList.Count; i++)
         {
             if (effectList[i].First == status)
                 effectList.RemoveAt(i);
         }
     }
 
+    /// <summary>
+    /// Called at the end of a turn to check if any effects need to be removed
+    /// </summary>
     public void EndOfTurn()
     {
-        for(int i = 0; i < effectList.Count; i++)
+        for (int i = 0; i < effectList.Count; i++)
         {
             if (Registry.StatusEffectRegistry[effectList[i].First].limit == CountdownType.Turns)
             {
                 effectList[i].Second--;
-                if(effectList[i].Second == 0)
+                if (effectList[i].Second == 0)
                 {
                     effectList.RemoveAt(i);
                     i--;
                 }
             }
             //If the effect has a chance to be removed at the end of the turn
-            if(Random.value < Registry.StatusEffectRegistry[effectList[i].First].endOfTurnRemoveChance)
+            if (Random.value < Registry.StatusEffectRegistry[effectList[i].First].endOfTurnRemoveChance)
             {
                 effectList.RemoveAt(i);
                 i--;
@@ -85,6 +87,9 @@ public class StatusEffectList
         }
     }
 
+    /// <summary>
+    /// Called at the end of a match to remove status effects that shouldn't persist through battles
+    /// </summary>
     public void EndOfMatch()
     {
         for (int i = 0; i < effectList.Count; i++)

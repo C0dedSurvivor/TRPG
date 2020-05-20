@@ -1,17 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// Stores a possible enemy move
 /// </summary>
 public class EnemyMove
 {
+    //Where the pawn would move to
     public Vector2Int movePosition;
+    //Where the pawn's attack target is
     public Vector2Int attackPosition;
+    //How valuable this movement would be to make
     public float priority;
+    //How valuable the reason this movement would be made is (attack someone, reposition, protect someone, etc, all have different values for this)
     public int reasonPriority;
 
     public EnemyMove(int x, int y, float priority, int reasonPriority)

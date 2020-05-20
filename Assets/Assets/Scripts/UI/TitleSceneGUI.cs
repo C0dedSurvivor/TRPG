@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class TitleSceneGUI : MonoBehaviour
 {
@@ -8,19 +6,24 @@ public class TitleSceneGUI : MonoBehaviour
     public GameObject optionsMenu;
     public GameObject saveSelect;
 
-    // Initializes all of the storages and registries
+    /// <summary>
+    /// Loads the information that doesn't care about save files
+    /// </summary>
     void Awake()
     {
         Registry.FillRegistry();
-        GameStorage.FillStorage();
     }
 
-    // Start is called before the first frame update
+    /// <summary>
+    /// Load in the save directory to check for any game saves
+    /// </summary>
     void Start()
     {
-        //Load in the save directory to check for any game saves
     }
 
+    /// <summary>
+    /// Shows the title screen
+    /// </summary>
     public void OpenTitleScreen()
     {
         titleScreen.SetActive(true);
@@ -28,6 +31,9 @@ public class TitleSceneGUI : MonoBehaviour
         saveSelect.SetActive(false);
     }
 
+    /// <summary>
+    /// Shows the save select menu
+    /// </summary>
     public void OpenSaveSelect()
     {
         titleScreen.SetActive(false);
@@ -35,6 +41,9 @@ public class TitleSceneGUI : MonoBehaviour
         saveSelect.SetActive(true);
     }
 
+    /// <summary>
+    /// Shows the options menu
+    /// </summary>
     public void OpenOptions()
     {
         titleScreen.SetActive(false);
@@ -42,6 +51,10 @@ public class TitleSceneGUI : MonoBehaviour
         saveSelect.SetActive(false);
     }
 
+    /// <summary>
+    /// Loads the data for a given save slot
+    /// </summary>
+    /// <param name="slot">Slot ID to load</param>
     public void LoadSave(int slot)
     {
         Inventory.LoadInventory(slot);

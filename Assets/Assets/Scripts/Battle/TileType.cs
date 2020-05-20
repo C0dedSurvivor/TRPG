@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
-
+﻿/// <summary>
+/// What events can trigger a tile effect
+/// </summary>
 public enum MoveTriggers
 {
     StartOfTurn,
@@ -16,13 +13,20 @@ public class TileType
 {
     public string name { get; set; }
     public string flavorText;
+    //If melee attacks can happen when this tile is between the attacker and target
     public bool blocksMeleeAttacks;
+    //If ranged attacks can happen when this tile is between the attacker and target
     public bool blocksRangedAttacks;
     public SkillPartBase startOfTurn;
     public SkillPartBase passOver;
     public SkillPartBase stopOnTile;
     public SkillPartBase endOfTurn;
 
+    /// <summary>
+    /// Gets what effect should trigger when an event happens on this tile type
+    /// </summary>
+    /// <param name="trigger">The event that happened on the tile</param>
+    /// <returns>The effect that triggers</returns>
     public ExecuteEffectEvent this[MoveTriggers trigger]
     {
         get
@@ -38,7 +42,7 @@ public class TileType
         }
     }
 
-    public TileType(string name, string flavorText, bool blocksMelee = false, bool blocksRanged = false, SkillPartBase startOfTurn = null, 
+    public TileType(string name, string flavorText, bool blocksMelee = false, bool blocksRanged = false, SkillPartBase startOfTurn = null,
         SkillPartBase passOver = null, SkillPartBase stopOnTile = null, SkillPartBase endOfTurn = null)
     {
         this.name = name;
@@ -51,6 +55,11 @@ public class TileType
         this.endOfTurn = endOfTurn;
     }
 
+    /// <summary>
+    /// Does this tile type have an effect that triggers at the given event happening
+    /// </summary>
+    /// <param name="trigger">The event that happens on the tile</param>
+    /// <returns>If an effect gets triggered</returns>
     public bool Contains(MoveTriggers trigger)
     {
         return trigger == MoveTriggers.StartOfTurn && startOfTurn != null ||

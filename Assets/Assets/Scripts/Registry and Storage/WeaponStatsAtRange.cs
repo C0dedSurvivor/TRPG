@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-/// <summary>
+﻿/// <summary>
 /// Some weapons have different stats or effects based on how far away the target is
 /// </summary>
 public class WeaponStatsAtRange
@@ -19,6 +14,7 @@ public class WeaponStatsAtRange
     public bool ranged;
     //Damage multiplier
     public float damageMult;
+
     public WeaponStatsAtRange(int distance, bool ranged, DamageType type, bool heals = false, float multiplier = 1)
     {
         atDistance = distance;

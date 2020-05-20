@@ -1,11 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-public class VisualInventoryBase : MonoBehaviour {
-
+public class VisualInventoryBase : MonoBehaviour
+{
     public GameObject itemBoxPrefab;
 
     protected List<StoredItem> itemList = new List<StoredItem>();
@@ -20,6 +19,9 @@ public class VisualInventoryBase : MonoBehaviour {
 
     protected bool enabled = false;
 
+    /// <summary>
+    /// Gets some objects necessary for mouse over events to trigger correctly
+    /// </summary>
     void Start()
     {
         //Fetch the Raycaster from the GameObject (the Canvas)
@@ -28,6 +30,9 @@ public class VisualInventoryBase : MonoBehaviour {
         m_EventSystem = GetComponentInParent<EventSystem>();
     }
 
+    /// <summary>
+    /// Checks for mouse over events
+    /// </summary>
     void Update()
     {
         if (enabled)
@@ -58,6 +63,9 @@ public class VisualInventoryBase : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Clears the visuals and hides the inventory
+    /// </summary>
     public virtual void Close()
     {
         for (int i = 0; i < itemBoxList.Count; i++)

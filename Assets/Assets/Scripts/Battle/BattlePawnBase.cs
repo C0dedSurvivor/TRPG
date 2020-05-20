@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public enum Stats
@@ -77,7 +76,7 @@ public class BattlePawnBase
     public BattleOnlyStats tempStats;
 
     //Player creator
-    public BattlePawnBase(){ }
+    public BattlePawnBase() { }
 
     //Enemy creator
     public BattlePawnBase(int x, int y, int mT, string name)
@@ -172,7 +171,7 @@ public class BattlePawnBase
             if (i != null)
             {
                 EquippableBase temp = ((EquippableBase)Registry.ItemRegistry[i.Name]);
-                if(temp.stats.ContainsKey(stat))
+                if (temp.stats.ContainsKey(stat))
                     value += temp.stats[stat];
             }
         }
@@ -230,7 +229,7 @@ public class BattlePawnBase
     /// <param name="damage">Amount of damage to deal</param>
     public int Damage(int damage)
     {
-        //Replace with removedByDamage
+        //TODO: Replace with removedByDamage
         //
         //
         //if (damage > 0 && statusList.Contains(string.Sleep))
@@ -240,6 +239,11 @@ public class BattlePawnBase
         return trueDamage;
     }
 
+    /// <summary>
+    /// How much damage a move actually does taking into account current health
+    /// </summary>
+    /// <param name="damage">The maximum amount of damage the pawn might take</param>
+    /// <returns>The amount of that damage the pawn can take without being put below 0 hp</returns>
     public int GetDamage(int damage)
     {
         return Mathf.Min(damage, cHealth);

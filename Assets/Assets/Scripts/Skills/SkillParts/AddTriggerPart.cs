@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class AddTriggerPart : SkillPartBase
+﻿public class AddTriggerPart : SkillPartBase
 {
     public TriggeredEffect effect;
     //The amount of times this effect can be triggered per battle

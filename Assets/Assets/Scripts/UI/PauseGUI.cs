@@ -283,7 +283,7 @@ public class PauseGUI : MonoBehaviour
     /// Exits the game
     /// 
     /// 
-    /// To Do: Add prompt to save when persistence works
+    /// TODO: Add prompt to save when persistence works
     /// 
     /// 
     /// </summary>

@@ -1,7 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
+﻿/// <summary>
+/// What is a valid target for a given skill
+/// </summary>
 public enum TargettingType
 {
     Self,
@@ -15,7 +14,8 @@ public enum TargettingType
     AllEnemies
 }
 
-public class SkillPartBase {
+public class SkillPartBase
+{
     public TargettingType targetType;
 
     //1-100
@@ -23,8 +23,9 @@ public class SkillPartBase {
 
     public SkillPartBase() { }
 
-    public SkillPartBase(TargettingType targetType, int chanceToProc) {
+    public SkillPartBase(TargettingType targetType, int chanceToProc)
+    {
         this.targetType = targetType;
         this.chanceToProc = chanceToProc;
-    } 
+    }
 }

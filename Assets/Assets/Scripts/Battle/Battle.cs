@@ -154,15 +154,12 @@ public class Battle : MonoBehaviour
         eventQueue.Insert(new MovementEvent(battleCamera, 4f, new Vector3(bottomLeft.x + (xSize / 2) - 0.5f, 25, bottomLeft.y + (ySize / 2) - 1.5f), true));
         eventQueue.Insert(new MovementEvent(battleCamera, 4f, battleCamera.transform.rotation, true));
         battleCamera.transform.SetPositionAndRotation(mainCamera.position, mainCamera.rotation);
-        eventQueue.Insert(new FunctionEvent(ToMatch));
         players = new List<Player>();
         //Moves the player and enemy models into their correct position and sets up default values
         for (int i = 0; i < GameStorage.activePlayerList.Count; i++)
         {
             players.Add(GameStorage.playerMasterList[GameStorage.activePlayerList[i]]);
             players[i].tempStats = new BattleOnlyStats(6 + 2 * i, 5 + i % 2, players[i]);
-            CheckEventTriggers(players[i], EffectTriggers.StartOfMatch);
-            CheckEventTriggers(players[i], EffectTriggers.StartOfTurn);
             participantModels.Add(players[i], Instantiate(PlayerBattleModelPrefab));
             participantModels[players[i]].transform.position = new Vector3(
                 players[i].tempStats.position.x + bottomLeft.x,
@@ -178,8 +175,6 @@ public class Battle : MonoBehaviour
         enemies.Add(new Enemy("Enemy4", 14, 11, 4, 5, 5));
         foreach (Enemy e in enemies)
         {
-            CheckEventTriggers(e, EffectTriggers.StartOfMatch);
-            CheckEventTriggers(e, EffectTriggers.StartOfTurn);
             participantModels.Add(e, Instantiate(EnemyBattleModelPrefab));
             participantModels[e].transform.position = new Vector3(
                 e.tempStats.position.x + bottomLeft.x,
@@ -188,6 +183,26 @@ public class Battle : MonoBehaviour
                 );
         }
         eventQueue.Insert(new FunctionEvent(ui.StartBattle));
+        eventQueue.Insert(new FunctionEvent(StartBattlePostUI));
+    }
+
+    /// <summary>
+    /// Performs any battle setup that needs to be done after the UI is put up
+    /// </summary>
+    public void StartBattlePostUI()
+    {
+        battleState = BattleState.Player;
+        updateTilesThisFrame = true;
+        foreach (Player p in players)
+        {
+            CheckEventTriggers(p, EffectTriggers.StartOfMatch);
+            CheckEventTriggers(p, EffectTriggers.StartOfTurn);
+        }
+        foreach (Enemy e in enemies)
+        {
+            CheckEventTriggers(e, EffectTriggers.StartOfMatch);
+            CheckEventTriggers(e, EffectTriggers.StartOfTurn);
+        }
     }
 
     /// <summary>
@@ -475,12 +490,9 @@ public class Battle : MonoBehaviour
         }
     }
 
-    private void ToMatch()
-    {
-        battleState = BattleState.Player;
-        updateTilesThisFrame = true;
-    }
-
+    /// <summary>
+    /// Switches the gamestate to player attack target selection
+    /// </summary>
     private void ToAttack()
     {
         battleState = BattleState.Attack;
@@ -1526,6 +1538,15 @@ public class Battle : MonoBehaviour
                             return;
                         }
                     }
+                }
+            }
+
+            //Triggers one or none of a list of weighted random options
+            else if(effect is ConnectedChancePart)
+            {
+                foreach(SkillPartBase subEffect in (effect as ConnectedChancePart).ChooseEffect())
+                {
+                    eventQueue.Insert(new ExecuteEffectEvent(subEffect, caster, target, fromSpell, valueFromPrevious));
                 }
             }
 

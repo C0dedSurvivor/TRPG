@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class FunctionEvent : BattleEventBase
+﻿public class FunctionEvent : BattleEventBase
 {
     public delegate void DefaultType();
 

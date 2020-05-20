@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class GearTurner : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
@@ -16,9 +14,12 @@ public class GearTurner : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
     private float fullRotation = 0;
     //Whether or not the gear can be turned
     public bool frozen = false;
-	
-	// Update is called once per frame
-	void Update () {
+
+    /// <summary>
+    /// Smoothly rotates the gear back into bounds if it was dragged too far
+    /// </summary>
+    void Update()
+    {
         if (!dragging)
         {
             float limiter = (buttonCount / 2.0f) * buttonDifference;
@@ -40,7 +41,7 @@ public class GearTurner : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
                 }
             }
         }
-	}
+    }
 
     /// <summary>
     /// When the player starts dragging the gear
@@ -59,7 +60,7 @@ public class GearTurner : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
         {
             transform.Rotate(new Vector3(0, 0, data.delta.y / 4.0f));
             fullRotation += data.delta.y / 4.0f;
-            if(GetComponent<GearInventoryGUI>() != null)
+            if (GetComponent<GearInventoryGUI>() != null)
             {
                 GetComponent<GearInventoryGUI>().CheckForOutOfBounds();
             }

@@ -1,14 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
+﻿using System.Collections.Generic;
 
 /*
  * Just ignore this
  * It has no reason to exist
  * It's only still here in case I need it later
  */
-
 
 public class GraphNode<T>
 {

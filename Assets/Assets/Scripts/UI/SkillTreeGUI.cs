@@ -1,15 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 /// <summary>
 /// Creates and controls the UI for unlocking and equipping skills
 /// </summary>
-public class SkillTreeGUI : MonoBehaviour {
-
+public class SkillTreeGUI : MonoBehaviour
+{
     public Button skillButtonPrefab;
     public Button skillTreeButtonPrefab;
     public Image lineRendererPrefab;
@@ -47,14 +46,20 @@ public class SkillTreeGUI : MonoBehaviour {
     //If this window cannot be traversed out of
     public bool holdingFocus => failedSkillUnlock.activeSelf || quickSkillSwitcher.activeSelf;
 
-    // Use this for initialization
-    void Start () {
+    /// <summary>
+    /// Gets objects necessary for mouse over interaction
+    /// </summary>
+    void Start()
+    {
         //Fetch the Raycaster from the GameObject (the Canvas)
         m_Raycaster = GetComponent<GraphicRaycaster>();
         //Fetch the Event System from the Scene
         m_EventSystem = GetComponent<EventSystem>();
     }
 
+    /// <summary>
+    /// Checks for mouse over interaction
+    /// </summary>
     void Update()
     {
         //Set up the new Pointer Event
@@ -102,7 +107,7 @@ public class SkillTreeGUI : MonoBehaviour {
         skillTreeButtons.Clear();
         //Generates buttons off of the new player's skill tree list
         int i = 0;
-        foreach(int tree in GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList.Keys)
+        foreach (int tree in GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList.Keys)
         {
             i++;
             Vector2 size = skillTreeButtonPrefab.GetComponent<RectTransform>().sizeDelta;
@@ -165,15 +170,16 @@ public class SkillTreeGUI : MonoBehaviour {
         float maxY = float.MinValue;
         int xPos = 0;
         Dictionary<int, Vector2> madeButtons = new Dictionary<int, Vector2>();
-        while (madeButtons.Count < Registry.SpellTreeRegistry[skillTree].spells.Count) {
+        while (madeButtons.Count < Registry.SpellTreeRegistry[skillTree].spells.Count)
+        {
             //Makes a list of all buttons that need to be generated this round
             List<int> halfMadeButtons = new List<int>();
             for (int i = 0; i < Registry.SpellTreeRegistry[skillTree].spells.Count; i++)
             {
-                if(!madeButtons.ContainsKey(i))
+                if (!madeButtons.ContainsKey(i))
                 {
                     bool valid = true;
-                    foreach(int j in Registry.SpellTreeRegistry[skillTree][i].dependencies)
+                    foreach (int j in Registry.SpellTreeRegistry[skillTree][i].dependencies)
                     {
                         if (!madeButtons.ContainsKey(j))
                             valid = false;
@@ -184,10 +190,10 @@ public class SkillTreeGUI : MonoBehaviour {
             }
             Vector2Int modifiedButtonSpacing = new Vector2Int(Mathf.RoundToInt(buttonXSpacing * Screen.width / 1920.0f), Mathf.RoundToInt(buttonYSpacing * Screen.height / 1080.0f));
             //Find where all of the buttons belong
-            foreach(int i in halfMadeButtons)
+            foreach (int i in halfMadeButtons)
             {
                 float pos = 0;
-                foreach(int j in Registry.SpellTreeRegistry[skillTree][i].dependencies)
+                foreach (int j in Registry.SpellTreeRegistry[skillTree][i].dependencies)
                 {
                     pos += madeButtons[j].y;
                 }
@@ -198,9 +204,9 @@ public class SkillTreeGUI : MonoBehaviour {
                 }
                 Debug.Log(pos);
                 //Normalizes the position of skills that have multiple dependencies
-                if(halfMadeButtons.Count % 2 == 0)
+                if (halfMadeButtons.Count % 2 == 0)
                 {
-                    if(pos % modifiedButtonSpacing.y != Mathf.Sign(pos) * (modifiedButtonSpacing.y / 2.0f) && pos % modifiedButtonSpacing.y != 0)
+                    if (pos % modifiedButtonSpacing.y != Mathf.Sign(pos) * (modifiedButtonSpacing.y / 2.0f) && pos % modifiedButtonSpacing.y != 0)
                     {
                         pos = modifiedButtonSpacing.y * (Mathf.RoundToInt(pos / modifiedButtonSpacing.y)) + Mathf.Sign(pos) * (modifiedButtonSpacing.y / 2.0f);
                     }
@@ -214,19 +220,20 @@ public class SkillTreeGUI : MonoBehaviour {
                 }
                 Debug.Log(pos);
                 float displacement = 0;
-                if(halfMadeButtons.Count % 2 == 0)
+                if (halfMadeButtons.Count % 2 == 0)
                     displacement = (modifiedButtonSpacing.y / 2.0f);
                 bool conflictionSwitch = true;
                 //Makes sure none of them overlap with another skill
                 while (madeButtons.ContainsValue(new Vector2(xPos, pos + displacement)))
                 {
-                    if(conflictionSwitch)
+                    if (conflictionSwitch)
                         displacement *= -1;
                     if (displacement >= 0)
-                         displacement += modifiedButtonSpacing.y;
-                    else if(!conflictionSwitch)
+                        displacement += modifiedButtonSpacing.y;
+                    else if (!conflictionSwitch)
                         displacement -= modifiedButtonSpacing.y;
-                    if (madeButtons.ContainsValue(new Vector2(xPos, pos + displacement))) {
+                    if (madeButtons.ContainsValue(new Vector2(xPos, pos + displacement)))
+                    {
                         int impactedSkill = -1;
                         foreach (int key in madeButtons.Keys)
                         {
@@ -261,7 +268,7 @@ public class SkillTreeGUI : MonoBehaviour {
         displayWindow.GetComponent<LayoutElement>().minHeight = maxY - minY;
         displayWindow.transform.localPosition = Vector2.zero;
         //Generates the visuals based on the previously generated data
-        foreach(int id in madeButtons.Keys)
+        foreach (int id in madeButtons.Keys)
         {
             skillButtons.Add(Instantiate(skillButtonPrefab, displayWindow.transform));
             skillButtons[skillButtons.Count - 1].transform.position = new Vector3(madeButtons[id].x - Mathf.Clamp(displayWindow.GetComponent<LayoutElement>().minWidth * 0.5f, 300, float.MaxValue) + 50, madeButtons[id].y, 0) + skillWindow.transform.position;
@@ -312,7 +319,7 @@ public class SkillTreeGUI : MonoBehaviour {
         Debug.Log("normalized: " + skillWindow.GetComponent<RectTransform>().sizeDelta);
         displayWindow.GetComponent<LayoutElement>().minWidth *= (2000.0f / Screen.width);
         displayWindow.GetComponent<LayoutElement>().minHeight *= (1200.0f / Screen.height);
-        if(displayWindow.GetComponent<LayoutElement>().minWidth > Screen.width)
+        if (displayWindow.GetComponent<LayoutElement>().minWidth > Screen.width)
             displayWindow.transform.localPosition = new Vector3(displayWindow.GetComponent<LayoutElement>().minWidth / 7.5f, 0, 0);
     }
 
@@ -331,7 +338,8 @@ public class SkillTreeGUI : MonoBehaviour {
         string type = "";
         if (Registry.SpellTreeRegistry[currentSkillTree][skill].partList.OfType<DamagePart>().FirstOrDefault() != null)
             type += "Damage";
-        if (Registry.SpellTreeRegistry[currentSkillTree][skill].partList.OfType<HealingPart>().FirstOrDefault() != null) {
+        if (Registry.SpellTreeRegistry[currentSkillTree][skill].partList.OfType<HealingPart>().FirstOrDefault() != null)
+        {
             if (type != "")
                 type += ", ";
             type += "Heal";
@@ -463,15 +471,15 @@ public class SkillTreeGUI : MonoBehaviour {
             }
         }
         //If it cannot be unlocked due to a skill it depends on not being unlocked, tells the player what skills are needed
-        if(needed.Count > 0)
+        if (needed.Count > 0)
         {
             unlockable = false;
             errorMessage += needed[0];
-            for(int i = 1; i < needed.Count - 1; i++)
+            for (int i = 1; i < needed.Count - 1; i++)
             {
                 errorMessage += ", " + needed[i];
             }
-            if(needed.Count > 1)
+            if (needed.Count > 1)
                 errorMessage += " and " + needed[needed.Count - 1];
         }
         errorMessage += " first.";
@@ -485,7 +493,7 @@ public class SkillTreeGUI : MonoBehaviour {
         if (unlockable)
         {
             GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].UnlockSkill(currentSkillTree, skillID);
-            foreach(Button b in skillButtons)
+            foreach (Button b in skillButtons)
             {
                 if (GameStorage.playerMasterList[GameStorage.activePlayerList[playerID]].skillTreeList[currentSkillTree][b.GetComponent<SkillUnlockButton>().skillID].unlocked)
                 {

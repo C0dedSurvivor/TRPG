@@ -1,5 +1,5 @@
-﻿public class DamagePart : SkillPartBase{
-
+﻿public class DamagePart : SkillPartBase
+{
     //Raw damage value, affected by enemy defense
     public int damage;
     //Flat damage value

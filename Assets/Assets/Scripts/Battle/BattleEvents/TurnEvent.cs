@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public struct TurnEvent : BattleEventBase
+﻿public struct TurnEvent : BattleEventBase
 {
     public BattlePawnBase turner;
     public FacingDirection direction;

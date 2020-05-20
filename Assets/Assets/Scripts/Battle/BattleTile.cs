@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-public class BattleTile
+﻿public class BattleTile
 {
     public int tileType;
 

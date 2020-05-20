@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 public class SpellTree
 {
@@ -10,6 +6,11 @@ public class SpellTree
 
     public List<Skill> spells;
 
+    /// <summary>
+    /// Gets or sets the skill at the given index of the tree
+    /// </summary>
+    /// <param name="i">Index of the skill</param>
+    /// <returns>Skill at the given index</returns>
     public Skill this[int i]
     {
         get
@@ -20,11 +21,6 @@ public class SpellTree
         {
             spells[i] = value;
         }
-    }
-
-    public void Add(Skill skill)
-    {
-        spells.Add(skill);
     }
 
     public SpellTree(string name, List<Skill> spells = null)

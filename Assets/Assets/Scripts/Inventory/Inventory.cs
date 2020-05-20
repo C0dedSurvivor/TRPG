@@ -1,9 +1,11 @@
-﻿using System.Collections;
+﻿using Newtonsoft.Json;
 using System.Collections.Generic;
-using UnityEngine;
 using System.IO;
-using Newtonsoft.Json;
+using UnityEngine;
 
+/// <summary>
+/// Ways to sort the inventory view
+/// </summary>
 public enum SortingType
 {
     //starts with what you have the most of, goes to what you have the least of
@@ -12,6 +14,9 @@ public enum SortingType
     AmountIncreasing,
 }
 
+/// <summary>
+/// Ways to filter the inventory view
+/// </summary>
 public enum Filter
 {
     All = -1,
@@ -33,6 +38,10 @@ public class Inventory
 
     public static SortingType sortingType = SortingType.AmountDecreasing;
 
+    /// <summary>
+    /// Loads the inventory from a save file if it exists, otherwise populates the starting inventory
+    /// </summary>
+    /// <param name="slot">The ID of the save slot</param>
     public static void LoadInventory(int slot)
     {
         if (File.Exists("Assets/Resources/Storage/Slot" + slot + "/Inventory.data"))
@@ -178,34 +187,34 @@ public class Inventory
     /// <returns>Returns how many of the item were successfully added to the inventory</returns>
     public static int AddItem(string itemName, int amount)
     {
-        
-            ItemBase item = Registry.ItemRegistry[itemName];
-            foreach (StoredItem stored in itemList)
+
+        ItemBase item = Registry.ItemRegistry[itemName];
+        foreach (StoredItem stored in itemList)
+        {
+            if (stored.Name == itemName)
             {
-                if (stored.Name == itemName)
+                if (stored.amount + amount >= item.MaxStack)
                 {
-                    if (stored.amount + amount >= item.MaxStack)
-                    {
-                        int amountAccepted = amount - (stored.amount + amount - item.MaxStack);
-                        stored.amount = item.MaxStack;
-                        return amountAccepted;
-                    }
-                    else
-                    {
-                        stored.amount += amount;
-                        return amount;
-                    }
+                    int amountAccepted = amount - (stored.amount + amount - item.MaxStack);
+                    stored.amount = item.MaxStack;
+                    return amountAccepted;
+                }
+                else
+                {
+                    stored.amount += amount;
+                    return amount;
                 }
             }
-            //if it doesn't already exist
-            itemList.Add(new StoredItem(itemName, Mathf.Min(item.MaxStack, amount)));
-            return Mathf.Min(item.MaxStack, amount);
+        }
+        //if it doesn't already exist
+        itemList.Add(new StoredItem(itemName, Mathf.Min(item.MaxStack, amount)));
+        return Mathf.Min(item.MaxStack, amount);
     }
 
     public static int AddItem(Equippable equippable)
     {
-            itemList.Add(equippable);
-            return 1;
+        itemList.Add(equippable);
+        return 1;
     }
 
     /// <summary>
@@ -239,7 +248,8 @@ public class Inventory
     /// <returns>Amount of that item that exist in the inventory</returns>
     public static int GetItemAmount(string itemName)
     {
-        if (Registry.ItemRegistry[itemName] is EquippableBase) {
+        if (Registry.ItemRegistry[itemName] is EquippableBase)
+        {
             int amt = 0;
             foreach (StoredItem s in itemList)
             {

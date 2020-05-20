@@ -3,7 +3,6 @@ using UnityEngine;
 
 public class MovementEvent : BattleEventBase
 {
-
     public AnimBase animation;
     public bool forced;
 

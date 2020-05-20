@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class BattleUI : MonoBehaviour
@@ -31,19 +29,28 @@ public class BattleUI : MonoBehaviour
 
     public Text littleInfoSys;
 
+    /// <summary>
+    /// Hides the battle UI on startup
+    /// </summary>
     void Start()
     {
         UIParent.SetActive(false);
         littleInfoSys.text = "";
     }
 
+    /// <summary>
+    /// Shows the battle UI when the battle starts
+    /// </summary>
     public void StartBattle()
     {
         UIParent.SetActive(true);
         UpdateSelectedUnit();
     }
 
-    // Update is called once per frame
+    /// <summary>
+    /// Determines whether certain buttons are active or inactive
+    /// This should only be for buttons where whether they are shown can be changed due to too many things for a normal function call to be feasible
+    /// </summary>
     void Update()
     {
         swap.SetActive(battleController.canSwap);
@@ -57,6 +64,9 @@ public class BattleUI : MonoBehaviour
         denyAttack.SetActive(Battle.battleState == BattleState.Attack);
     }
 
+    /// <summary>
+    /// Updates the visuals shown based on what units are selected on the field
+    /// </summary>
     public void UpdateSelectedUnit()
     {
         //If a player is selected
@@ -180,6 +190,9 @@ public class BattleUI : MonoBehaviour
         statDisplays[7].text = "Health: " + pawn.cHealth + "/" + pawn.GetEffectiveStat(Stats.MaxHealth);
     }
 
+    /// <summary>
+    /// Hides the battle UI at the end of a battle
+    /// </summary>
     public void EndOfBattle()
     {
         UIParent.SetActive(false);

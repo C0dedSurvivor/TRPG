@@ -14,7 +14,7 @@ class ComplexKeybinding
 
     public ComplexKeybinding(List<KeyCode> triggerKeyPressed = null, List<KeyCode> triggerKeyDown = null, List<KeyCode> mustHaveUp = null, List<KeyCode> mustHaveDown = null)
     {
-        if(triggerKeyPressed != null)
+        if (triggerKeyPressed != null)
             this.triggerKeyPressed = triggerKeyPressed;
         if (triggerKeyDown != null)
             this.triggerKeyDown = triggerKeyDown;

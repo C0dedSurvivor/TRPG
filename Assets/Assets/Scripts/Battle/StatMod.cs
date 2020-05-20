@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-public class StatMod
+﻿public class StatMod
 {
     public Stats affectedStat;
     public int flatChange;
@@ -18,6 +13,9 @@ public class StatMod
         duration = dur;
     }
 
+    /// <summary>
+    /// Called at the end of a turn
+    /// </summary>
     public void CountDown()
     {
         duration--;

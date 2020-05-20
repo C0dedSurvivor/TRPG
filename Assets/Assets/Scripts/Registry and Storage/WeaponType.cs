@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class WeaponType
@@ -10,6 +7,7 @@ public class WeaponType
     //List of special effects acivated at certain ranges
     public List<WeaponStatsAtRange> ranges;
     public List<WeaponStatsAtRange> diagonalRanges;
+
     public WeaponType(string n)
     {
         name = n;
@@ -17,6 +15,11 @@ public class WeaponType
         diagonalRanges = new List<WeaponStatsAtRange>();
     }
 
+    /// <summary>
+    /// Gets the stats the weapon gives a given range from the attacker
+    /// </summary>
+    /// <param name="dist">The distance from the attacker to the target</param>
+    /// <returns>The weapon stats at the given range or null if the weapon can't attack there</returns>
     public WeaponStatsAtRange GetStatsAtRange(Vector2Int dist)
     {
         int trueDistance = Mathf.Max(Mathf.Abs(dist.x), Mathf.Abs(dist.y));

@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-public class Skill {
+public class Skill
+{
     public string name;
-    
+
     public TargettingType targetType;
 
     public int aEtherCost;
@@ -22,7 +21,7 @@ public class Skill {
     public List<int> dependencies = new List<int>();
     //List of skill parts in order of execution
     public List<SkillPartBase> partList = new List<SkillPartBase>();
-    
+
     public string flavorText;
 
     public Skill(string name, TargettingType target, int cost, int targetRange, int xAOE, int yAOE, int unlockCost, int unlockLvl, string flavorText = "")
@@ -36,31 +35,5 @@ public class Skill {
         this.unlockCost = unlockCost;
         unlockLevel = unlockLvl;
         this.flavorText = flavorText;
-    }
-
-    //Adds the ID of a skill that needs to be unlocked before this one becomes unlockable
-    public void AddDependency(int id)
-    {
-        dependencies.Add(id);
-    }
-
-    public void AddDamagePart(TargettingType target, DamageType damageType, int damage, int flatDamage, int percentMaxHealth, int percentCurrentHealth)
-    {
-        partList.Add(new DamagePart(target, damageType, damage, flatDamage, percentMaxHealth, percentCurrentHealth));
-    }
-
-    public void AddHealPart(TargettingType target, int healing, int flatHealing, int percentMaxHealth, int percentCurrentHealth)
-    {
-        partList.Add(new HealingPart(target, healing, flatHealing, percentMaxHealth, percentCurrentHealth));
-    }
-
-    public void AddStatPart(TargettingType target, Stats affectedStat, int flat, float multiplier, int duration, int chance = 100)
-    {
-        partList.Add(new StatChangePart(target, affectedStat, flat, multiplier, duration, chance));
-    }
-
-    public void AddStatusPart(TargettingType target, string status, bool remove, int chance = 100)
-    {
-        partList.Add(new StatusEffectPart(target, status, remove, chance));
     }
 }

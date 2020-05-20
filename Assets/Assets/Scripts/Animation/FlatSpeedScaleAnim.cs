@@ -5,13 +5,13 @@ public class FlatSpeedScaleAnim : ScaleAnimBase
     public Vector3 initialScale;
     private float percent = 0;
 
-    public FlatSpeedScaleAnim(GameObject target, float speed, Vector3 initialScale, float uniformFinalScale, bool concurrent = false) : 
+    public FlatSpeedScaleAnim(GameObject target, float speed, Vector3 initialScale, float uniformFinalScale, bool concurrent = false) :
         base(target, speed, uniformFinalScale, concurrent)
     {
         this.initialScale = initialScale;
     }
 
-    public FlatSpeedScaleAnim(GameObject target, float speed, Vector3 initialScale, Vector3 finalScale, bool concurrent = false) : 
+    public FlatSpeedScaleAnim(GameObject target, float speed, Vector3 initialScale, Vector3 finalScale, bool concurrent = false) :
         base(target, speed, finalScale, concurrent)
     {
         this.initialScale = initialScale;

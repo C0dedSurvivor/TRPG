@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PauseInventory : GearInventoryGUI {
+public class PauseInventory : GearInventoryGUI
+{
     //How this inventory should be sorted
     public Dropdown sorting;
     //How this inventory is filtered

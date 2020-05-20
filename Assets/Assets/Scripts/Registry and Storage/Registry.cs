@@ -30,6 +30,9 @@ public class Registry
     //Enemy template definitions
     public static Dictionary<string, EnemyType> EnemyDefinitionRegistry = new Dictionary<string, EnemyType>();
 
+    /// <summary>
+    /// Loads in the registry values from the path given in StorageDirectory
+    /// </summary>
     public static void FillRegistry()
     {
         using (StreamReader reader = new StreamReader(StorageDirectory.DefintionsPath))

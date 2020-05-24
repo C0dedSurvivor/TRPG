@@ -56,7 +56,7 @@ public class BattleUI : MonoBehaviour
         swap.SetActive(battleController.canSwap);
 
         //If a player has a movement spot selected
-        confirmMove.SetActive(battleController.selectedMoveSpot != new Vector2Int(-1, -1));
+        confirmMove.SetActive(battleController.selectedMovement != null);
 
         endPlayerTurn.SetActive(Battle.battleState == BattleState.Player);
 

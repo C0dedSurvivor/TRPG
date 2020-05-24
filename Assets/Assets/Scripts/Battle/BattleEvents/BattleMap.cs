@@ -269,12 +269,12 @@ public class BattleMap : MonoBehaviour
     /// <summary>
     /// Shows the move marker with a line going from it to the BattlePawn along the path the BattlePawn would take
     /// </summary>
-    /// <param name="moveDifference">The path lengths to follow</param>
-    /// <param name="markerPos">The ending position in battle coordinates (Where the marker is)</param>
-    /// <param name="verticalFirst">Whether the path should do vertical or horizontal first</param>
-    public void ShowMoveMarker(Vector2Int moveDifference, Vector2Int markerPos, bool verticalFirst)
+    /// <param name="flatPath">The path taken in battle coords</param>
+    public void ShowMoveMarker(List<Vector2Int> flatPath)
     {
         moveMarker.SetActive(true);
+
+        Vector2Int markerPos = flatPath[flatPath.Count - 1];
 
         //Update the line renderer
         LineRenderer path = moveMarker.GetComponent<LineRenderer>();
@@ -285,7 +285,9 @@ public class BattleMap : MonoBehaviour
             markerPos.y + battle.bottomLeft.y
         );
 
-        List<List<Vector3>> linePositions = GetPath(-moveDifference, markerPos, 0, !verticalFirst);
+        List<Vector2Int> pathFromMarkerToPawn = flatPath.GetRange(0, flatPath.Count);
+        pathFromMarkerToPawn.Reverse();
+        List<List<Vector3>> linePositions = GetPath(pathFromMarkerToPawn, 0);
         List<Vector3> linePath = new List<Vector3>();
         foreach (List<Vector3> pointList in linePositions)
         {
@@ -311,66 +313,31 @@ public class BattleMap : MonoBehaviour
     {
         return map.SampleHeight(pos);
     }
-
+    
     /// <summary>
     /// Generates a path from a position following an offset
     /// </summary>
-    /// <param name="difference">The path lengths to follow</param>
-    /// <param name="startingPos">The starting position in battle coordinates</param>
+    /// <param name="flatPath">The path taken in battle coords</param>
     /// <param name="verticalOffset">The initial vertical offset of the object following the path</param>
-    /// <param name="verticalFirst">Whether the path should do vertical or horizontal first</param>
-    /// <returns></returns>
-    public List<List<Vector3>> GetPath(Vector2Int difference, Vector2Int startingPos, float verticalOffset, bool verticalFirst)
+    /// <returns>The path with correct heights split into 1 tile long lists</returns>
+    public List<List<Vector3>> GetPath(List<Vector2Int> flatPath, float verticalOffset)
     {
         List<List<Vector3>> movementList = new List<List<Vector3>>();
 
-        if (verticalFirst)
+        for (int i = 0; i < flatPath.Count - 1; i++)
         {
-            for (int y = 0; y < Mathf.Abs(difference.y); y++)
+            List<Vector3> positionList = new List<Vector3>();
+            Vector2 sliceDif = flatPath[i + 1] - flatPath[i];
+            for (float subslice = 0; subslice <= 1 + subdivisionIncrement / 2; subslice += subdivisionIncrement)
             {
-                List<Vector3> positionList = new List<Vector3>();
-                for (float ySlice = y; ySlice <= y + 1 + subdivisionIncrement / 2; ySlice += subdivisionIncrement)
-                {
-                    float zPos = ySlice * Mathf.Sign(difference.y) + startingPos.y;
-                    positionList.Add(new Vector3(startingPos.x, verticalOffset + GetHeightAtGlobalPos(new Vector3(startingPos.x + transform.position.x + 0.5f, 0, transform.position.z + zPos + 0.5f)), zPos));
-                }
-                movementList.Add(positionList);
+                Vector2 newBattlePos = flatPath[i] + sliceDif * subslice;
+                positionList.Add(new Vector3(
+                    newBattlePos.x, 
+                    verticalOffset + GetHeightAtGlobalPos(new Vector3(newBattlePos.x + transform.position.x + 0.5f, 0, newBattlePos.y + transform.position.z + 0.5f)),
+                    newBattlePos.y
+                    ));
             }
-            for (int x = 0; x < Mathf.Abs(difference.x); x++)
-            {
-                List<Vector3> positionList = new List<Vector3>();
-                float zPos = difference.y + startingPos.y;
-                for (float xSlice = x; xSlice <= x + 1 + subdivisionIncrement / 2; xSlice += subdivisionIncrement)
-                {
-                    float xPos = xSlice * Mathf.Sign(difference.x) + startingPos.x;
-                    positionList.Add(new Vector3(xPos, verticalOffset + GetHeightAtGlobalPos(new Vector3(xPos + transform.position.x + 0.5f, 0, transform.position.z + zPos + 0.5f)), zPos));
-                }
-                movementList.Add(positionList);
-            }
-        }
-        else
-        {
-            for (int x = 0; x < Mathf.Abs(difference.x); x++)
-            {
-                List<Vector3> positionList = new List<Vector3>();
-                for (float xSlice = x; xSlice <= x + 1 + subdivisionIncrement / 2; xSlice += subdivisionIncrement)
-                {
-                    float xPos = xSlice * Mathf.Sign(difference.x) + startingPos.x;
-                    positionList.Add(new Vector3(xPos, verticalOffset + GetHeightAtGlobalPos(new Vector3(xPos + transform.position.x + 0.5f, 0, transform.position.z + startingPos.y + 0.5f)), startingPos.y));
-                }
-                movementList.Add(positionList);
-            }
-            for (int y = 0; y < Mathf.Abs(difference.y); y++)
-            {
-                List<Vector3> positionList = new List<Vector3>();
-                float xPos = difference.x + startingPos.x;
-                for (float ySlice = y; ySlice <= y + 1 + subdivisionIncrement / 2; ySlice += subdivisionIncrement)
-                {
-                    float zPos = ySlice * Mathf.Sign(difference.y) + startingPos.y;
-                    positionList.Add(new Vector3(xPos, verticalOffset + GetHeightAtGlobalPos(new Vector3(xPos + transform.position.x + 0.5f, 0, transform.position.z + zPos + 0.5f)), zPos));
-                }
-                movementList.Add(positionList);
-            }
+            movementList.Add(positionList);
         }
 
         return movementList;

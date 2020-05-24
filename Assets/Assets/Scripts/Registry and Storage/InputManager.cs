@@ -19,7 +19,8 @@ public enum PlayerKeybinds
     UIConfirm,
     UIBack,
     UIContinueText,
-    UISkipText
+    UISkipText,
+    BattleChangeMovePath
 }
 
 class InputManager
@@ -48,6 +49,7 @@ class InputManager
         { PlayerKeybinds.UISkipText, new ComplexKeybinding(new List<KeyCode>(){ KeyCode.Return }) },
         #endregion
         #region Battle
+        { PlayerKeybinds.BattleChangeMovePath, new ComplexKeybinding(new List<KeyCode>(){ KeyCode.Tab }) },
         #endregion
     };
 

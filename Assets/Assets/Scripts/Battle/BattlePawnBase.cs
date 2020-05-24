@@ -203,15 +203,6 @@ public class BattlePawnBase
     }
 
     /// <summary>
-    /// Returns true if sent value matches the code of a tile type this participant can move over
-    /// </summary>
-    /// <param name="tileValue">Tile type to check for</param>
-    public bool ValidMoveTile(int tileValue)
-    {
-        return Registry.MovementRegistry[moveType].passableTiles.ContainsKey(tileValue);
-    }
-
-    /// <summary>
     /// Heals the pawn, making sure it isn't healed past its max health
     /// </summary>
     /// <param name="healAmount">Max amount of health to gain</param>

@@ -69,23 +69,6 @@ public class Registry
             foreach (EnemyType item in dataDump.EnemyDefs) { EnemyDefinitionRegistry.Add(item.name, item); }
         }
 
-        //Adds all the different movement types
-        MovementRegistry.Add(new MovementType("Tank", new Dictionary<int, bool>() { {1, false }, {2, true },
-            { 4, false }, {8, false }, { 7, false }, {10, false },
-            { 9, false }, {6, false } }, 1));
-        MovementRegistry.Add(new MovementType("Average", new Dictionary<int, bool>() { {1, false }, {2, true },
-            { 4, false }, {8, false }, { 7, false }, {10, false },
-            { 9, false }, {6, false } }, 2));
-        MovementRegistry.Add(new MovementType("Horse calvalry", new Dictionary<int, bool>() { {1, false }, {2, true },
-            { 4, false }, {8, false }, { 7, false }, {10, false },
-            { 9, false }, {6, false } }, 3));
-        MovementRegistry.Add(new MovementType("Flying calvalry", new Dictionary<int, bool>() { {1, false }, {2, false },
-            { 4, false }, {8, false }, { 7, false }, {10, false },
-            { 9, false }, {6, false }, {3, false } }, 3));
-        MovementRegistry.Add(new MovementType("Water walker", new Dictionary<int, bool>() { {1, false }, {2, true },
-            { 4, false }, {8, false }, { 7, false }, {10, false },
-            { 9, false }, {6, false }, {3, false } }, 2));
-
         //Adds all the effects
         StatusEffectRegistry.Add("Sleep", new StatusEffectDefinition("Sleep", CountdownType.None, false, true, 0.25f));
         StatusEffectRegistry.Add("Paralyze", new StatusEffectDefinition("Paralyze", CountdownType.None, true, true));

@@ -2,18 +2,17 @@
 
 public class MovementType
 {
-    public string name;
+    public string name { get; set; }
     /// <summary>
-    /// For each passable tile, say if it is limited movement.
-    /// Limited movement means you cannot move into and over a tile of that type in the same move.
+    /// The IDs of tile types this movement type can go over, along with the restrictions of doing such
     /// </summary>
-    public Dictionary<int, bool> passableTiles;
+    public Dictionary<int, MovementTypeTileInfo> tileTypeInfo;
     public int moveSpeed;
 
-    public MovementType(string name, Dictionary<int, bool> passableTiles, int moveSpeed)
+    public MovementType(string name, Dictionary<int, MovementTypeTileInfo> tileTypeInfo, int moveSpeed)
     {
         this.name = name;
-        this.passableTiles = passableTiles;
+        this.tileTypeInfo = tileTypeInfo;
         this.moveSpeed = moveSpeed;
     }
 }

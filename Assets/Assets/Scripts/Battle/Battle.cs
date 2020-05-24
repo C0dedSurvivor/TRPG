@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -91,7 +92,7 @@ public class Battle : MonoBehaviour
     public int hoveredSpell = -1;
     public int selectedSpell = -1;
     private int turn = 1;
-    public Vector2Int selectedMoveSpot = new Vector2Int(-1, -1);
+    public PlayerMovePathSet selectedMovement = null;
     private Vector2Int spellCastPosition = new Vector2Int(-1, -1);
     //If the current spell cast position is on a valid target
     public bool skillLegitTarget = false;
@@ -319,6 +320,12 @@ public class Battle : MonoBehaviour
                         break;
                     case BattleState.Player:
                     case BattleState.Attack:
+                        //If the player wants to switch which path their move will take
+                        if (selectedMovement != null && InputManager.KeybindTriggered(PlayerKeybinds.BattleChangeMovePath))
+                        {
+                            selectedMovement.NextPath();
+                            graphicalBattleMap.ShowMoveMarker(selectedMovement.GetPath());
+                        }
                         //Shows whether the selected spell can be cast where the cursor is and what its range is
                         if (selectedSpell != -1)
                         {
@@ -381,9 +388,8 @@ public class Battle : MonoBehaviour
                     //If player is trying to move a pawn
                     if (battleMap[pos.x, pos.y].playerMoveRange && !players[selectedPlayer].tempStats.moved)
                     {
-                        selectedMoveSpot.Set(pos.x, pos.y);
-                        Vector2Int moveDifference = pos - players[selectedPlayer].tempStats.position;
-                        graphicalBattleMap.ShowMoveMarker(moveDifference, pos, CanMoveYFirst(players[selectedPlayer], moveDifference));
+                        selectedMovement = GetPathsFromPawnToTile(players[selectedPlayer], pos);
+                        graphicalBattleMap.ShowMoveMarker(selectedMovement.GetPath());
                         actionTaken = true;
                     }
                     break;
@@ -396,7 +402,7 @@ public class Battle : MonoBehaviour
                     selectedEnemy = EnemyAtPos(pos.x, pos.y);
                     spellCastPosition = new Vector2Int(pos.x, pos.y);
                     //Generates the choice menu
-                    if (selectedMoveSpot.x != -1)
+                    if (selectedMovement != null)
                         skillCastConfirmMenu.GetComponentInChildren<Text>().text = "You have a move selected. Move and cast?";
                     else
                         skillCastConfirmMenu.GetComponentInChildren<Text>().text = "Are you sure you want to cast there?";
@@ -410,7 +416,7 @@ public class Battle : MonoBehaviour
                 if (battleState != BattleState.Attack)
                 {
                     selectedPlayer = PlayerAtPos(pos.x, pos.y);
-                    selectedMoveSpot = new Vector2Int(-1, -1);
+                    selectedMovement = null; ;
                     graphicalBattleMap.HideMoveMarker();
                     selectedSpell = -1;
                 }
@@ -482,7 +488,7 @@ public class Battle : MonoBehaviour
         if (canSwap)
         {
             battleState = (battleState == BattleState.Swap ? BattleState.Player : BattleState.Swap);
-            selectedMoveSpot = new Vector2Int(-1, -1);
+            selectedMovement = null; ;
             selectedPlayer = -1;
             graphicalBattleMap.HideMoveMarker();
             updateTilesThisFrame = true;
@@ -506,21 +512,16 @@ public class Battle : MonoBehaviour
     /// </summary>
     public void ConfirmPlayerMove()
     {
-        if (selectedMoveSpot.x != -1)
+        if (selectedMovement != null)
         {
-            Vector2Int diff = selectedMoveSpot - players[selectedPlayer].tempStats.position;
-            Debug.Log(diff);
-
             List<List<Vector3>> path = graphicalBattleMap.GetPath(
-                diff,
-                players[selectedPlayer].tempStats.position,
+                selectedMovement.GetPath(),
                 1 + graphicalBattleMap.GetHeightAtGlobalPos(
                     new Vector3(
                         players[selectedPlayer].tempStats.position.x + bottomLeft.x,
                         0,
                         players[selectedPlayer].tempStats.position.y + bottomLeft.y)
-                    ),
-                CanMoveYFirst(players[selectedPlayer], diff)
+                    )
             );
 
             foreach (List<Vector3> pointList in path)
@@ -542,7 +543,7 @@ public class Battle : MonoBehaviour
                 eventQueue.Insert(new MovementEvent(participantModels[players[selectedPlayer]], pawnMoveSpeed, pointList));
             }
 
-            selectedMoveSpot = new Vector2Int(-1, -1);
+            selectedMovement = null; ;
             graphicalBattleMap.HideMoveMarker();
             canSwap = false;
             eventQueue.Insert(new FunctionEvent(ToAttack));
@@ -573,7 +574,7 @@ public class Battle : MonoBehaviour
         if (selectedPlayer != -1)
         {
             players[selectedPlayer].tempStats.moved = true;
-            selectedMoveSpot = new Vector2Int(-1, -1);
+            selectedMovement = null; ;
         }
         selectedPlayer = -1;
         selectedEnemy = -1;
@@ -695,18 +696,16 @@ public class Battle : MonoBehaviour
         }
 
         //Sets up the animations for moving the enemy
-        Vector2Int diff = possibleMoves[0].movePosition - enemies[ID].tempStats.position;
+        PlayerMovePathSet movePath = GetPathsFromPawnToTile(enemies[ID], possibleMoves[0].movePosition);
 
         List<List<Vector3>> path = graphicalBattleMap.GetPath(
-                diff,
-                enemies[ID].tempStats.position,
+                movePath.GetPath(),
                 1 + graphicalBattleMap.GetHeightAtGlobalPos(
                     new Vector3(
                         enemies[ID].tempStats.position.x + bottomLeft.x,
                         0,
                         enemies[ID].tempStats.position.y + bottomLeft.y)
-                    ),
-                CanMoveYFirst(enemies[ID], diff)
+                    )
             );
 
         foreach (List<Vector3> pointList in path)
@@ -978,8 +977,8 @@ public class Battle : MonoBehaviour
             if (hoveredSpell != -1)
                 skillToShow = hoveredSpell;
             Vector2Int skillPos = players[selectedPlayer].tempStats.position;
-            if (selectedMoveSpot.x != -1)
-                skillPos = selectedMoveSpot;
+            if (selectedMovement != null)
+                skillPos = selectedMovement.GetPath()[selectedMovement.GetPath().Count - 1];
             Skill displaySkill = Registry.SpellTreeRegistry[players[selectedPlayer].skillQuickList[skillToShow].x][players[selectedPlayer].skillQuickList[skillToShow].y];
 
             if (displaySkill.targetType == TargettingType.Self)
@@ -1093,89 +1092,173 @@ public class Battle : MonoBehaviour
     }
 
     /// <summary>
-    /// Returns whether or not the path a pawn can take to a given position can be vertical first
-    /// </summary>
-    /// <param name="mover">The pawn that is moving</param>
-    /// <param name="relativeMove">The position they want to move to relative to their current position</param>
-    private bool CanMoveYFirst(BattlePawnBase mover, Vector2Int relativeMove)
-    {
-        for (int y = 0; y <= Mathf.Abs(relativeMove.y); y++)
-        {
-            if (!mover.ValidMoveTile(battleMap[mover.tempStats.position.x, mover.tempStats.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y))].tileType))
-                return false;
-            if ((mover is Player ? EnemyAtPos(mover.tempStats.position.x, mover.tempStats.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y))) : PlayerAtPos(mover.tempStats.position.x, mover.tempStats.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y)))) != -1)
-                return false;
-        }
-
-        for (int x = 0; x <= Mathf.Abs(relativeMove.x); x++)
-        {
-            if (!mover.ValidMoveTile(battleMap[mover.tempStats.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.tempStats.position.y + relativeMove.y].tileType))
-                return false;
-            if ((mover is Player ? EnemyAtPos(mover.tempStats.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.tempStats.position.y + relativeMove.y) : PlayerAtPos(mover.tempStats.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.tempStats.position.y + relativeMove.y)) != -1)
-                return false;
-        }
-        return true;
-    }
-
-    /// <summary>
-    /// Returns whether or not the path a pawn can take to a given position can be horizontal first
-    /// </summary>
-    /// <param name="mover">The pawn that is moving</param>
-    /// <param name="relativeMove">The position they want to move to relative to their current position</param>
-    private bool CanMoveXFirst(BattlePawnBase mover, Vector2Int relativeMove)
-    {
-        for (int x = 0; x <= Mathf.Abs(relativeMove.x); x++)
-        {
-            if (!mover.ValidMoveTile(battleMap[mover.tempStats.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.tempStats.position.y].tileType))
-                return false;
-            if ((mover is Player ? EnemyAtPos(mover.tempStats.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.tempStats.position.y) : PlayerAtPos(mover.tempStats.position.x + x * Mathf.RoundToInt(Mathf.Sign(relativeMove.x)), mover.tempStats.position.y)) != -1)
-                return false;
-        }
-
-        for (int y = 0; y <= Mathf.Abs(relativeMove.y); y++)
-        {
-            if (!mover.ValidMoveTile(battleMap[mover.tempStats.position.x + relativeMove.x, mover.tempStats.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y))].tileType))
-                return false;
-            if ((mover is Player ? EnemyAtPos(mover.tempStats.position.x + relativeMove.x, mover.tempStats.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y))) : PlayerAtPos(mover.tempStats.position.x + relativeMove.x, mover.tempStats.position.y + y * Mathf.RoundToInt(Mathf.Sign(relativeMove.y)))) != -1)
-                return false;
-        }
-        return true;
-    }
-
-    /// <summary>
     /// Gets all of the places a given pawn can move to
     /// </summary>
     /// <param name="entity">The entity moving</param>
     /// <returns>First = a valid position, Second = whether or not moving vertically first is valid</returns>
     private List<Vector2Int> GetViableMovements(BattlePawnBase entity)
     {
-        List<Vector2Int> moveSpots = new List<Vector2Int>();
         bool isPlayer = entity is Player;
         int maxMove = entity.GetEffectiveStat(Stats.MaxMove);
-        for (int x = -maxMove; x <= maxMove; x++)
-        {
-            for (int y = -maxMove; y <= maxMove; y++)
-            {
-                if (Mathf.Abs(x) + Mathf.Abs(y) <= maxMove && x + entity.tempStats.position.x >= 0 && x + entity.tempStats.position.x < BattleMap.mapSizeX && y + entity.tempStats.position.y >= 0 && y + entity.tempStats.position.y < BattleMap.mapSizeY)
-                {
-                    //It is automatically valid if the entity is moving to itself
-                    if (x == 0 && y == 0)
-                    {
-                        moveSpots.Add(new Vector2Int(entity.tempStats.position.x, entity.tempStats.position.y));
-                        continue;
-                    }
-                    //It is an invalid move position if it would overlap with an existing entity
-                    if (PlayerAtPos(x + entity.tempStats.position.x, y + entity.tempStats.position.y) != -1)
-                        continue;
-                    if (EnemyAtPos(x + entity.tempStats.position.x, y + entity.tempStats.position.y) != -1)
-                        continue;
+        return FindAllPossibleMovements(entity.tempStats.position, maxMove, Registry.MovementRegistry[entity.moveType], isPlayer, true);
+    }
 
-                    if (CanMoveYFirst(entity, new Vector2Int(x, y)) || CanMoveXFirst(entity, new Vector2Int(x, y)))
-                        moveSpots.Add(new Vector2Int(x + entity.tempStats.position.x, y + entity.tempStats.position.y));
-                }
+    /// <summary>
+    /// Follows a given path to see if the pawn can go anywhere from there
+    /// </summary>
+    /// <param name="currentSpot">What spot they are moving from</param>
+    /// <param name="remainingMovement">How much movement they have left</param>
+    /// <param name="moveType">What the pawn's movement type is</param>
+    /// <param name="isPlayer">Whether that pawn is a player or enemy</param>
+    /// <param name="firstMove">Whether this is the initial tile a pawn is moving from. Some checks don't need to be done if this is true</param>
+    /// <returns></returns>
+    private List<Vector2Int> FindAllPossibleMovements(Vector2Int currentSpot, int remainingMovement, MovementType moveType, bool isPlayer, bool firstMove = false)
+    {
+        List<Vector2Int> validMoveSpots = new List<Vector2Int>();
+        MovementTypeTileInfo currentTileInfo = moveType.tileTypeInfo[battleMap[currentSpot.x, currentSpot.y].tileType];
+
+        //These checks don't matter if this tile is the pawn's starting position
+        if (!firstMove)
+        {
+            int playerIDAtPos = PlayerAtPos(currentSpot.x, currentSpot.y);
+            int enemyIDAtPos = EnemyAtPos(currentSpot.x, currentSpot.y);
+
+            //If there is no pawn blocking this spot
+            if (playerIDAtPos == -1 && enemyIDAtPos == -1)
+                validMoveSpots.Add(currentSpot);
+            //If there is a pawn from the opposite team on this tile there is no point continuing on this path
+            else if ((playerIDAtPos != -1 && !isPlayer) || (enemyIDAtPos != -1 && isPlayer))
+                return validMoveSpots;
+
+            //If this tile is limited movement that means that it cannot be moved into and out of in the same turn so this path ends here
+            if (currentTileInfo.limitedMovement)
+                return validMoveSpots;
+        }
+        else
+        {
+            validMoveSpots.Add(currentSpot);
+        }
+
+        if (currentSpot.y + 1 < BattleMap.mapSizeY && currentTileInfo.canMoveOutThrough[MoveDirection.Up])
+        {
+            MovementTypeTileInfo targetTileInfo = moveType.tileTypeInfo[battleMap[currentSpot.x, currentSpot.y + 1].tileType];
+            if (targetTileInfo.canMoveInFrom[MoveDirection.Down] && targetTileInfo.moveDifficulty <= remainingMovement)
+                validMoveSpots = validMoveSpots.Union(FindAllPossibleMovements(currentSpot + Vector2Int.up, remainingMovement - targetTileInfo.moveDifficulty, moveType, isPlayer)).ToList();
+        }
+        if (currentSpot.y - 1 >= 0 && currentTileInfo.canMoveOutThrough[MoveDirection.Down])
+        {
+            MovementTypeTileInfo targetTileInfo = moveType.tileTypeInfo[battleMap[currentSpot.x, currentSpot.y - 1].tileType];
+            if (targetTileInfo.canMoveInFrom[MoveDirection.Up] && targetTileInfo.moveDifficulty <= remainingMovement)
+                validMoveSpots = validMoveSpots.Union(FindAllPossibleMovements(currentSpot + Vector2Int.down, remainingMovement - targetTileInfo.moveDifficulty, moveType, isPlayer)).ToList();
+        }
+        if (currentSpot.x - 1 >= 0 && currentTileInfo.canMoveOutThrough[MoveDirection.Left])
+        {
+            MovementTypeTileInfo targetTileInfo = moveType.tileTypeInfo[battleMap[currentSpot.x - 1, currentSpot.y].tileType];
+            if (targetTileInfo.canMoveInFrom[MoveDirection.Right] && targetTileInfo.moveDifficulty <= remainingMovement)
+                validMoveSpots = validMoveSpots.Union(FindAllPossibleMovements(currentSpot + Vector2Int.left, remainingMovement - targetTileInfo.moveDifficulty, moveType, isPlayer)).ToList();
+        }
+        if (currentSpot.x + 1 < BattleMap.mapSizeX && currentTileInfo.canMoveOutThrough[MoveDirection.Right])
+        {
+            MovementTypeTileInfo targetTileInfo = moveType.tileTypeInfo[battleMap[currentSpot.x + 1, currentSpot.y].tileType];
+            if (targetTileInfo.canMoveInFrom[MoveDirection.Left] && targetTileInfo.moveDifficulty <= remainingMovement)
+                validMoveSpots = validMoveSpots.Union(FindAllPossibleMovements(currentSpot + Vector2Int.right, remainingMovement - targetTileInfo.moveDifficulty, moveType, isPlayer)).ToList();
+        }
+        return validMoveSpots;
+    }
+
+    /// <summary>
+    /// Gets all possible paths a pawn can take to a given tile
+    /// </summary>
+    /// <param name="mover">The pawn doing the moving</param>
+    /// <param name="target">The tile being moved to</param>
+    /// <returns>All possible paths the pawn can take sorted by increasing complexity</returns>
+    private PlayerMovePathSet GetPathsFromPawnToTile(BattlePawnBase mover, Vector2Int target)
+    {
+        bool isPlayer = mover is Player;
+        int maxMove = mover.GetEffectiveStat(Stats.MaxMove);
+        return new PlayerMovePathSet(FindPathsFromAToB(new List<Vector2Int>() { mover.tempStats.position }, target, maxMove, Registry.MovementRegistry[mover.moveType], isPlayer, true));
+    }
+
+    /// <summary>
+    /// Follows a path to see if any permutations off of it can lead to the target
+    /// </summary>
+    /// <param name="currentPath">The path the pawn has taken so far</param>
+    /// <param name="target">What the path is supposed to lead to</param>
+    /// <param name="remainingMovement">How much movement they have left</param>
+    /// <param name="moveType">What the pawn's movement type is</param>
+    /// <param name="isPlayer">Whether that pawn is a player or enemy</param>
+    /// <param name="firstMove">Whether this is the initial tile a pawn is moving from. Some checks don't need to be done if this is true</param>
+    /// <returns>Returns all paths that branch off of this one and lead to the target</returns>
+    public List<List<Vector2Int>> FindPathsFromAToB(List<Vector2Int> currentPath, Vector2Int target, int remainingMovement, MovementType moveType, bool isPlayer, bool firstMove = false)
+    {
+        List<List<Vector2Int>> validPaths = new List<List<Vector2Int>>();
+        Vector2Int currentSpot = currentPath[currentPath.Count - 1];
+        MovementTypeTileInfo currentTileInfo = moveType.tileTypeInfo[battleMap[currentSpot.x, currentSpot.y].tileType];
+
+        //These checks don't matter if this tile is the pawn's starting position
+        if (!firstMove)
+        {
+            int playerIDAtPos = PlayerAtPos(currentSpot.x, currentSpot.y);
+            int enemyIDAtPos = EnemyAtPos(currentSpot.x, currentSpot.y);
+
+            //If there is no pawn blocking this spot
+            if (playerIDAtPos == -1 && enemyIDAtPos == -1 && currentSpot == target)
+                validPaths.Add(currentPath);
+            //If there is a pawn from the opposite team on this tile there is no point continuing on this path
+            else if ((playerIDAtPos != -1 && !isPlayer) || (enemyIDAtPos != -1 && isPlayer))
+                return validPaths;
+
+            //If this tile is limited movement that means that it cannot be moved into and out of in the same turn so this path ends here
+            if (currentTileInfo.limitedMovement)
+                return validPaths;
+        }
+        //If the pawn is moving to its starting position
+        else if (currentSpot == target)
+        {
+            validPaths.Add(currentPath);
+        }
+
+        if (currentSpot.y + 1 < BattleMap.mapSizeY && currentTileInfo.canMoveOutThrough[MoveDirection.Up])
+        {
+            MovementTypeTileInfo targetTileInfo = moveType.tileTypeInfo[battleMap[currentSpot.x, currentSpot.y + 1].tileType];
+            if (targetTileInfo.canMoveInFrom[MoveDirection.Down] && targetTileInfo.moveDifficulty <= remainingMovement)
+            {
+                List<Vector2Int> futurePath = currentPath.GetRange(0, currentPath.Count);
+                futurePath.Add(currentSpot + Vector2Int.up);
+                validPaths = validPaths.Union(FindPathsFromAToB(futurePath, target, remainingMovement - targetTileInfo.moveDifficulty, moveType, isPlayer)).ToList();
             }
         }
-        return moveSpots;
+        if (currentSpot.y - 1 >= 0 && currentTileInfo.canMoveOutThrough[MoveDirection.Down])
+        {
+            MovementTypeTileInfo targetTileInfo = moveType.tileTypeInfo[battleMap[currentSpot.x, currentSpot.y - 1].tileType];
+            if (targetTileInfo.canMoveInFrom[MoveDirection.Up] && targetTileInfo.moveDifficulty <= remainingMovement)
+            {
+                List<Vector2Int> futurePath = currentPath.GetRange(0, currentPath.Count);
+                futurePath.Add(currentSpot + Vector2Int.down);
+                validPaths = validPaths.Union(FindPathsFromAToB(futurePath, target, remainingMovement - targetTileInfo.moveDifficulty, moveType, isPlayer)).ToList();
+            }
+        }
+        if (currentSpot.x - 1 >= 0 && currentTileInfo.canMoveOutThrough[MoveDirection.Left])
+        {
+            MovementTypeTileInfo targetTileInfo = moveType.tileTypeInfo[battleMap[currentSpot.x - 1, currentSpot.y].tileType];
+            if (targetTileInfo.canMoveInFrom[MoveDirection.Right] && targetTileInfo.moveDifficulty <= remainingMovement)
+            {
+                List<Vector2Int> futurePath = currentPath.GetRange(0, currentPath.Count);
+                futurePath.Add(currentSpot + Vector2Int.left);
+                validPaths = validPaths.Union(FindPathsFromAToB(futurePath, target, remainingMovement - targetTileInfo.moveDifficulty, moveType, isPlayer)).ToList();
+            }
+        }
+        if (currentSpot.x + 1 < BattleMap.mapSizeX && currentTileInfo.canMoveOutThrough[MoveDirection.Right])
+        {
+            MovementTypeTileInfo targetTileInfo = moveType.tileTypeInfo[battleMap[currentSpot.x + 1, currentSpot.y].tileType];
+            if (targetTileInfo.canMoveInFrom[MoveDirection.Left] && targetTileInfo.moveDifficulty <= remainingMovement)
+            {
+                List<Vector2Int> futurePath = currentPath.GetRange(0, currentPath.Count);
+                futurePath.Add(currentSpot + Vector2Int.right);
+                validPaths = validPaths.Union(FindPathsFromAToB(futurePath, target, remainingMovement - targetTileInfo.moveDifficulty, moveType, isPlayer)).ToList();
+            }
+        }
+        return validPaths;
     }
 
     /// <summary>
@@ -1504,47 +1587,77 @@ public class Battle : MonoBehaviour
                     }
                 }
 
-                if (direction == MoveDirection.Up || direction == MoveDirection.Down)
+                MovementType moveType = Registry.MovementRegistry[target.moveType];
+
+                Vector2Int currentPos = target.tempStats.position;
+                for (int i = 0; i <= trueEffect.amount - 1; i++)
                 {
-                    int dir = direction == MoveDirection.Up ? 1 : -1;
-                    for (int i = 1; i <= trueEffect.amount; i++)
+                    Vector2Int futurePos = -Vector2Int.one;
+                    MovementTypeTileInfo currentTileInfo = moveType.tileTypeInfo[battleMap[currentPos.x, currentPos.y].tileType];
+                    if (direction == MoveDirection.Up)
                     {
-                        if (target.ValidMoveTile(battleMap[target.tempStats.position.x, target.tempStats.position.y + i * dir].tileType))
-                            eventQueue.Insert(new MovementEvent(participantModels[target], pawnMoveSpeed,
-                                new List<Vector3>{ participantModels[target].transform.position + new Vector3Int(0, 0, i - 1) * dir,
-                                participantModels[target].transform.position + new Vector3Int(0, 0, i) * dir }));
-                        else
+                        futurePos = currentPos + Vector2Int.up;
+                        if (futurePos.y >= BattleMap.mapSizeY || !currentTileInfo.canMoveOutThrough[MoveDirection.Up] || !moveType.tileTypeInfo[battleMap[futurePos.x, futurePos.y].tileType].canMoveInFrom[MoveDirection.Down])
                         {
                             //If the pawn hits a spot where they can't move any further, stun them for a turn
                             eventQueue.Insert(new ExecuteEffectEvent(new StatusEffectPart(TargettingType.AllInRange, "Stun", false), caster, target));
                             return;
                         }
                     }
-                }
-                //If it is right or left
-                else
-                {
-                    int dir = direction == MoveDirection.Right ? 1 : -1;
-                    for (int i = 1; i <= trueEffect.amount; i++)
+                    else if (direction == MoveDirection.Down)
                     {
-                        if (target.ValidMoveTile(battleMap[target.tempStats.position.x + i * dir, target.tempStats.position.y].tileType))
-                            eventQueue.Insert(new MovementEvent(participantModels[target], pawnMoveSpeed,
-                                new List<Vector3>{ participantModels[target].transform.position + new Vector3Int(i - 1, 0, 0) * dir,
-                                participantModels[target].transform.position + new Vector3Int(i, 0, 0) * dir }));
-                        else
+                        futurePos = currentPos + Vector2Int.down;
+                        if (futurePos.y < 0 || !currentTileInfo.canMoveOutThrough[MoveDirection.Down] || !moveType.tileTypeInfo[battleMap[futurePos.x, futurePos.y].tileType].canMoveInFrom[MoveDirection.Up])
                         {
                             //If the pawn hits a spot where they can't move any further, stun them for a turn
                             eventQueue.Insert(new ExecuteEffectEvent(new StatusEffectPart(TargettingType.AllInRange, "Stun", false), caster, target));
                             return;
                         }
                     }
+                    else if (direction == MoveDirection.Left)
+                    {
+                        futurePos = currentPos + Vector2Int.left;
+                        if (futurePos.x < 0 || !currentTileInfo.canMoveOutThrough[MoveDirection.Left] || !moveType.tileTypeInfo[battleMap[futurePos.x, futurePos.y].tileType].canMoveInFrom[MoveDirection.Right])
+                        {
+                            //If the pawn hits a spot where they can't move any further, stun them for a turn
+                            eventQueue.Insert(new ExecuteEffectEvent(new StatusEffectPart(TargettingType.AllInRange, "Stun", false), caster, target));
+                            return;
+                        }
+                    }
+                    else if (direction == MoveDirection.Right)
+                    {
+                        futurePos = currentPos + Vector2Int.right;
+                        if (futurePos.x >= BattleMap.mapSizeX || !currentTileInfo.canMoveOutThrough[MoveDirection.Right] || !moveType.tileTypeInfo[battleMap[futurePos.x, futurePos.y].tileType].canMoveInFrom[MoveDirection.Left])
+                        {
+                            //If the pawn hits a spot where they can't move any further, stun them for a turn
+                            eventQueue.Insert(new ExecuteEffectEvent(new StatusEffectPart(TargettingType.AllInRange, "Stun", false), caster, target));
+                            return;
+                        }
+                    }
+
+                    int playerIDAtPos = PlayerAtPos(futurePos.x, futurePos.y);
+                    int enemyIDAtPos = EnemyAtPos(futurePos.x, futurePos.y);
+
+                    //If there is a pawn blocking this spot
+                    if (playerIDAtPos != -1 && enemyIDAtPos != -1)
+                    {
+                        //If the pawn hits a spot where they can't move any further, stun them for a turn
+                        eventQueue.Insert(new ExecuteEffectEvent(new StatusEffectPart(TargettingType.AllInRange, "Stun", false), caster, target));
+                        return;
+                    }
+
+                    Vector2Int diff = futurePos - currentPos;
+                    eventQueue.Insert(new MovementEvent(participantModels[target], pawnMoveSpeed,
+                        new List<Vector3>{ participantModels[target].transform.position + new Vector3Int(diff.x * i, 0, diff.y * i),
+                                participantModels[target].transform.position + new Vector3Int(diff.x * (i + 1), 0, diff.y * (i + 1))}));
+                    currentPos = futurePos;
                 }
             }
 
             //Triggers one or none of a list of weighted random options
-            else if(effect is ConnectedChancePart)
+            else if (effect is ConnectedChancePart)
             {
-                foreach(SkillPartBase subEffect in (effect as ConnectedChancePart).ChooseEffect())
+                foreach (SkillPartBase subEffect in (effect as ConnectedChancePart).ChooseEffect())
                 {
                     eventQueue.Insert(new ExecuteEffectEvent(subEffect, caster, target, fromSpell, valueFromPrevious));
                 }
@@ -1679,7 +1792,7 @@ public class Battle : MonoBehaviour
     {
         skillCastConfirmMenu.SetActive(false);
         //Checks if the player is trying to move before casting
-        if (selectedMoveSpot.x != -1)
+        if (selectedMovement != null)
             ConfirmPlayerMove();
         //Figures out what skill the player wants to cast
         Skill displaySkill = Registry.SpellTreeRegistry[players[selectedPlayer].skillQuickList[selectedSpell].x][players[selectedPlayer].skillQuickList[selectedSpell].y];

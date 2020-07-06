@@ -29,6 +29,8 @@ public class Registry
     public static Dictionary<string, EnemyType> PlayerTemplateRegistry = new Dictionary<string, EnemyType>();
     //Enemy template definitions
     public static Dictionary<string, EnemyType> EnemyDefinitionRegistry = new Dictionary<string, EnemyType>();
+    //Dialogue trees
+    public static Dictionary<string, DialogueNode> DialogueRegistry = new Dictionary<string, DialogueNode>();
 
     /// <summary>
     /// Loads in the registry values from the path given in StorageDirectory
@@ -68,6 +70,32 @@ public class Registry
             foreach (EnemyType item in dataDump.PlayerDefs) { PlayerTemplateRegistry.Add(item.name, item); }
             foreach (EnemyType item in dataDump.EnemyDefs) { EnemyDefinitionRegistry.Add(item.name, item); }
         }
+
+        //Adds all the dialogues
+        DialogueRegistry.Add("test", 
+            new DialogueVisibleSelf(true,
+            new List<DialogueNode>() {
+                new DialogueCanPlayerMove(false,
+                new List<DialogueNode> {
+                    new DialogueLine("Speaker 1", "This is a line that is said",
+                    new List<DialogueNode> {
+                        new DialogueLine("Speaker 2", "this is just another line meant to test how a much longer line of text looks on the screen.",
+                        new List<DialogueNode> {
+                            new DialoguePause(1,
+                            new List<DialogueNode> {
+                                new DialogueLine("Final Speaker", "Just tested a break",
+                                new List<DialogueNode>(){
+                                    new DialogueVisibleSelf(false,
+                                    new List<DialogueNode>()
+                                    {
+                                        new DialogueCanPlayerMove(true)
+                                    })
+                                })
+                            })
+                        })
+                    })
+                })
+            }));
 
         //Adds all the effects
         StatusEffectRegistry.Add("Sleep", new StatusEffectDefinition("Sleep", CountdownType.None, false, true, 0.25f));

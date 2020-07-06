@@ -36,6 +36,8 @@ public class GameStorage : MonoBehaviour
     //Test wall
     public static GameObject testWall;
 
+    public static MapPlayerScript mapPlayer;
+
     /// <summary>
     /// ONLY FOR TESTING
     /// Grabs testing map, fills registry, and loads a blank save
@@ -43,6 +45,7 @@ public class GameStorage : MonoBehaviour
     void Awake()
     {
         mapTerrain = GameObject.FindGameObjectWithTag("Ground").GetComponent<Terrain>();
+        mapPlayer = GameObject.FindGameObjectWithTag("Player").GetComponent<MapPlayerScript>();
 
         //If the registry hasn't already been filled
         //Only for testing game while bypassing title screen

@@ -3,19 +3,19 @@ using UnityEngine;
 
 public class DialogueConditionalBranch : DialogueNode
 {
-    List<ConditionalCheck> conditionals = new List<ConditionalCheck>();
+    private List<DialogueBranchInfo> conditionals = new List<DialogueBranchInfo>();
 
-    public DialogueConditionalBranch(List<ConditionalCheck> conditionals, List<DialogueNode> path = null) : base(path)
+    public DialogueConditionalBranch(List<DialogueBranchInfo> conditionals) : base(null)
     {
         this.conditionals = conditionals;
     }
 
     public override DialogueNode GetNext()
     {
-        for (int i = 0; i < conditionals.Count; i++)
+        foreach (DialogueBranchInfo branch in conditionals)
         {
-            if (conditionals[i].Evaluate())
-                return dialoguePath[i];
+            if (branch.condition.Evaluate())
+                return branch.nextNode;
         }
         Debug.Log("No path forward found, ending the dialogue");
         return null;

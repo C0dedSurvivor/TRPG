@@ -3,23 +3,36 @@ using System.Collections.Generic;
 
 class DialogueChoiceBranch : DialogueNode
 {
-    List<string> choices = new List<string>();
-    private int selected = -1;
+    private List<DialogueBranchInfo> options = new List<DialogueBranchInfo>();
 
-    public DialogueChoiceBranch(List<string> choices, List<DialogueNode> path = null) : base(path)
+    public DialogueChoiceBranch(List<DialogueBranchInfo> options) : base(null)
     {
-        this.choices = choices;
+        this.options = options;
     }
 
-    public void SetSelected(int choice)
+    public List<string> GetOptions()
     {
-        selected = choice;
+        List<string> openOptions = new List<string>();
+        foreach (DialogueBranchInfo branch in options)
+        {
+            if (branch.condition == null || branch.condition.Evaluate())
+                openOptions.Add(branch.choiceText);
+        }
+        return openOptions;
     }
 
     public override DialogueNode GetNext()
     {
-        if(selected == -1)
-            throw new Exception("Tried to grab dialogue choice before an option was selected");
-        return dialoguePath[selected];
+        throw new Exception("Tried to grab invalid next node from branching dialogue");
+    }
+
+    public DialogueNode GetNext(string option)
+    {
+        foreach (DialogueBranchInfo branch in options)
+        {
+            if (branch.choiceText == option)
+                return branch.nextNode;
+        }
+        throw new Exception("Given branch not found.");
     }
 }

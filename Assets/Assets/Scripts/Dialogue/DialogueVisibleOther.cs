@@ -6,7 +6,7 @@ class DialogueVisibleOther : DialogueNode
     public GameObject target;
     public bool newVisibility;
 
-    public DialogueVisibleOther(GameObject target, bool newVisibility, List<DialogueNode> path = null) : base(path)
+    public DialogueVisibleOther(GameObject target, bool newVisibility, DialogueNode nextNode = null) : base(nextNode)
     {
         this.target = target;
         this.newVisibility = newVisibility;
@@ -14,6 +14,6 @@ class DialogueVisibleOther : DialogueNode
 
     public override DialogueNode GetNext()
     {
-        return dialoguePath?[0];
+        return nextNode;
     }
 }

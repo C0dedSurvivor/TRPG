@@ -1,12 +1,10 @@
-﻿using System.Collections.Generic;
-
-public abstract class DialogueNode
+﻿public abstract class DialogueNode
 {
-    public List<DialogueNode> dialoguePath;
+    public DialogueNode nextNode;
 
-    protected DialogueNode(List<DialogueNode> path = null)
+    protected DialogueNode(DialogueNode nextNode = null)
     {
-        dialoguePath = path;
+        this.nextNode = nextNode;
     }
 
     public abstract DialogueNode GetNext();

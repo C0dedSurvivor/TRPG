@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using UnityEngine.UI;
+﻿using UnityEngine.UI;
 
 public class DialogueSpriteSwitch : DialogueNode
 {
@@ -8,7 +7,7 @@ public class DialogueSpriteSwitch : DialogueNode
     //The name of the new image to give it
     public string newTexture;
 
-    public DialogueSpriteSwitch(Image target, string newTextureName, List<DialogueNode> path = null) : base(path)
+    public DialogueSpriteSwitch(Image target, string newTextureName, DialogueNode nextNode = null) : base(nextNode)
     {
         this.target = target;
         newTexture = newTextureName;
@@ -16,6 +15,6 @@ public class DialogueSpriteSwitch : DialogueNode
 
     public override DialogueNode GetNext()
     {
-        return dialoguePath?[0];
+        return nextNode;
     }
 }

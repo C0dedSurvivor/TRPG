@@ -1,17 +1,15 @@
-﻿using System.Collections.Generic;
-
-class DialoguePause : DialogueNode
+﻿class DialoguePause : DialogueNode
 {
     //How long to pause for
     public float seconds;
 
-    public DialoguePause(float seconds, List<DialogueNode> path = null) : base(path)
+    public DialoguePause(float seconds, DialogueNode nextNode = null) : base(nextNode)
     {
         this.seconds = seconds;
     }
 
     public override DialogueNode GetNext()
     {
-        return dialoguePath?[0];
+        return nextNode;
     }
 }

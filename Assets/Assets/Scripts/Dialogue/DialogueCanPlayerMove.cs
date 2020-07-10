@@ -1,16 +1,14 @@
-﻿using System.Collections.Generic;
-
-class DialogueCanPlayerMove : DialogueNode
+﻿class DialogueCanPlayerMove : DialogueNode
 {
     public bool canMove;
 
-    public DialogueCanPlayerMove(bool canMove, List<DialogueNode> path = null) : base(path)
+    public DialogueCanPlayerMove(bool canMove, DialogueNode nextNode = null) : base(nextNode)
     {
         this.canMove = canMove;
     }
 
     public override DialogueNode GetNext()
     {
-        return dialoguePath?[0];
+        return nextNode;
     }
 }

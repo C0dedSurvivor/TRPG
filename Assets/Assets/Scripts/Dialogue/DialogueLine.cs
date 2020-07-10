@@ -1,17 +1,15 @@
-﻿using System.Collections.Generic;
-
-public class DialogueLine : DialogueNode
+﻿public class DialogueLine : DialogueNode
 {
     public string speaker;
     public string line;
 
-    public DialogueLine(string line, List<DialogueNode> path = null) : base(path)
+    public DialogueLine(string line, DialogueNode nextNode = null) : base(nextNode)
     {
         speaker = "";
         this.line = line;
     }
 
-    public DialogueLine(string speaker, string line, List<DialogueNode> path = null) : base(path)
+    public DialogueLine(string speaker, string line, DialogueNode nextNode = null) : base(nextNode)
     {
         this.speaker = speaker;
         this.line = line;
@@ -19,6 +17,6 @@ public class DialogueLine : DialogueNode
 
     public override DialogueNode GetNext()
     {
-        return dialoguePath?[0];
+        return nextNode;
     }
 }

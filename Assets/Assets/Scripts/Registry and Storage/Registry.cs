@@ -72,33 +72,37 @@ public class Registry
         }
 
         //Adds all the dialogues
-        DialogueRegistry.Add("test", 
+        DialogueRegistry.Add("test",
             new DialogueVisibleSelf(true,
-            new List<DialogueNode>() {
                 new DialogueCanPlayerMove(false,
-                new List<DialogueNode> {
                     new DialogueLine("Speaker 1", "This is a line that is said",
-                    new List<DialogueNode> {
                         new DialogueLine("Speaker 2", "this is just another line meant to test how a much longer line of text looks on the screen.",
-                        new List<DialogueNode> {
                             new DialoguePause(1,
-                            new List<DialogueNode> {
                                 new DialogueLine("Final Speaker", "Just tested a break",
-                                new List<DialogueNode>(){
-                                    new DialogueVisibleSelf(false,
-                                    new List<DialogueNode>()
-                                    {
-                                        new DialogueCanPlayerMove(true)
-                                    })
-                                })
-                            })
-                        })
-                    })
-                })
-            }));
+                                    new DialogueChoiceBranch(
+                                        new List<DialogueBranchInfo>()
+                                        {
+                                            new DialogueBranchInfo("Option 1", new DialogueLine("Concise Speaker", "You chose option 1!", DialogueEndCap())),
+                                            new DialogueBranchInfo("Longer Option 2", new DialogueLine("Verbose Speaker", "You chose longer option 2!", DialogueEndCap()))
+                                        }
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ));
 
         //Adds all the effects
         StatusEffectRegistry.Add("Sleep", new StatusEffectDefinition("Sleep", CountdownType.None, false, true, 0.25f));
         StatusEffectRegistry.Add("Paralyze", new StatusEffectDefinition("Paralyze", CountdownType.None, true, true));
+    }
+
+    /// <summary>
+    /// Adds the nodes to hide the dialogue view and make the player able to move at the end of a dialogue
+    /// </summary>
+    private static DialogueNode DialogueEndCap()
+    {
+        return new DialogueVisibleSelf(false, new DialogueCanPlayerMove(true));
     }
 }

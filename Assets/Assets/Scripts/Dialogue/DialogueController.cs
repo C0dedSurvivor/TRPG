@@ -1,16 +1,22 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class DialogueController : MonoBehaviour
 {
     protected List<DialogueNode> toDisplay = new List<DialogueNode>();
-    [SerializeField]
-    private TextAnimator textAnimator;
     //If dialogue is currently happening, makes sure it doesn't interrupt it with a new line
     private bool animatingText = false;
     //If waiting on a pause to finish
     private bool paused = false;
+
+    [SerializeField]
+    private TextAnimator textAnimator;
+    [SerializeField]
+    private Button branchButtonPrefab;
+    [SerializeField]
+    private GameObject branchButtonContainer;
 
     /// <summary>
     /// Is true if the text animator is done displaying all text from the queue
@@ -79,11 +85,19 @@ public class DialogueController : MonoBehaviour
                 case DialogueConditionalBranch condBranch:
                     ToNextNode();
                     break;
+                //Also handles DialogueLockedChoiceBranch
                 case DialogueChoiceBranch choiceBranch:
-                    ToNextNode();
-                    break;
-                case DialogueLockedChoiceBranch lockedChoiceBranch:
-                    ToNextNode();
+                    List<string> options = choiceBranch.GetOptions();
+                    foreach(string option in options)
+                    {
+                        Button optionButton = Instantiate(branchButtonPrefab, new Vector3(), Quaternion.Euler(Vector3.zero), branchButtonContainer.transform);
+                        string tempString = string.Copy(option);
+                        optionButton.GetComponentInChildren<Text>().text = tempString;
+                        optionButton.name = tempString;
+                        optionButton.onClick.AddListener(delegate { SelectBranch(tempString); });
+                        Cursor.lockState = CursorLockMode.None;
+                        Cursor.visible = true;
+                    }
                     break;
                 case DialoguePause pause:
                     StartCoroutine(PauseDialogue(pause.seconds));
@@ -117,12 +131,27 @@ public class DialogueController : MonoBehaviour
         }
     }
 
-    public void SelectChoice(int choice)
+    public void SelectBranch(string choice)
     {
-        if(toDisplay[0] is DialogueChoiceBranch)
+        if (toDisplay[0] is DialogueChoiceBranch)
         {
-            (toDisplay[0] as DialogueChoiceBranch).SetSelected(choice);
-            ToNextNode();
+            toDisplay[0] = (toDisplay[0] as DialogueChoiceBranch).GetNext(choice);
+
+            foreach(Transform child in branchButtonContainer.transform)
+            {
+                Destroy(child.gameObject);
+            }
+
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+
+            if (toDisplay[0] == null)
+            {
+                toDisplay.RemoveAt(0);
+                if (toDisplay.Count == 0)
+                    return;
+            }
+            ProcessNewNode();
         }
     }
 

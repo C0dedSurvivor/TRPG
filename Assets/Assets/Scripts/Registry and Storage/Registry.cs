@@ -93,6 +93,24 @@ public class Registry
                 )
             ));
 
+        DialogueRegistry.Add("conditionalTest",
+            new DialogueVisibleSelf(true,
+                new DialogueCanPlayerMove(false,
+                    new DialogueConditionalBranch(
+                        new List<DialogueBranchInfo>()
+                        {
+                            new DialogueBranchInfo(
+                                new HasItemConditional("Animal Tooth", 5),
+                                new DialogueLine("Excited Person", "Ooohh, cool! You have a lot of animal teeth!", DialogueEndCap())
+                                ),
+                            new DialogueBranchInfo(
+                                new DialogueLine("Sad Person", "Ooohh, damn... You don't have any animal teeth...", DialogueEndCap())
+                                )
+                        }
+                    )
+                )
+            ));
+
         //Adds all the effects
         StatusEffectRegistry.Add("Sleep", new StatusEffectDefinition("Sleep", CountdownType.None, false, true, 0.25f));
         StatusEffectRegistry.Add("Paralyze", new StatusEffectDefinition("Paralyze", CountdownType.None, true, true));

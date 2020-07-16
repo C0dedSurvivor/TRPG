@@ -6,7 +6,7 @@
     public DialogueNode nextNode;
 
     /// <summary>
-    /// Constructor for a DialogueChoiceBranch branch
+    /// Constructor for a branch where the player can always choose it
     /// </summary>
     public DialogueBranchInfo(string choiceText, DialogueNode nextNode)
     {
@@ -17,7 +17,7 @@
     }
 
     /// <summary>
-    /// Constructor for a DialogueConditionalBranch branch
+    /// Constructor for a branch for an automated check to see what path to go down
     /// </summary>
     public DialogueBranchInfo(ConditionalCheck condition, DialogueNode nextNode)
     {
@@ -28,7 +28,18 @@
     }
 
     /// <summary>
-    /// Constructor for a DialogueLockedChoiceBranch branch
+    /// Constructor for the default branch for an automated check for if no other paths are valid
+    /// </summary>
+    public DialogueBranchInfo(DialogueNode nextNode)
+    {
+        this.nextNode = nextNode;
+        condition = null;
+        showIfLocked = false;
+        choiceText = null;
+    }
+
+    /// <summary>
+    /// Constructor for a branch that can only be chosen if a certain condition is met
     /// </summary>
     public DialogueBranchInfo(string choiceText, ConditionalCheck condition, bool showIfLocked, DialogueNode nextNode)
     {

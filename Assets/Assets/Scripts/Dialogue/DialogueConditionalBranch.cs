@@ -14,7 +14,7 @@ public class DialogueConditionalBranch : DialogueNode
     {
         foreach (DialogueBranchInfo branch in conditionals)
         {
-            if (branch.condition.Evaluate())
+            if (branch.condition == null || branch.condition.Evaluate())
                 return branch.nextNode;
         }
         Debug.Log("No path forward found, ending the dialogue");

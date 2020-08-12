@@ -151,6 +151,7 @@ public class Battle : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         canSwap = true;
+        mapPlayer.GetComponent<MapPlayerScript>().CanMove = false;
         //Sets up the opening camera animation
         eventQueue.Insert(new MovementEvent(battleCamera, 4f, new Vector3(bottomLeft.x + (xSize / 2) - 0.5f, 25, bottomLeft.y + (ySize / 2) - 1.5f), true));
         eventQueue.Insert(new MovementEvent(battleCamera, 4f, battleCamera.transform.rotation, true));
@@ -252,7 +253,7 @@ public class Battle : MonoBehaviour
                     }
                 }
             }
-            else if (eventQueue.Count != 0)
+            else if (eventQueue.Count != 0 && littleInfoSys.Done)
             {
                 BattleEventBase currentEvent = eventQueue.GetNext();
                 if (currentEvent is ExecuteEffectEvent && battleState != BattleState.None)
@@ -472,6 +473,7 @@ public class Battle : MonoBehaviour
             eventQueue.Insert(new MovementEvent(mapPlayer.GetComponentInChildren<Camera>().gameObject, 4f, mapPlayer.GetComponentInChildren<Camera>().transform.position, true));
             eventQueue.Insert(new MovementEvent(mapPlayer.GetComponentInChildren<Camera>().gameObject, 4f, mapPlayer.GetComponentInChildren<Camera>().transform.rotation, true));
             mapPlayer.GetComponentInChildren<Camera>().transform.SetPositionAndRotation(battleCamera.transform.position, battleCamera.transform.rotation);
+            mapPlayer.GetComponent<MapPlayerScript>().CanMove = true;
         }
         else
         {

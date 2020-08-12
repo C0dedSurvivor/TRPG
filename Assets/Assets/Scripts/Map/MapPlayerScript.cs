@@ -2,7 +2,6 @@
 
 public class MapPlayerScript : MonoBehaviour
 {
-
     public int walkingSpeed = 8;
     public int sprintSpeed = 16;
     public int turningSpeed = 75;
@@ -17,6 +16,10 @@ public class MapPlayerScript : MonoBehaviour
     public Camera mapCamera;
     public Battle battleController;
 
+    private bool canMove = true;
+
+    public bool CanMove { set { canMove = value; } }
+
     // Use this for initialization
     void Start()
     {
@@ -24,12 +27,13 @@ public class MapPlayerScript : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         rigidbody = GetComponent<Rigidbody>();
+        CanMove = true;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!PauseGUI.paused && !battleController.IsBattling)
+        if (!PauseGUI.paused && canMove)
         {
             //Interacts with any objects directly in front of the player that have a PlayerInteraction method
             if (InputManager.KeybindTriggered(PlayerKeybinds.MapInteract))

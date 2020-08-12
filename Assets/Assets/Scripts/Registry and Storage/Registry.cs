@@ -29,6 +29,8 @@ public class Registry
     public static Dictionary<string, EnemyType> PlayerTemplateRegistry = new Dictionary<string, EnemyType>();
     //Enemy template definitions
     public static Dictionary<string, EnemyType> EnemyDefinitionRegistry = new Dictionary<string, EnemyType>();
+    //Dialogue trees
+    public static Dictionary<string, DialogueNode> DialogueRegistry = new Dictionary<string, DialogueNode>();
 
     /// <summary>
     /// Loads in the registry values from the path given in StorageDirectory
@@ -69,8 +71,56 @@ public class Registry
             foreach (EnemyType item in dataDump.EnemyDefs) { EnemyDefinitionRegistry.Add(item.name, item); }
         }
 
+        //Adds all the dialogues
+        DialogueRegistry.Add("test",
+            new DialogueVisibleSelf(true,
+                new DialogueCanPlayerMove(false,
+                    new DialogueLine("Speaker 1", "This is a line that is said",
+                        new DialogueLine("Speaker 2", "this is just another line meant to test how a much longer line of text looks on the screen.",
+                            new DialoguePause(1,
+                                new DialogueLine("Final Speaker", "Just tested a break",
+                                    new DialogueChoiceBranch(
+                                        new List<DialogueBranchInfo>()
+                                        {
+                                            new DialogueBranchInfo("Option 1", new DialogueLine("Concise Speaker", "You chose option 1!", DialogueEndCap())),
+                                            new DialogueBranchInfo("Longer Option 2", new DialogueLine("Verbose Speaker", "You chose longer option 2!", DialogueEndCap()))
+                                        }
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ));
+
+        DialogueRegistry.Add("conditionalTest",
+            new DialogueVisibleSelf(true,
+                new DialogueCanPlayerMove(false,
+                    new DialogueConditionalBranch(
+                        new List<DialogueBranchInfo>()
+                        {
+                            new DialogueBranchInfo(
+                                new HasItemConditional("Animal Tooth", 5),
+                                new DialogueLine("Excited Person", "Ooohh, cool! You have a lot of animal teeth!", DialogueEndCap())
+                                ),
+                            new DialogueBranchInfo(
+                                new DialogueLine("Sad Person", "Ooohh, damn... You don't have any animal teeth...", DialogueEndCap())
+                                )
+                        }
+                    )
+                )
+            ));
+
         //Adds all the effects
         StatusEffectRegistry.Add("Sleep", new StatusEffectDefinition("Sleep", CountdownType.None, false, true, 0.25f));
         StatusEffectRegistry.Add("Paralyze", new StatusEffectDefinition("Paralyze", CountdownType.None, true, true));
+    }
+
+    /// <summary>
+    /// Adds the nodes to hide the dialogue view and make the player able to move at the end of a dialogue
+    /// </summary>
+    private static DialogueNode DialogueEndCap()
+    {
+        return new DialogueVisibleSelf(false, new DialogueCanPlayerMove(true));
     }
 }

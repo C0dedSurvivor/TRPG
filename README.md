@@ -7,10 +7,14 @@
 This game combines an open world style of movement with a tactical battle system. When you encounter an enemy, the camera zooms to an overhead view and the area around you becomes a grid-based tactical battefield.
 
 ## Battle gameplay:
-Walk up to the test battle starter (the floating cubes) to start a battle <br />
+Interact with the test battle starter (the white floating cubes) to start a battle <br />
 Click on a player to select your moves (the 4 pills near the bottom of the battlefield) <br />
 After all players move, enemies will move <br />
 Battle continues until all of one team are dead
+
+## Conversations:
+Interact with the test conversation starter (the green floating cubes) to start a conversation <br />
+Click on a button with the path you want when presented with a choice
 
 ## Pause Menu:
 Click on an option on the left gear to navigate to it
@@ -35,9 +39,3 @@ Interact with object in world - R <br />
 Enter/Leave/Navigate pause menu - Escape <br />
 Zoom camera in or out in map - Control + scroll wheel <br />
 Speed up/continue text box - Enter
-
-## Known bugs:
-* Leaving the window then coming back to it makes some UI textures no longer display
-* Some jitter can occur when generating skill trees with horizontal scrolling
-* Skill trees with vertical scrolling are not centered correctly and that can lead to some skills being partially or entirely off screen
-* Visual indicators for attack range don't always work around walls

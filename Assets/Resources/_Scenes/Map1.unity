@@ -6354,7 +6354,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speaker: {fileID: 0}
-  text: {fileID: 0}
+  text: {fileID: 674435492}
 --- !u!1 &684003553
 GameObject:
   m_ObjectHideFlags: 0

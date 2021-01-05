@@ -39,7 +39,8 @@ public class TextAnimator : MonoBehaviour
                 timer += Time.deltaTime;
             if (InputManager.KeybindTriggered(PlayerKeybinds.UIContinueText) && currentLine == text.text)
             {
-                speaker.text = "";
+                if (speaker != null)
+                    speaker.text = "";
                 text.text = "";
                 currentLine = null;
             }

@@ -31,6 +31,8 @@ public class Registry
     public static Dictionary<string, EnemyType> EnemyDefinitionRegistry = new Dictionary<string, EnemyType>();
     //Dialogue trees
     public static Dictionary<string, DialogueNode> DialogueRegistry = new Dictionary<string, DialogueNode>();
+    //Quest definitions
+    public static Dictionary<int, QuestDefinition> QuestRegistry = new Dictionary<int, QuestDefinition>();
 
     /// <summary>
     /// Loads in the registry values from the path given in StorageDirectory
@@ -114,6 +116,30 @@ public class Registry
         //Adds all the effects
         StatusEffectRegistry.Add("Sleep", new StatusEffectDefinition("Sleep", CountdownType.None, false, true, 0.25f));
         StatusEffectRegistry.Add("Paralyze", new StatusEffectDefinition("Paralyze", CountdownType.None, true, true));
+
+        //Adds test quests
+        QuestRegistry.Add(0,
+            new QuestDefinition(
+                new List<QuestObjectiveDef>()
+                {
+                    new QuestObjectiveDef(
+                        "A test walking quest",
+                        LoggableAction.Travel,
+                        new List<QuestReqActionMod>()
+                        {
+
+                        },
+                        new List<QuestReqActionMod>()
+                        {
+
+                        },
+                        200,
+                        QuestMeasures.Distance
+                        )
+                },
+                false
+                )
+            );
     }
 
     /// <summary>

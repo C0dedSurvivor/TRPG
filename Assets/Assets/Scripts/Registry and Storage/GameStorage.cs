@@ -52,11 +52,17 @@ public class GameStorage : MonoBehaviour
         if (Registry.MovementRegistry.Count == 0)
         {
             Registry.FillRegistry();
-            QuestManager.AcceptQuest(0);
+            QuestManager.Instance.AcceptQuest(0);
+            QuestManager.Instance.AcceptQuest(1);
+            QuestManager.Instance.AcceptQuest(2);
             LoadSaveData(-1);
         }
     }
 
+    /// <summary>
+    /// Loads save file info and default information that will eventually be loaded by save
+    /// </summary>
+    /// <param name="slot">Which save slot to load from</param>
     public static void LoadSaveData(int slot)
     {
         if (slot != -1)

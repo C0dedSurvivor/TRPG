@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 
+/// <summary>
+/// A list of actions that can be monitored by a quest
+/// </summary>
 public enum LoggableAction
 {
     RiseAbove25Percent,
@@ -36,6 +39,9 @@ public enum LoggableAction
     EquipItem
 }
 
+/// <summary>
+/// Denotes the formatting to use when displaying the completion progress
+/// </summary>
 public enum QuestMeasures
 {
     Currency,

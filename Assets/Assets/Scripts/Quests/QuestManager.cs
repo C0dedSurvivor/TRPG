@@ -1,15 +1,48 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
 
-public static class QuestManager
+public class QuestManager : MonoBehaviour
 {
-    private static List<QuestInstanceData> currentQuests = new List<QuestInstanceData>();
+    private List<QuestInstanceData> currentQuests = new List<QuestInstanceData>();
+
+    public Text questSidebarText;
+
+    public static QuestManager qmInstance;
+
+    /// <summary>
+    /// Fun with singletons
+    /// </summary>
+    public static QuestManager Instance
+    {
+        get
+        {
+            if (qmInstance == null)
+            {
+                throw new Exception("Quest Manager not initialized in time.");
+            }
+            return qmInstance;
+        }
+    }
+
+    /// <summary>
+    /// Sets the instance in the scene as the singleton instance
+    /// </summary>
+    public void Awake()
+    {
+        if (qmInstance == null)
+        {
+            qmInstance = this;
+        }
+    }
 
     /// <summary>
     /// Adds a quest to the player's current quests if a quest with the same ID isn't already active
     /// </summary>
     /// <param name="questID">The ID of the quest to add</param>
     /// <returns>Returns whether the quest was successfully added</returns>
-    public static bool AcceptQuest(int questID)
+    public bool AcceptQuest(int questID)
     {
         foreach(QuestInstanceData quest in currentQuests)
         {
@@ -24,7 +57,7 @@ public static class QuestManager
     /// Checks whether a given event progresses any active quests
     /// </summary>
     /// <param name="packet">Event data</param>
-    public static void CheckProgression(QuestPacket packet)
+    public void CheckProgression(QuestPacket packet)
     {
         foreach(QuestInstanceData quest in currentQuests)
         {
@@ -57,22 +90,24 @@ public static class QuestManager
                 quest.completionProgress[i] += packet.amount;
             }
         }
+        questSidebarText.text = "";
+        foreach (string s in GetCurrentQuestStrings()) { questSidebarText.text += s; }
     }
 
     /// <summary>
     /// Returns the string descriptions of all active quests for display
     /// </summary>
     /// <returns>List of quest descriptions</returns>
-    public static List<string> GetCurrentQuestStrings()
+    public List<string> GetCurrentQuestStrings()
     {
         List<string> questStrings = new List<string>();
         foreach(QuestInstanceData quest in currentQuests)
         {
             string questString = "";
             QuestDefinition qDef = Registry.QuestRegistry[quest.questID];
-            foreach(QuestObjectiveDef objective in qDef.objectives)
+            for(int i = 0; i < qDef.objectives.Count; i++)
             {
-                questString += objective.description + "\n";
+                questString += qDef.objectives[i].description + "\n" + quest.completionProgress[i] + "/" + qDef.objectives[i].completionReqAmt + "\n";
             }
             if (qDef.repeatable)
                 questString += "Repeatable\n";

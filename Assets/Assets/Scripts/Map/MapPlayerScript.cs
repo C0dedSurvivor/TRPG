@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class MapPlayerScript : MonoBehaviour
 {
@@ -54,6 +55,12 @@ public class MapPlayerScript : MonoBehaviour
             movement += InputManager.KeybindTriggered(PlayerKeybinds.MapMoveLeft) ? Vector3.left : Vector3.zero;
             movement += InputManager.KeybindTriggered(PlayerKeybinds.MapMoveRight) ? Vector3.right : Vector3.zero;
             transform.Translate(movement.normalized * walkingSpeed * Time.deltaTime);
+            
+            // ***
+            //Test quests
+            // ***
+            QuestManager.Instance.CheckProgression(new QuestPacket(LoggableAction.Travel, new List<QuestReqActionMod>() { new QuestReqActionMod(QuestActionModType.Where, "IDK") }, movement.magnitude));
+            QuestManager.Instance.CheckProgression(new QuestPacket(LoggableAction.Travel, new List<QuestReqActionMod>() { }, movement.magnitude));
 
             //Jumping
             if (InputManager.KeybindTriggered(PlayerKeybinds.MapJump) && Physics.Raycast(transform.position + Vector3.down, Vector3.down, 0.001f))

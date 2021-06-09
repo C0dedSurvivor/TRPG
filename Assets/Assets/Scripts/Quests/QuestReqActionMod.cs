@@ -8,6 +8,9 @@ public enum QuestActionModType
     Using
 }
 
+/// <summary>
+/// A modifier put on an action to allow a more granulated definition
+/// </summary>
 public class QuestReqActionMod : IEquatable<QuestReqActionMod>
 {
     public QuestActionModType type;
@@ -19,6 +22,10 @@ public class QuestReqActionMod : IEquatable<QuestReqActionMod>
         this.mod = mod;
     }
 
+    /// <summary>
+    /// Checks if this mod matches another
+    /// </summary>
+    /// <param name="other">The mod to compare against</param>
     public bool Equals(QuestReqActionMod other)
     {
         return other.type == type && other.mod == mod;

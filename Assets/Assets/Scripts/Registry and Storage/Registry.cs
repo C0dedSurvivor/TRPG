@@ -140,6 +140,52 @@ public class Registry
                 false
                 )
             );
+        //Adds test quests
+        QuestRegistry.Add(1,
+            new QuestDefinition(
+                new List<QuestObjectiveDef>()
+                {
+                    new QuestObjectiveDef(
+                        "A test conditional walking quest",
+                        LoggableAction.Travel,
+                        new List<QuestReqActionMod>()
+                        {
+                            new QuestReqActionMod(QuestActionModType.Where, "IDK")
+                        },
+                        new List<QuestReqActionMod>()
+                        {
+
+                        },
+                        200,
+                        QuestMeasures.Distance
+                        )
+                },
+                false
+                )
+            );
+        //Adds test quests
+        QuestRegistry.Add(2,
+            new QuestDefinition(
+                new List<QuestObjectiveDef>()
+                {
+                    new QuestObjectiveDef(
+                        "A test anti-conditional walking quest",
+                        LoggableAction.Travel,
+                        new List<QuestReqActionMod>()
+                        {
+                            
+                        },
+                        new List<QuestReqActionMod>()
+                        {
+                            new QuestReqActionMod(QuestActionModType.Where, "IDK")
+                        },
+                        200,
+                        QuestMeasures.Distance
+                        )
+                },
+                false
+                )
+            );
     }
 
     /// <summary>

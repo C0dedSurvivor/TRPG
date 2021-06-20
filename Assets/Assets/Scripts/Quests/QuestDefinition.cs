@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 
+/// <summary>
+/// The immutable information connected to a quest ID
+/// </summary>
 public class QuestDefinition
 {
     public List<QuestObjectiveDef> objectives;

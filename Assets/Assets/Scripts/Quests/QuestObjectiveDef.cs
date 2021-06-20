@@ -52,6 +52,9 @@ public enum QuestMeasures
     Tiles
 }
 
+/// <summary>
+/// Definition for a singular action-based objective for a quest
+/// </summary>
 public class QuestObjectiveDef
 {
     public string description;

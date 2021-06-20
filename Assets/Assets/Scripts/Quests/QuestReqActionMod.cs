@@ -1,5 +1,8 @@
 ﻿using System;
 
+/// <summary>
+/// What kind of action a given modifier is defining
+/// </summary>
 public enum QuestActionModType
 {
     Who,

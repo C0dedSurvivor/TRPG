@@ -114,7 +114,11 @@ public class DialogueController : MonoBehaviour
                     //spriteSwitch.target.sprite = GameStorage.sprites[spriteSwitch.newTexture];
                     ToNextNode();
                     break;
-                case DialogueGiveQuest giveQuest:
+                case DialogueAcceptQuest giveQuest:
+                    QuestManager.Instance.AcceptQuest(giveQuest.questID);
+                    ToNextNode();
+                    break;
+                case DialogueSubmitQuest submitQuest:
                     ToNextNode();
                     break;
                 case DialogueQuestReward questReward:
@@ -131,6 +135,10 @@ public class DialogueController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Registers when a player chooses what branch to go down in a choice branch
+    /// </summary>
+    /// <param name="choice">The line they chose</param>
     public void SelectBranch(string choice)
     {
         if (toDisplay[0] is DialogueChoiceBranch)
@@ -166,6 +174,11 @@ public class DialogueController : MonoBehaviour
             ProcessNewNode();
     }
 
+    /// <summary>
+    /// Pauses the dialogue for a given amount of time
+    /// </summary>
+    /// <param name="time"></param>
+    /// <returns>How long to pause for in seconds</returns>
     IEnumerator PauseDialogue(float time)
     {
         paused = true;

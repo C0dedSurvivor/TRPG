@@ -9,7 +9,7 @@ public class QuestManager : MonoBehaviour
 
     public Text questSidebarText;
 
-    public static QuestManager qmInstance;
+    private static QuestManager qmInstance;
 
     /// <summary>
     /// Fun with singletons
@@ -47,9 +47,13 @@ public class QuestManager : MonoBehaviour
         foreach(QuestInstanceData quest in currentQuests)
         {
             if (quest == questID)
+            {
+                Debug.LogError("Tried to assign an already assigned quest ID.");
                 return false;
+            }
         }
         currentQuests.Add(new QuestInstanceData(questID));
+        UpdateSidebar();
         return true;
     }
 
@@ -90,8 +94,7 @@ public class QuestManager : MonoBehaviour
                 quest.completionProgress[i] += packet.amount;
             }
         }
-        questSidebarText.text = "";
-        foreach (string s in GetCurrentQuestStrings()) { questSidebarText.text += s; }
+        UpdateSidebar();
     }
 
     /// <summary>
@@ -114,5 +117,29 @@ public class QuestManager : MonoBehaviour
             questStrings.Add(questString);
         }
         return questStrings;
+    }
+
+    /// <summary>
+    /// Updates the quest progress sidebar
+    /// </summary>
+    public void UpdateSidebar()
+    {
+        questSidebarText.text = "";
+        foreach (string s in GetCurrentQuestStrings()) { questSidebarText.text += s; }
+    }
+
+    /// <summary>
+    /// Checks the status of a given quest ID
+    /// </summary>
+    /// <param name="questID">The ID of the quest to check</param>
+    /// <returns>Returns whether the quest was successfully added</returns>
+    public QuestState GetQuestStatus(int questID)
+    {
+        foreach (QuestInstanceData quest in currentQuests)
+        {
+            if (quest == questID)
+                return quest.state;
+        }
+        return QuestState.Inactive;
     }
 }

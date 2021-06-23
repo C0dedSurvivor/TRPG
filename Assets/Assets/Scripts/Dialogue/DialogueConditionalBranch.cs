@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class DialogueConditionalBranch : DialogueNode
 {
-    private List<DialogueBranchInfo> conditionals = new List<DialogueBranchInfo>();
+    protected List<DialogueBranchInfo> conditionals = new List<DialogueBranchInfo>();
 
     public DialogueConditionalBranch(List<DialogueBranchInfo> conditionals) : base(null)
     {

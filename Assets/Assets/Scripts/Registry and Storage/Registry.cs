@@ -73,50 +73,6 @@ public class Registry
             foreach (EnemyType item in dataDump.EnemyDefs) { EnemyDefinitionRegistry.Add(item.name, item); }
         }
 
-        //Adds all the dialogues
-        DialogueRegistry.Add("test",
-            new DialogueVisibleSelf(true,
-                new DialogueCanPlayerMove(false,
-                    new DialogueLine("Speaker 1", "This is a line that is said",
-                        new DialogueLine("Speaker 2", "this is just another line meant to test how a much longer line of text looks on the screen.",
-                            new DialoguePause(1,
-                                new DialogueLine("Final Speaker", "Just tested a break",
-                                    new DialogueChoiceBranch(
-                                        new List<DialogueBranchInfo>()
-                                        {
-                                            new DialogueBranchInfo("Option 1", new DialogueLine("Concise Speaker", "You chose option 1!", DialogueEndCap())),
-                                            new DialogueBranchInfo("Longer Option 2", new DialogueLine("Verbose Speaker", "You chose longer option 2!", DialogueEndCap()))
-                                        }
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            ));
-
-        DialogueRegistry.Add("conditionalTest",
-            new DialogueVisibleSelf(true,
-                new DialogueCanPlayerMove(false,
-                    new DialogueConditionalBranch(
-                        new List<DialogueBranchInfo>()
-                        {
-                            new DialogueBranchInfo(
-                                new HasItemConditional("Animal Tooth", 5),
-                                new DialogueLine("Excited Person", "Ooohh, cool! You have a lot of animal teeth!", DialogueEndCap())
-                                ),
-                            new DialogueBranchInfo(
-                                new DialogueLine("Sad Person", "Ooohh, damn... You don't have any animal teeth...", DialogueEndCap())
-                                )
-                        }
-                    )
-                )
-            ));
-
-        //Adds all the effects
-        StatusEffectRegistry.Add("Sleep", new StatusEffectDefinition("Sleep", CountdownType.None, false, true, 0.25f));
-        StatusEffectRegistry.Add("Paralyze", new StatusEffectDefinition("Paralyze", CountdownType.None, true, true));
-
         //Adds test quests
         QuestRegistry.Add(0,
             new QuestDefinition(
@@ -163,7 +119,7 @@ public class Registry
                 false
                 )
             );
-        //Adds test quests
+
         QuestRegistry.Add(2,
             new QuestDefinition(
                 new List<QuestObjectiveDef>()
@@ -173,7 +129,7 @@ public class Registry
                         LoggableAction.Travel,
                         new List<QuestReqActionMod>()
                         {
-                            
+
                         },
                         new List<QuestReqActionMod>()
                         {
@@ -186,6 +142,69 @@ public class Registry
                 false
                 )
             );
+
+        //Adds all the dialogues
+        DialogueRegistry.Add("test",
+            DialogueStartCap(
+                new DialogueLine("Speaker 1", "This is a line that is said",
+                    new DialogueLine("Speaker 2", "this is just another line meant to test how a much longer line of text looks on the screen.",
+                        new DialoguePause(1,
+                            new DialogueLine("Final Speaker", "Just tested a break",
+                                new DialogueChoiceBranch(
+                                    new List<DialogueBranchInfo>()
+                                    {
+                                        new DialogueBranchInfo("Option 1", new DialogueLine("Concise Speaker", "You chose option 1!", DialogueEndCap())),
+                                        new DialogueBranchInfo("Longer Option 2", new DialogueLine("Verbose Speaker", "You chose longer option 2!", DialogueEndCap()))
+                                    }
+                                )
+                            )
+                        )
+                    )
+                )
+            ));
+
+        DialogueRegistry.Add("conditionalTest",
+            DialogueStartCap(
+                new DialogueConditionalBranch(
+                    new List<DialogueBranchInfo>()
+                    {
+                        new DialogueBranchInfo(
+                            new HasItemConditional("Animal Tooth", 5),
+                            new DialogueLine("Excited Person", "Ooohh, cool! You have a lot of animal teeth!", DialogueEndCap())
+                            ),
+                        new DialogueBranchInfo(
+                            new DialogueLine("Sad Person", "Ooohh, damn... You don't have any animal teeth...", DialogueEndCap())
+                            )
+                    }
+                )
+            ));
+
+        DialogueRegistry.Add("Quester Tester",
+            DialogueStartCap(
+                new DialogueQuestBranch(
+                    0,
+                    notUnlocked: new DialogueLine("...", "You do not have the qualifications to take my challenge.", DialogueEndCap()),
+                    inProgress: new DialogueLine("...", "Wow you're slow.", DialogueEndCap()),
+                    submittable: new DialogueLine("...", "Good, you have done well.", DialogueEndCap()),
+                    complete: new DialogueLine("...", "You've already learned all that I can teach you.", DialogueEndCap()),
+                    givable: new DialogueLine("...", "It seems you are ready to attempt my challenge."),
+                    givableAccept: new DialogueLine("...", "Best of luck young padawan.", DialogueEndCap()),
+                    givableDeny: new DialogueLine("...", "Coward.", DialogueEndCap())
+                    )
+            ));
+
+        //Adds all the effects
+        StatusEffectRegistry.Add("Sleep", new StatusEffectDefinition("Sleep", CountdownType.None, false, true, 0.25f));
+        StatusEffectRegistry.Add("Paralyze", new StatusEffectDefinition("Paralyze", CountdownType.None, true, true));
+    }
+
+    /// <summary>
+    /// Adds the nodes to show the dialogue view and make the player unable to move at the start of a dialogue
+    /// </summary>
+    /// <param name="next">The dialogue to follow the setup</param>
+    private static DialogueNode DialogueStartCap(DialogueNode next)
+    {
+        return new DialogueVisibleSelf(true, new DialogueCanPlayerMove(false, next));
     }
 
     /// <summary>

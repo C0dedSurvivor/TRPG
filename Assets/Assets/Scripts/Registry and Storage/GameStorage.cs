@@ -52,9 +52,9 @@ public class GameStorage : MonoBehaviour
         if (Registry.MovementRegistry.Count == 0)
         {
             Registry.FillRegistry();
-            QuestManager.Instance.AcceptQuest(0);
-            QuestManager.Instance.AcceptQuest(1);
-            QuestManager.Instance.AcceptQuest(2);
+            //QuestManager.Instance.AcceptQuest(0);
+            //QuestManager.Instance.AcceptQuest(1);
+            //QuestManager.Instance.AcceptQuest(2);
             LoadSaveData(-1);
         }
     }

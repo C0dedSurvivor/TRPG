@@ -8,7 +8,7 @@ class DialogueQuestBranch : DialogueConditionalBranch
         int questID,
         DialogueNode notUnlocked, 
         DialogueNode inProgress, 
-        DialogueNode submittable, 
+        DialogueNode submitting, 
         DialogueNode complete, 
         DialogueLine givable, 
         DialogueNode givableAccept, 
@@ -47,7 +47,7 @@ class DialogueQuestBranch : DialogueConditionalBranch
                 ),
             new DialogueBranchInfo(
                 new QuestProgressConditional(questID, QuestState.ReadyForSubmission),
-                submittable
+                new DialogueSubmitQuest(questID, submitting)
                 ),
             new DialogueBranchInfo(
                 new QuestProgressConditional(questID, QuestState.Complete),

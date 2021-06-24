@@ -58,6 +58,34 @@ public class QuestManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Submits a quest if all relevant objectives are completed
+    /// </summary>
+    /// <param name="questID">The ID of the quest to submit</param>
+    /// <returns>Returns whether the quest was successfully submitted</returns>
+    public bool SubmitQuest(int questID)
+    {
+        foreach (QuestInstanceData quest in currentQuests)
+        {
+            if (quest == questID)
+            {
+                if (quest.state == QuestState.ReadyForSubmission)
+                {
+                    quest.state = QuestState.Complete;
+                    UpdateSidebar();
+                    return true;
+                }
+                else
+                {
+                    Debug.LogError("Tried to submit an unfinished quest.");
+                    return false;
+                }
+            }
+        }
+        Debug.LogError("Tried to submit an unassigned quest.");
+        return false;
+    }
+
+    /// <summary>
     /// Checks whether a given event progresses any active quests
     /// </summary>
     /// <param name="packet">Event data</param>
@@ -65,33 +93,45 @@ public class QuestManager : MonoBehaviour
     {
         foreach(QuestInstanceData quest in currentQuests)
         {
-            List<QuestObjectiveDef> objectives = Registry.QuestRegistry[quest.questID].objectives;
-            for (int i = 0; i < objectives.Count; i++)
+            if (quest.state != QuestState.Complete && quest.state != QuestState.ReadyForSubmission)
             {
-                bool invalid = false;
-                //If it has a mod that disqualifies it from progressing this objective, go to next objective
-                foreach (QuestReqActionMod disqualifyingMod in objectives[i].disqualifyingMods)
+                bool questComplete = true;
+                List<QuestObjectiveDef> objectives = Registry.QuestRegistry[quest.questID].objectives;
+                for (int i = 0; i < objectives.Count; i++)
                 {
-                    if (packet.mods.Contains(disqualifyingMod))
-                    {
-                        invalid = true;
-                        break;
+                    if (objectives[i].action == packet.action) {
+                        bool invalid = false;
+                        //If it has a mod that disqualifies it from progressing this objective, go to next objective
+                        foreach (QuestReqActionMod disqualifyingMod in objectives[i].disqualifyingMods)
+                        {
+                            if (packet.mods.Contains(disqualifyingMod))
+                            {
+                                invalid = true;
+                                break;
+                            }
+                        }
+                        if (invalid)
+                            continue;
+                        //If it is missing a mod required to progress this objective, go to next objective
+                        foreach (QuestReqActionMod requiredMod in objectives[i].requiredMods)
+                        {
+                            if (!packet.mods.Contains(requiredMod))
+                            {
+                                invalid = true;
+                                break;
+                            }
+                        }
+                        //Progresses the quest if it should be progressed
+                        if (!invalid)
+                            quest.completionProgress[i] = Mathf.Min(quest.completionProgress[i] + packet.amount, objectives[i].completionReqAmt);
                     }
+                    //Checks if this objective is complete
+                    if (questComplete && !GameStorage.Approximately(quest.completionProgress[i], objectives[i].completionReqAmt))
+                        questComplete = false;
                 }
-                if (invalid)
-                    continue;
-                //If it is missing a mod required to progress this objective, go to next objective
-                foreach (QuestReqActionMod requiredMod in objectives[i].requiredMods)
-                {
-                    if (!packet.mods.Contains(requiredMod))
-                    {
-                        invalid = true;
-                        break;
-                    }
-                }
-                if (invalid)
-                    continue;
-                quest.completionProgress[i] += packet.amount;
+                //If all objectives are complete, mark this as ready for turn in
+                if (questComplete)
+                    quest.state = QuestState.ReadyForSubmission;
             }
         }
         UpdateSidebar();
@@ -106,15 +146,18 @@ public class QuestManager : MonoBehaviour
         List<string> questStrings = new List<string>();
         foreach(QuestInstanceData quest in currentQuests)
         {
-            string questString = "";
-            QuestDefinition qDef = Registry.QuestRegistry[quest.questID];
-            for(int i = 0; i < qDef.objectives.Count; i++)
+            if (quest.state != QuestState.Complete)
             {
-                questString += qDef.objectives[i].description + "\n" + quest.completionProgress[i] + "/" + qDef.objectives[i].completionReqAmt + "\n";
+                string questString = "";
+                QuestDefinition qDef = Registry.QuestRegistry[quest.questID];
+                for (int i = 0; i < qDef.objectives.Count; i++)
+                {
+                    questString += qDef.objectives[i].description + "\n" + quest.completionProgress[i] + "/" + qDef.objectives[i].completionReqAmt + "\n";
+                }
+                if (qDef.repeatable)
+                    questString += "Repeatable\n";
+                questStrings.Add(questString);
             }
-            if (qDef.repeatable)
-                questString += "Repeatable\n";
-            questStrings.Add(questString);
         }
         return questStrings;
     }

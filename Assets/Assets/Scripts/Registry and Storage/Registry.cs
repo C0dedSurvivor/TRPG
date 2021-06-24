@@ -185,7 +185,7 @@ public class Registry
                     0,
                     notUnlocked: new DialogueLine("...", "You do not have the qualifications to take my challenge.", DialogueEndCap()),
                     inProgress: new DialogueLine("...", "Wow you're slow.", DialogueEndCap()),
-                    submittable: new DialogueLine("...", "Good, you have done well.", DialogueEndCap()),
+                    submitting: new DialogueLine("...", "Good, you have done well.", DialogueEndCap()),
                     complete: new DialogueLine("...", "You've already learned all that I can teach you.", DialogueEndCap()),
                     givable: new DialogueLine("...", "It seems you are ready to attempt my challenge."),
                     givableAccept: new DialogueLine("...", "Best of luck young padawan.", DialogueEndCap()),

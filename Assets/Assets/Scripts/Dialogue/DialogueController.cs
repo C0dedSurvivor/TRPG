@@ -119,6 +119,7 @@ public class DialogueController : MonoBehaviour
                     ToNextNode();
                     break;
                 case DialogueSubmitQuest submitQuest:
+                    QuestManager.Instance.SubmitQuest(submitQuest.questID);
                     ToNextNode();
                     break;
                 case DialogueQuestReward questReward:
